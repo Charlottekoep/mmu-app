@@ -1,26 +1,102 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/* ─── Design Tokens ──────────────────────────────────────────────────────── */
+@theme {
+  /* Font */
+  --font-sans: var(--font-lato), sans-serif;
+
+  /* Brand colours */
+  --color-primary:       #2969FF;
+  --color-secondary:     #0F1B4A;
+  --color-navy-deep:     #2E3C74;
+  --color-near-black:    #000023;
+  --color-white:         #FFFFFF;
+  --color-green:         #1FC881;
+  --color-amber:         #FFAB00;
+  --color-red:           #D50000;
+  --color-purple:        #C347E2;
+  --color-light-blue:    #D3E0FF;
+  --color-border:        #DEDEDE;
+  --color-subtle-bg:     #E9E9E9;
+  --color-text-high:     #262626;
+  --color-text-mid:      #5A5A5A;
+  --color-text-disabled: #969696;
+
+  /* Type scale — sizes (use with text-* utilities) */
+  --text-display:    96px;
+  --text-h2:         30px;
+  --text-h3:         22px;
+  --text-eyebrow:    13px;
+  --text-body:       17px;
+  --text-body-large: 22px;
+  --text-caption:    12px;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+/* ─── Compound Typography Utilities ─────────────────────────────────────── */
+/* Use these when you want the full type style in one class, e.g.           */
+/* className="type-display"                                                  */
+
+@utility type-display {
+  font-size:      96px;
+  font-weight:    900;
+  letter-spacing: -0.03em;
+  line-height:    1;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+@utility type-h2 {
+  font-size:      30px;
+  font-weight:    900;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
 }
 
+@utility type-h3 {
+  font-size:      22px;
+  font-weight:    700;
+  letter-spacing: 0.10em;
+  text-transform: uppercase;
+}
+
+@utility type-eyebrow {
+  font-size:      13px;
+  font-weight:    700;
+  letter-spacing: 0.20em;
+  text-transform: uppercase;
+}
+
+@utility type-body {
+  font-size:   17px;
+  font-weight: 400;
+  line-height: 1.75;
+}
+
+@utility type-body-large {
+  font-size:   22px;
+  font-weight: 300;
+}
+
+@utility type-caption {
+  font-size:      12px;
+  font-weight:    700;
+  text-transform: uppercase;
+}
+
+/* ─── Shadow Utilities ───────────────────────────────────────────────────── */
+
+@utility shadow-card {
+  box-shadow: 0 2px 8px rgba(15,27,74,0.10), 0 1px 3px rgba(15,27,74,0.06);
+}
+
+@utility shadow-elevated {
+  box-shadow: 0 4px 16px rgba(15,27,74,0.14), 0 2px 6px rgba(15,27,74,0.08);
+}
+
+@utility shadow-pill {
+  box-shadow: 0 1px 4px rgba(15,27,74,0.12);
+}
+
+/* ─── Base ───────────────────────────────────────────────────────────────── */
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background-color: var(--color-white);
+  color:            var(--color-text-high);
 }
