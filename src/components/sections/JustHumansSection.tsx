@@ -58,7 +58,7 @@ export default function JustHumansSection({ section }: Props) {
 
         {/* ── Header ─────────────────────────────────────────────────── */}
         <div className="mb-12">
-          <p className="type-eyebrow text-white/30 mb-2">Just Humans</p>
+          <p className="type-eyebrow text-white mb-2">Just Humans</p>
           <h2 className="type-h2 text-white">
             {subject ? subject.name : 'Team Spotlight'}
           </h2>
@@ -73,9 +73,9 @@ export default function JustHumansSection({ section }: Props) {
               <p className="text-[16px] font-bold text-white">
                 {presenter?.name ?? '—'}
               </p>
-              <p className="mt-1 text-[13px] text-white/40">{presenter?.role ?? ''}</p>
+              <p className="mt-1 text-[13px] text-white/65">{presenter?.role ?? ''}</p>
             </div>
-            <span className="type-eyebrow text-white/25">Presenter</span>
+            <span className="type-eyebrow text-white/65">Presenter</span>
           </div>
 
           {/* Arrow */}
@@ -99,7 +99,7 @@ export default function JustHumansSection({ section }: Props) {
               <p className="text-[16px] font-bold text-white">
                 {subject?.name ?? '—'}
               </p>
-              <p className="mt-1 text-[13px] text-white/40">{subject?.role ?? ''}</p>
+              <p className="mt-1 text-[13px] text-white/65">{subject?.role ?? ''}</p>
             </div>
             <span className="type-eyebrow text-primary/60">In the spotlight</span>
           </div>
@@ -108,9 +108,9 @@ export default function JustHumansSection({ section }: Props) {
         {/* ── Spotlight content ──────────────────────────────────────── */}
         {content.spotlight && (
           <div className="max-w-2xl">
-            <p className="type-eyebrow text-white/30 mb-4">Spotlight</p>
+            <p className="type-eyebrow text-white mb-4">Spotlight</p>
             <div
-              className="text-[16px] leading-relaxed text-white/70 [&_p]:mb-3 [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_li]:mb-1.5 [&_strong]:text-white [&_em]:italic"
+              className="text-[16px] leading-relaxed text-white/65 [&_p]:mb-3 [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_li]:mb-1.5 [&_strong]:text-white [&_em]:italic"
               dangerouslySetInnerHTML={{ __html: content.spotlight }}
             />
           </div>

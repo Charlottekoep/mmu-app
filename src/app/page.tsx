@@ -29,9 +29,9 @@ export default async function HomePage() {
 
         {/* ── Branding ─────────────────────────────────────────────────── */}
         <div className="mb-14 text-center">
-          <p className="type-eyebrow text-white/40">Root Insurance</p>
+          <p className="type-eyebrow text-white">Root Insurance</p>
           <h1 className="mt-4 type-display text-white leading-none">MMU</h1>
-          <p className="mt-3 type-body-large text-white/50">Monday Mission Update</p>
+          <p className="mt-3 type-body-large text-white/65">Monday Mission Update</p>
         </div>
 
         {/* ── Primary CTA ──────────────────────────────────────────────── */}
@@ -40,7 +40,7 @@ export default async function HomePage() {
         {/* ── Recent sessions ──────────────────────────────────────────── */}
         {sessions.length > 0 && (
           <div className="mt-16 w-full max-w-md">
-            <p className="type-eyebrow text-white/30 mb-4">Recent sessions</p>
+            <p className="type-eyebrow text-white mb-4">Recent sessions</p>
             <ul className="space-y-2">
               {sessions.map((s) => (
                 <li key={s.id}>
@@ -49,7 +49,7 @@ export default async function HomePage() {
                     className="flex items-center justify-between rounded-xl border border-white/10 bg-white/5 px-5 py-4 transition-colors hover:bg-white/10"
                   >
                     <div>
-                      <p className="type-eyebrow text-white/40">
+                      <p className="type-eyebrow text-white/65">
                         MMU #{s.session_number}
                       </p>
                       <p className="mt-1 text-[17px] leading-snug text-white">
@@ -80,7 +80,7 @@ export default async function HomePage() {
         )}
 
         {sessions.length === 0 && (
-          <p className="mt-12 type-eyebrow text-white/20">
+          <p className="mt-12 type-eyebrow text-white/65">
             No sessions yet — create your first one above
           </p>
         )}

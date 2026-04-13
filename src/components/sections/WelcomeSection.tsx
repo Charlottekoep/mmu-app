@@ -48,13 +48,13 @@ export default function WelcomeSection({ session, sections }: Props) {
       {/* ── Main content ──────────────────────────────────────────────── */}
       <div className="relative z-10 flex max-w-3xl flex-col items-center px-12 text-center">
         {/* Eyebrow */}
-        <p className="type-eyebrow tracking-[0.25em] text-white/35 mb-6">
+        <p className="type-eyebrow tracking-[0.25em] text-white mb-6">
           Monday Mission Update
         </p>
 
         {/* Date */}
         <p
-          className="mb-5 text-[18px] font-light text-white/40"
+          className="mb-5 text-[18px] font-light text-white/65"
           style={{ letterSpacing: '0.04em' }}
         >
           {dateStr}
@@ -72,7 +72,7 @@ export default function WelcomeSection({ session, sections }: Props) {
         {/* Welcome message */}
         {session.welcome_message && (
           <p
-            className="mb-12 max-w-xl text-[20px] leading-relaxed text-white/55"
+            className="mb-12 max-w-xl text-[20px] leading-relaxed text-white/65"
             style={{ fontWeight: 300 }}
           >
             {session.welcome_message}
@@ -85,7 +85,7 @@ export default function WelcomeSection({ session, sections }: Props) {
             {activeSections.map((s) => (
               <span
                 key={s.id}
-                className="rounded-full border border-white/15 bg-white/[0.06] px-3.5 py-1.5 text-[11px] font-bold uppercase tracking-widest text-white/35"
+                className="rounded-full border border-white/20 bg-white/[0.08] px-3.5 py-1.5 text-[11px] font-bold uppercase tracking-widest text-white/65"
               >
                 {SECTION_LABELS[s.section_type] ?? s.section_type}
               </span>

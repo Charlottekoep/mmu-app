@@ -101,7 +101,7 @@ export default function NorthStarSection({ sessionId }: Props) {
         {/* ── Heading ──────────────────────────────────────────────── */}
         <div className="mb-10">
           <h1 className="type-h2 text-white">North Star &amp; Momentum</h1>
-          <p className="mt-3 type-body-large text-white/50">
+          <p className="mt-3 type-body-large text-white/65">
             Grow Root into a profitable, efficient $18m ARR business by 2029
           </p>
         </div>
@@ -110,7 +110,7 @@ export default function NorthStarSection({ sessionId }: Props) {
         <div className="space-y-12">
           {groups.map(({ key, label, levers }) => (
             <section key={key}>
-              <p className="type-eyebrow text-white/40 mb-4">{label}</p>
+              <p className="type-eyebrow text-white mb-4">{label}</p>
               <div
                 className={
                   key === 'north_star'

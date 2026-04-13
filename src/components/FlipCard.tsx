@@ -161,7 +161,7 @@ export default function FlipCard({ lever, compact = false }: Props) {
           }}
         >
           {/* Measure */}
-          <p className="type-eyebrow text-white/40">Measure</p>
+          <p className="type-eyebrow text-white/65">Measure</p>
           <p className="mt-1 text-[13px] leading-snug text-white/80 line-clamp-3">
             {lever.measure}
           </p>
@@ -169,20 +169,20 @@ export default function FlipCard({ lever, compact = false }: Props) {
           {/* Stats */}
           <div className="mt-auto flex items-end gap-5 pt-3">
             <div>
-              <p className="type-eyebrow text-white/40">Current</p>
+              <p className="type-eyebrow text-white/65">Current</p>
               <p className="mt-0.5 text-[15px] font-bold text-white">
                 {lever.current_state}
               </p>
             </div>
             <div>
-              <p className="type-eyebrow text-white/40">Target</p>
+              <p className="type-eyebrow text-white/65">Target</p>
               <p className="mt-0.5 text-[15px] font-bold text-white">
                 {lever.target}
               </p>
             </div>
             {lever.trend && (
               <div>
-                <p className="type-eyebrow text-white/40">Trend</p>
+                <p className="type-eyebrow text-white/65">Trend</p>
                 <p className="mt-0.5 text-[20px] leading-none text-white">
                   {TREND_CHAR[lever.trend] ?? '—'}
                 </p>
@@ -192,7 +192,7 @@ export default function FlipCard({ lever, compact = false }: Props) {
 
           {/* Notes */}
           {lever.notes && (
-            <p className="mt-2.5 text-[12px] leading-snug text-white/40 line-clamp-2">
+            <p className="mt-2.5 text-[12px] leading-snug text-white/65 line-clamp-2">
               {lever.notes}
             </p>
           )}

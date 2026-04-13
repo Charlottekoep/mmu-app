@@ -56,13 +56,13 @@ export default function ShowAndTellSection({ section }: Props) {
 
         {/* ── Header ─────────────────────────────────────────────────── */}
         <div className="mb-3 flex items-start justify-between">
-          <p className="type-eyebrow text-white/30">Show &amp; Tell</p>
+          <p className="type-eyebrow text-white">Show &amp; Tell</p>
           {presenter && (
             <div className="flex items-center gap-3">
               <MemberAvatar member={presenter} size={36} />
               <div>
                 <p className="text-[13px] font-bold text-white">{presenter.name}</p>
-                <p className="text-[11px] text-white/30">{presenter.role}</p>
+                <p className="text-[11px] text-white/65">{presenter.role}</p>
               </div>
             </div>
           )}
@@ -74,7 +74,7 @@ export default function ShowAndTellSection({ section }: Props) {
         </h2>
 
         {content.duration_min && (
-          <p className="mb-10 text-[14px] text-white/35">
+          <p className="mb-10 text-[14px] text-white/65">
             {content.duration_min} min
           </p>
         )}
@@ -83,7 +83,7 @@ export default function ShowAndTellSection({ section }: Props) {
         {content.watch_for && (
           <blockquote className="mb-12 border-l-4 border-primary/50 pl-6 py-2 max-w-2xl">
             <p className="type-eyebrow text-primary/60 mb-2">What to watch for</p>
-            <p className="text-[16px] leading-relaxed text-white/70 italic">
+            <p className="text-[16px] leading-relaxed text-white/65 italic">
               {content.watch_for}
             </p>
           </blockquote>

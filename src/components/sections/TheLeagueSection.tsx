@@ -92,7 +92,7 @@ export default function TheLeagueSection({ section }: Props) {
         {/* ── Header ─────────────────────────────────────────────────── */}
         <div className="mb-10 flex items-start justify-between">
           <div>
-            <p className="type-eyebrow text-white/30 mb-3">The League</p>
+            <p className="type-eyebrow text-white mb-3">The League</p>
             <h2 className="type-h2 text-white">Insurance IQ</h2>
           </div>
           {presenter && (
@@ -100,7 +100,7 @@ export default function TheLeagueSection({ section }: Props) {
               <MemberAvatar member={presenter} size={40} />
               <div>
                 <p className="text-[13px] font-bold text-white">{presenter.name}</p>
-                <p className="text-[11px] text-white/30">{presenter.role}</p>
+                <p className="text-[11px] text-white/65">{presenter.role}</p>
               </div>
             </div>
           )}
@@ -112,9 +112,9 @@ export default function TheLeagueSection({ section }: Props) {
             {/* ── Insurance concept ────────────────────────────────── */}
             {content.concept && (
               <section>
-                <p className="type-eyebrow text-white/30 mb-4">This week&apos;s concept</p>
+                <p className="type-eyebrow text-white mb-4">This week&apos;s concept</p>
                 <div
-                  className="text-[16px] leading-relaxed text-white/70 [&_p]:mb-3 [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_li]:mb-1.5 [&_strong]:font-bold [&_strong]:text-white [&_em]:italic max-w-2xl"
+                  className="text-[16px] leading-relaxed text-white/65 [&_p]:mb-3 [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_li]:mb-1.5 [&_strong]:font-bold [&_strong]:text-white [&_em]:italic max-w-2xl"
                   dangerouslySetInnerHTML={{ __html: content.concept }}
                 />
               </section>
@@ -123,7 +123,7 @@ export default function TheLeagueSection({ section }: Props) {
             {/* ── Quiz ─────────────────────────────────────────────── */}
             {quiz.length > 0 && (
               <section>
-                <p className="type-eyebrow text-white/30 mb-4">
+                <p className="type-eyebrow text-white mb-4">
                   Quiz · {quizIndex + 1}/{quiz.length}
                 </p>
 
@@ -154,7 +154,7 @@ export default function TheLeagueSection({ section }: Props) {
                         type="button"
                         onClick={() => setQuizIndex((i) => Math.max(0, i - 1))}
                         disabled={quizIndex === 0}
-                        className="rounded-full border border-white/15 px-4 py-1.5 text-[12px] text-white/40 transition-all hover:border-white/30 hover:text-white/70 disabled:opacity-25"
+                        className="rounded-full border border-white/20 px-4 py-1.5 text-[12px] text-white/65 transition-all hover:border-white/40 hover:text-white disabled:opacity-25"
                       >
                         ← Prev
                       </button>
@@ -162,7 +162,7 @@ export default function TheLeagueSection({ section }: Props) {
                         type="button"
                         onClick={() => setQuizIndex((i) => Math.min(quiz.length - 1, i + 1))}
                         disabled={quizIndex === quiz.length - 1}
-                        className="rounded-full border border-white/15 px-4 py-1.5 text-[12px] text-white/40 transition-all hover:border-white/30 hover:text-white/70 disabled:opacity-25"
+                        className="rounded-full border border-white/20 px-4 py-1.5 text-[12px] text-white/65 transition-all hover:border-white/40 hover:text-white disabled:opacity-25"
                       >
                         Next →
                       </button>
@@ -176,7 +176,7 @@ export default function TheLeagueSection({ section }: Props) {
 
           {/* ── Leaderboard ──────────────────────────────────────────── */}
           <aside>
-            <p className="type-eyebrow text-white/30 mb-4">Leaderboard</p>
+            <p className="type-eyebrow text-white mb-4">Leaderboard</p>
             <div className="space-y-2">
               {ranked.map((entry, rank) => {
                 const medal = MEDAL[rank]
@@ -194,7 +194,7 @@ export default function TheLeagueSection({ section }: Props) {
                     {/* Rank */}
                     <span className="w-6 text-center text-[18px] leading-none">
                       {medal ? medal.label : (
-                        <span className="text-[13px] font-bold text-white/20">
+                        <span className="text-[13px] font-bold text-white/65">
                           {rank + 1}
                         </span>
                       )}
@@ -206,7 +206,7 @@ export default function TheLeagueSection({ section }: Props) {
                     {/* Name */}
                     <span
                       className="flex-1 text-[14px] font-medium truncate"
-                      style={{ color: medal ? medal.color : 'rgba(255,255,255,0.75)' }}
+                      style={{ color: medal ? medal.color : 'rgba(255,255,255,0.9)' }}
                     >
                       {entry.member.name}
                     </span>
@@ -214,7 +214,7 @@ export default function TheLeagueSection({ section }: Props) {
                     {/* Score */}
                     <span
                       className="text-[16px] font-black tabular-nums"
-                      style={{ color: medal ? medal.color : 'rgba(255,255,255,0.5)' }}
+                      style={{ color: medal ? medal.color : 'rgba(255,255,255,0.65)' }}
                     >
                       {entry.score}
                     </span>
@@ -222,7 +222,7 @@ export default function TheLeagueSection({ section }: Props) {
                 )
               })}
               {ranked.length === 0 && (
-                <p className="type-eyebrow text-white/20 py-4">No scores yet</p>
+                <p className="type-eyebrow text-white/65 py-4">No scores yet</p>
               )}
             </div>
           </aside>

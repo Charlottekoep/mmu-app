@@ -92,13 +92,13 @@ export default function DeepDiveSection({ section, sessionId }: Props) {
                   className="h-2 w-2 flex-shrink-0 rounded-full"
                   style={{ background: RAG_COLOR[lever.rag_status] }}
                 />
-                <span className="text-[11px] font-bold uppercase tracking-widest text-white/50">
+                <span className="text-[11px] font-bold uppercase tracking-widest text-white/65">
                   {lever.name}
                 </span>
               </div>
             )}
             {/* Eyebrow */}
-            <p className="type-eyebrow text-white/30">Deep Dive</p>
+            <p className="type-eyebrow text-white">Deep Dive</p>
           </div>
 
           {/* Presenter */}
@@ -107,7 +107,7 @@ export default function DeepDiveSection({ section, sessionId }: Props) {
               <MemberAvatar member={presenter} size={36} />
               <div>
                 <p className="text-[13px] font-bold text-white">{presenter.name}</p>
-                <p className="text-[11px] text-white/30">{presenter.role}</p>
+                <p className="text-[11px] text-white/65">{presenter.role}</p>
               </div>
             </div>
           )}
@@ -131,7 +131,7 @@ export default function DeepDiveSection({ section, sessionId }: Props) {
         {/* ── Body ───────────────────────────────────────────────────── */}
         {content.body && (
           <div
-            className="mb-10 max-w-3xl text-[16px] leading-relaxed text-white/70 [&_p]:mb-3 [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_li]:mb-1.5 [&_strong]:font-bold [&_strong]:text-white [&_em]:italic"
+            className="mb-10 max-w-3xl text-[16px] leading-relaxed text-white/65 [&_p]:mb-3 [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_li]:mb-1.5 [&_strong]:font-bold [&_strong]:text-white [&_em]:italic"
             dangerouslySetInnerHTML={{ __html: content.body }}
           />
         )}

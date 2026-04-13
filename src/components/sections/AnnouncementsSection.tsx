@@ -61,7 +61,7 @@ export default function AnnouncementsSection({ section }: Props) {
         {/* ── Header ─────────────────────────────────────────────────── */}
         <div className="mb-10 flex items-start justify-between">
           <div>
-            <p className="type-eyebrow text-white/30 mb-3">Team Announcements</p>
+            <p className="type-eyebrow text-white mb-3">Team Announcements</p>
             <h2 className="type-h2 text-white">What&apos;s new</h2>
           </div>
           {presenter && (
@@ -69,7 +69,7 @@ export default function AnnouncementsSection({ section }: Props) {
               <MemberAvatar member={presenter} size={40} />
               <div>
                 <p className="text-[13px] font-bold text-white">{presenter.name}</p>
-                <p className="text-[11px] text-white/30">{presenter.role}</p>
+                <p className="text-[11px] text-white/65">{presenter.role}</p>
               </div>
             </div>
           )}
@@ -77,7 +77,7 @@ export default function AnnouncementsSection({ section }: Props) {
 
         {/* ── Announcement cards ─────────────────────────────────────── */}
         {items.length === 0 ? (
-          <p className="type-eyebrow text-white/20">No announcements yet</p>
+          <p className="type-eyebrow text-white/65">No announcements yet</p>
         ) : (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {items.map((item, i) => (

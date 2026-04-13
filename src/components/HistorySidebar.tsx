@@ -61,7 +61,7 @@ export default function HistorySidebar({
       >
         {/* Header */}
         <div className="flex items-center justify-between border-b border-white/10 px-6 py-5">
-          <span className="type-eyebrow text-white/40">Session History</span>
+          <span className="type-eyebrow text-white">Session History</span>
           <button
             onClick={onClose}
             aria-label="Close sidebar"
@@ -81,9 +81,9 @@ export default function HistorySidebar({
         {/* Session list */}
         <nav className="flex-1 overflow-y-auto py-2">
           {loading ? (
-            <p className="px-6 py-4 type-eyebrow text-white/30">Loading…</p>
+            <p className="px-6 py-4 type-eyebrow text-white/65">Loading…</p>
           ) : sessions.length === 0 ? (
-            <p className="px-6 py-4 type-eyebrow text-white/30">No sessions yet</p>
+            <p className="px-6 py-4 type-eyebrow text-white/65">No sessions yet</p>
           ) : (
             sessions.map((s) => {
               const isCurrent = s.id === currentSessionId
@@ -97,7 +97,7 @@ export default function HistorySidebar({
                   }`}
                 >
                   <div>
-                    <p className="type-eyebrow text-white/40">MMU #{s.session_number}</p>
+                    <p className="type-eyebrow text-white/65">MMU #{s.session_number}</p>
                     <p className="mt-1 text-[17px] leading-snug text-white">
                       {formatDate(s.date)}
                     </p>
