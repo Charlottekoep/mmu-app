@@ -3,6 +3,7 @@
 import { useState, useCallback, useRef } from 'react'
 import { getBrowserClient } from '@/lib/supabase'
 import type { SessionSection, Lever, LeverSnapshot, RagStatus } from '@/lib/types'
+import ImageUploader from '@/components/ImageUploader'
 
 // ─── Focus area groups ────────────────────────────────────────────────────
 
@@ -48,7 +49,6 @@ const TREND_OPTIONS: { value: 'up' | 'flat' | 'down'; label: string }[] = [
 // ─── Component ────────────────────────────────────────────────────────────
 
 export default function NorthStarUpdateForm({ section, sessionId, levers, snapshots }: Props) {
-  // Build initial state from snapshots (falling back to live lever values)
   const snapshotMap = new Map(snapshots.map((s) => [s.lever_id, s]))
 
   const initState = (): Record<string, LeverState> => {
@@ -66,16 +66,20 @@ export default function NorthStarUpdateForm({ section, sessionId, levers, snapsh
     return out
   }
 
-  const [states,  setStates]  = useState<Record<string, LeverState>>(initState)
-  const [saving,     setSaving]     = useState<string | null>(null)   // lever_id being saved
+  const [states,     setStates]     = useState<Record<string, LeverState>>(initState)
+  const [images,     setImages]     = useState<string[]>(
+    Array.isArray((section.content as { images?: string[] })?.images)
+      ? (section.content as { images: string[] }).images
+      : [],
+  )
+  const [saving,     setSaving]     = useState<string | null>(null)
   const [saved,      setSaved]      = useState<string | null>(null)
-  const [saveError,  setSaveError]  = useState<string | null>(null)  // lever_id that errored
+  const [saveError,  setSaveError]  = useState<string | null>(null)
   const debounceRefs = useRef<Record<string, ReturnType<typeof setTimeout>>>({})
 
   function update(leverId: string, patch: Partial<LeverState>) {
     setStates((prev) => ({ ...prev, [leverId]: { ...prev[leverId], ...patch } }))
 
-    // Debounce save per lever
     clearTimeout(debounceRefs.current[leverId])
     debounceRefs.current[leverId] = setTimeout(() => {
       saveOne(leverId, { ...states[leverId], ...patch })
@@ -119,6 +123,13 @@ export default function NorthStarUpdateForm({ section, sessionId, levers, snapsh
     setTimeout(() => setSaved((s) => s === leverId ? null : s), 2000)
   }, [sessionId])
 
+  async function saveImages(next: string[]) {
+    await getBrowserClient()
+      .from('session_sections')
+      .update({ content: { images: next } })
+      .eq('id', section.id)
+  }
+
   const groups = GROUPS.map(({ key, label }) => ({
     key,
     label,
@@ -155,6 +166,16 @@ export default function NorthStarUpdateForm({ section, sessionId, levers, snapsh
           </div>
         </section>
       ))}
+
+      {/* Images */}
+      <section>
+        <p className="type-eyebrow text-[#2969FF] mb-5">Images</p>
+        <ImageUploader
+          images={images}
+          folder={`${sessionId}/${section.id}`}
+          onChange={(imgs) => { setImages(imgs); saveImages(imgs) }}
+        />
+      </section>
     </div>
   )
 }

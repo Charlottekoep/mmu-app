@@ -12,7 +12,9 @@ type Content = {
   topic:        string
   duration_min: number
   demo_url:     string
+  body:         string
   watch_for:    string
+  images:       string[]
 }
 
 // ─── Component ────────────────────────────────────────────────────────────
@@ -49,9 +51,16 @@ export default function ShowAndTellSection({ section }: Props) {
 
   const content   = (section.content ?? {}) as Partial<Content>
   const presenter = members.find((m) => m.id === content.presenter_id)
+  const images    = content.images ?? []
 
   return (
     <DarkPageLayout>
+      <style>{`
+        .prose-table table { border-collapse: collapse; width: 100%; margin: 12px 0; }
+        .prose-table th, .prose-table td { border: 1px solid rgba(255,255,255,0.15); padding: 8px 12px; text-align: left; }
+        .prose-table th { background: rgba(255,255,255,0.08); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: rgba(255,255,255,0.9); }
+        .prose-table td { font-size: 14px; color: rgba(255,255,255,0.65); }
+      `}</style>
       <div className="h-screen overflow-y-auto px-14 pt-24 pb-20">
 
         {/* ── Header ─────────────────────────────────────────────────── */}
@@ -79,6 +88,14 @@ export default function ShowAndTellSection({ section }: Props) {
           </p>
         )}
 
+        {/* ── Body (rich text with optional table) ───────────────────── */}
+        {content.body && (
+          <div
+            className="prose-table mb-10 max-w-3xl text-[16px] leading-relaxed text-white/65 [&_p]:mb-3 [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_li]:mb-1.5 [&_strong]:font-bold [&_strong]:text-white [&_em]:italic"
+            dangerouslySetInnerHTML={{ __html: content.body }}
+          />
+        )}
+
         {/* ── Pull quote: watch for ───────────────────────────────────── */}
         {content.watch_for && (
           <blockquote className="mb-12 border-l-4 border-primary/50 pl-6 py-2 max-w-2xl">
@@ -91,7 +108,7 @@ export default function ShowAndTellSection({ section }: Props) {
 
         {/* ── Demo launch button ─────────────────────────────────────── */}
         {content.demo_url && (
-          <div className="mb-14">
+          <div className="mb-10">
             <a
               href={content.demo_url}
               target="_blank"
@@ -107,11 +124,13 @@ export default function ShowAndTellSection({ section }: Props) {
           </div>
         )}
 
+        {/* ── Images ─────────────────────────────────────────────────── */}
+        <ImageGrid images={images} />
+
         {/* ── Feedback area ──────────────────────────────────────────── */}
-        <div>
+        <div className="mt-10">
           <p className="type-eyebrow text-white/20 mb-4">Reactions</p>
           <div className="flex flex-wrap gap-4">
-            {/* Placeholder sticky notes — wire to real-time reactions later */}
             {(['👍', '💡', '🔥', '🤔'].map((emoji, i) => (
               <div
                 key={i}
@@ -131,7 +150,25 @@ export default function ShowAndTellSection({ section }: Props) {
   )
 }
 
-// ─── Avatar helper ────────────────────────────────────────────────────────
+// ─── Helpers ──────────────────────────────────────────────────────────────
+
+function ImageGrid({ images }: { images: string[] }) {
+  if (!images.length) return null
+  return (
+    <div className={`grid gap-3 mb-10 ${images.length === 1 ? 'grid-cols-1 max-w-2xl' : images.length === 2 ? 'grid-cols-2' : 'grid-cols-3'}`}>
+      {images.map((url, i) => (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          key={i}
+          src={url}
+          alt=""
+          className="w-full rounded-xl object-cover border border-white/10"
+          style={{ maxHeight: '360px' }}
+        />
+      ))}
+    </div>
+  )
+}
 
 function MemberAvatar({ member, size }: { member: TeamMember | undefined; size: number }) {
   const s = `${size}px`

@@ -44,7 +44,7 @@ function SectionRenderer({
     case 'just_humans':
       return <JustHumansSection section={section} sessionId={sessionId} />
     case 'north_star':
-      return <NorthStarSection sessionId={sessionId} />
+      return <NorthStarSection section={section} sessionId={sessionId} />
     case 'deep_dive':
       return <DeepDiveSection section={section} sessionId={sessionId} />
     case 'show_and_tell':
@@ -166,7 +166,7 @@ export default function PresentationShell({ session, sections }: Props) {
 
         {/* Session label — centre */}
         <span className="type-eyebrow text-white/30">
-          MMU&nbsp;#{session.session_number}
+          MMU&nbsp;{new Date(session.date + 'T00:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}
         </span>
 
         {/* Edit — top right */}

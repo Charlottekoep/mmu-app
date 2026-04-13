@@ -13,6 +13,7 @@ type Content = {
   presenter_id: string
   concept:      string
   quiz:         QuizItem[]
+  images:       string[]
 }
 
 type RankedEntry = LeaderboardEntry & { member: TeamMember }
@@ -67,6 +68,7 @@ export default function TheLeagueSection({ section }: Props) {
   const content   = (section.content ?? {}) as Partial<Content>
   const presenter = members.find((m) => m.id === content.presenter_id)
   const quiz      = (content.quiz ?? []).filter((q) => q.question)
+  const images    = content.images ?? []
 
   // Join leaderboard with members and sort by score desc
   const ranked: RankedEntry[] = leaderboard
@@ -172,6 +174,9 @@ export default function TheLeagueSection({ section }: Props) {
               </section>
             )}
 
+            {/* ── Images ───────────────────────────────────────────── */}
+            <ImageGrid images={images} />
+
           </div>
 
           {/* ── Leaderboard ──────────────────────────────────────────── */}
@@ -233,7 +238,25 @@ export default function TheLeagueSection({ section }: Props) {
   )
 }
 
-// ─── Avatar helper ────────────────────────────────────────────────────────
+// ─── Helpers ──────────────────────────────────────────────────────────────
+
+function ImageGrid({ images }: { images: string[] }) {
+  if (!images.length) return null
+  return (
+    <div className={`grid gap-3 ${images.length === 1 ? 'grid-cols-1 max-w-2xl' : images.length === 2 ? 'grid-cols-2' : 'grid-cols-3'}`}>
+      {images.map((url, i) => (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          key={i}
+          src={url}
+          alt=""
+          className="w-full rounded-xl object-cover border border-white/10"
+          style={{ maxHeight: '360px' }}
+        />
+      ))}
+    </div>
+  )
+}
 
 function MemberAvatar({ member, size }: { member: TeamMember | undefined; size: number }) {
   const s = `${size}px`

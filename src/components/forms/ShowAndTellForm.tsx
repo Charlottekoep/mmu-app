@@ -3,12 +3,14 @@
 import { useState, useCallback } from 'react'
 import { getBrowserClient } from '@/lib/supabase'
 import type { SessionSection, TeamMember } from '@/lib/types'
+import RichTextEditor from '@/components/RichTextEditor'
+import ImageUploader  from '@/components/ImageUploader'
 
 // ─── Shared styles ────────────────────────────────────────────────────────
 
-const fieldLabel = 'block text-[11px] font-bold uppercase tracking-widest text-[#2969FF] mb-1.5'
-const inputCls   = 'w-full rounded-lg border border-[#DEDEDE] bg-white px-3 py-2.5 text-[14px] text-[#262626] placeholder-[#969696] outline-none transition-colors focus:border-[#2969FF]'
-const selectCls  = 'w-full rounded-lg border border-[#DEDEDE] bg-white px-3 py-2.5 text-[14px] text-[#262626] outline-none transition-colors focus:border-[#2969FF] appearance-none'
+const fieldLabel  = 'block text-[11px] font-bold uppercase tracking-widest text-[#2969FF] mb-1.5'
+const inputCls    = 'w-full rounded-lg border border-[#DEDEDE] bg-white px-3 py-2.5 text-[14px] text-[#262626] placeholder-[#969696] outline-none transition-colors focus:border-[#2969FF]'
+const selectCls   = 'w-full rounded-lg border border-[#DEDEDE] bg-white px-3 py-2.5 text-[14px] text-[#262626] outline-none transition-colors focus:border-[#2969FF] appearance-none'
 const textareaCls = `${inputCls} resize-none`
 
 // ─── Types ────────────────────────────────────────────────────────────────
@@ -18,7 +20,9 @@ type Content = {
   topic:        string
   duration_min: number
   demo_url:     string
+  body:         string
   watch_for:    string
+  images:       string[]
 }
 
 type Props = {
@@ -29,7 +33,7 @@ type Props = {
 
 // ─── Component ────────────────────────────────────────────────────────────
 
-export default function ShowAndTellForm({ section, teamMembers }: Props) {
+export default function ShowAndTellForm({ section, sessionId, teamMembers }: Props) {
   const raw = section.content as Partial<Content>
 
   const [is_active,    setIsActive]    = useState(section.is_active)
@@ -37,7 +41,9 @@ export default function ShowAndTellForm({ section, teamMembers }: Props) {
   const [topic,        setTopic]       = useState(raw.topic        ?? '')
   const [duration_min, setDuration]    = useState<number>(raw.duration_min ?? 10)
   const [demo_url,     setDemoUrl]     = useState(raw.demo_url     ?? '')
+  const [body,         setBody]        = useState(raw.body         ?? '')
   const [watch_for,    setWatchFor]    = useState(raw.watch_for    ?? '')
+  const [images,       setImages]      = useState<string[]>(raw.images ?? [])
   const [saving,    setSaving]    = useState(false)
   const [saved,     setSaved]     = useState(false)
   const [saveError, setSaveError] = useState(false)
@@ -49,7 +55,9 @@ export default function ShowAndTellForm({ section, teamMembers }: Props) {
       topic:        patch.topic        ?? topic,
       duration_min: patch.duration_min ?? duration_min,
       demo_url:     patch.demo_url     ?? demo_url,
+      body:         patch.body         ?? body,
       watch_for:    patch.watch_for    ?? watch_for,
+      images:       patch.images       ?? images,
     }
     const active = patch.is_active !== undefined ? patch.is_active : is_active
     const { error: err } = await getBrowserClient()
@@ -59,7 +67,7 @@ export default function ShowAndTellForm({ section, teamMembers }: Props) {
     if (err) { setSaving(false); setSaveError(true); setTimeout(() => setSaveError(false), 3000); return }
     setSaving(false); setSaved(true)
     setTimeout(() => setSaved(false), 2000)
-  }, [presenter_id, topic, duration_min, demo_url, watch_for, is_active, section.id])
+  }, [presenter_id, topic, duration_min, demo_url, body, watch_for, images, is_active, section.id])
 
   function toggleActive() {
     const next = !is_active
@@ -147,6 +155,18 @@ export default function ShowAndTellForm({ section, teamMembers }: Props) {
         />
       </div>
 
+      {/* Body (rich text with table support) */}
+      <div>
+        <label className={fieldLabel}>Content</label>
+        <RichTextEditor
+          value={body}
+          onChange={(html) => { setBody(html); persist({ body: html }) }}
+          placeholder="Context, background, key points…"
+          minHeight={160}
+          showTable
+        />
+      </div>
+
       {/* Watch for */}
       <div>
         <label className={fieldLabel}>What to watch for</label>
@@ -157,6 +177,16 @@ export default function ShowAndTellForm({ section, teamMembers }: Props) {
           placeholder="Highlight key moments or things for the team to pay attention to…"
           rows={4}
           className={textareaCls}
+        />
+      </div>
+
+      {/* Images */}
+      <div>
+        <label className={fieldLabel}>Images</label>
+        <ImageUploader
+          images={images}
+          folder={`${sessionId}/${section.id}`}
+          onChange={(imgs) => { setImages(imgs); persist({ images: imgs }) }}
         />
       </div>
     </div>

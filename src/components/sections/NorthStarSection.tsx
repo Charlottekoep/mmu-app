@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { getBrowserClient } from '@/lib/supabase'
-import type { Lever } from '@/lib/types'
+import type { Lever, SessionSection } from '@/lib/types'
 import DarkPageLayout from '@/components/DarkPageLayout'
 import FlipCard from '@/components/FlipCard'
 
@@ -18,12 +18,16 @@ const GROUPS: { key: string; label: string }[] = [
 
 // ─── Component ────────────────────────────────────────────────────────────
 
-type Props = { sessionId: string }
+type Props = { section: SessionSection; sessionId: string }
 
-export default function NorthStarSection({ sessionId }: Props) {
+export default function NorthStarSection({ section, sessionId }: Props) {
   const [levers, setLevers]   = useState<Lever[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError]     = useState(false)
+
+  const images = Array.isArray((section.content as { images?: string[] })?.images)
+    ? (section.content as { images: string[] }).images
+    : []
 
   useEffect(() => {
     let cancelled = false
@@ -91,11 +95,6 @@ export default function NorthStarSection({ sessionId }: Props) {
 
   return (
     <DarkPageLayout>
-      {/*
-        h-screen overflow-y-auto: scroll section content within viewport.
-        pt-24: clear the fixed top bar (~80px) + breathing room.
-        pb-20: clear the fixed progress dots.
-      */}
       <div className="h-screen overflow-y-auto px-14 pt-24 pb-20">
 
         {/* ── Heading ──────────────────────────────────────────────── */}
@@ -129,6 +128,22 @@ export default function NorthStarSection({ sessionId }: Props) {
             </section>
           ))}
         </div>
+
+        {/* ── Images ───────────────────────────────────────────────── */}
+        {images.length > 0 && (
+          <div className={`mt-12 grid gap-3 ${images.length === 1 ? 'grid-cols-1 max-w-2xl' : images.length === 2 ? 'grid-cols-2' : 'grid-cols-3'}`}>
+            {images.map((url, i) => (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                key={i}
+                src={url}
+                alt=""
+                className="w-full rounded-xl object-cover border border-white/10"
+                style={{ maxHeight: '360px' }}
+              />
+            ))}
+          </div>
+        )}
 
       </div>
     </DarkPageLayout>

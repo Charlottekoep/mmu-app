@@ -4,6 +4,7 @@ import { useState, useCallback } from 'react'
 import { getBrowserClient } from '@/lib/supabase'
 import type { SessionSection, TeamMember } from '@/lib/types'
 import RichTextEditor from '@/components/RichTextEditor'
+import ImageUploader  from '@/components/ImageUploader'
 
 // ─── Shared field styles ──────────────────────────────────────────────────
 
@@ -16,6 +17,7 @@ type Content = {
   presenter_id: string
   subject_id:   string
   spotlight:    string
+  images:       string[]
 }
 
 type Props = {
@@ -26,12 +28,13 @@ type Props = {
 
 // ─── Component ────────────────────────────────────────────────────────────
 
-export default function JustHumansForm({ section, teamMembers }: Props) {
+export default function JustHumansForm({ section, sessionId, teamMembers }: Props) {
   const raw = section.content as Partial<Content>
 
   const [presenter_id, setPresenter] = useState(raw.presenter_id ?? '')
   const [subject_id,   setSubject]   = useState(raw.subject_id   ?? '')
   const [spotlight,    setSpotlight] = useState(raw.spotlight    ?? '')
+  const [images,       setImages]    = useState<string[]>(raw.images ?? [])
   const [saving,     setSaving]     = useState(false)
   const [saved,      setSaved]      = useState(false)
   const [saveError,  setSaveError]  = useState(false)
@@ -42,6 +45,7 @@ export default function JustHumansForm({ section, teamMembers }: Props) {
       presenter_id: patch.presenter_id ?? presenter_id,
       subject_id:   patch.subject_id   ?? subject_id,
       spotlight:    patch.spotlight    ?? spotlight,
+      images:       patch.images       ?? images,
     }
     const { error: err } = await getBrowserClient()
       .from('session_sections')
@@ -54,7 +58,7 @@ export default function JustHumansForm({ section, teamMembers }: Props) {
     }
     setSaving(false); setSaved(true)
     setTimeout(() => setSaved(false), 2000)
-  }, [presenter_id, subject_id, spotlight, section.id])
+  }, [presenter_id, subject_id, spotlight, images, section.id])
 
   const presenter = teamMembers.find((m) => m.id === presenter_id)
   const subject   = teamMembers.find((m) => m.id === subject_id)
@@ -107,6 +111,16 @@ export default function JustHumansForm({ section, teamMembers }: Props) {
           onChange={(html) => { setSpotlight(html); save({ spotlight: html }) }}
           placeholder="Fun facts, achievements, personal highlights…"
           minHeight={160}
+        />
+      </div>
+
+      {/* Images */}
+      <div>
+        <label className={fieldLabel}>Images</label>
+        <ImageUploader
+          images={images}
+          folder={`${sessionId}/${section.id}`}
+          onChange={(imgs) => { setImages(imgs); save({ images: imgs }) }}
         />
       </div>
     </div>

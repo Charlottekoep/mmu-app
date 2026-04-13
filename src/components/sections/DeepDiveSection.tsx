@@ -16,6 +16,7 @@ type Content = {
   body:         string
   links:        LinkItem[]
   image_url:    string
+  images:       string[]
 }
 
 type Props = { section: SessionSection; sessionId: string }
@@ -68,6 +69,7 @@ export default function DeepDiveSection({ section, sessionId }: Props) {
 
   const content   = (section.content ?? {}) as Partial<Content>
   const presenter = members.find((m) => m.id === content.presenter_id)
+  const images    = content.images ?? []
 
   // Resolve lever — use snapshot RAG if available
   const baseLever = levers.find((l) => l.id === content.lever_id)
@@ -80,6 +82,12 @@ export default function DeepDiveSection({ section, sessionId }: Props) {
 
   return (
     <DarkPageLayout>
+      <style>{`
+        .prose-table table { border-collapse: collapse; width: 100%; margin: 12px 0; }
+        .prose-table th, .prose-table td { border: 1px solid rgba(255,255,255,0.15); padding: 8px 12px; text-align: left; }
+        .prose-table th { background: rgba(255,255,255,0.08); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: rgba(255,255,255,0.9); }
+        .prose-table td { font-size: 14px; color: rgba(255,255,255,0.65); }
+      `}</style>
       <div className="h-screen overflow-y-auto px-14 pt-24 pb-20">
 
         {/* ── Top bar: lever badge + presenter ───────────────────────── */}
@@ -131,14 +139,17 @@ export default function DeepDiveSection({ section, sessionId }: Props) {
         {/* ── Body ───────────────────────────────────────────────────── */}
         {content.body && (
           <div
-            className="mb-10 max-w-3xl text-[16px] leading-relaxed text-white/65 [&_p]:mb-3 [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_li]:mb-1.5 [&_strong]:font-bold [&_strong]:text-white [&_em]:italic"
+            className="prose-table mb-10 max-w-3xl text-[16px] leading-relaxed text-white/65 [&_p]:mb-3 [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_li]:mb-1.5 [&_strong]:font-bold [&_strong]:text-white [&_em]:italic"
             dangerouslySetInnerHTML={{ __html: content.body }}
           />
         )}
 
+        {/* ── Additional images ──────────────────────────────────────── */}
+        <ImageGrid images={images} />
+
         {/* ── Links ──────────────────────────────────────────────────── */}
         {links.length > 0 && (
-          <div className="flex flex-wrap gap-3">
+          <div className="mt-10 flex flex-wrap gap-3">
             {links.map((link, i) => (
               <a
                 key={i}
@@ -161,7 +172,25 @@ export default function DeepDiveSection({ section, sessionId }: Props) {
   )
 }
 
-// ─── Avatar helper ────────────────────────────────────────────────────────
+// ─── Helpers ──────────────────────────────────────────────────────────────
+
+function ImageGrid({ images }: { images: string[] }) {
+  if (!images.length) return null
+  return (
+    <div className={`grid gap-3 mb-10 ${images.length === 1 ? 'grid-cols-1 max-w-2xl' : images.length === 2 ? 'grid-cols-2' : 'grid-cols-3'}`}>
+      {images.map((url, i) => (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          key={i}
+          src={url}
+          alt=""
+          className="w-full rounded-xl object-cover border border-white/10"
+          style={{ maxHeight: '360px' }}
+        />
+      ))}
+    </div>
+  )
+}
 
 function MemberAvatar({ member, size }: { member: TeamMember | undefined; size: number }) {
   const s = `${size}px`

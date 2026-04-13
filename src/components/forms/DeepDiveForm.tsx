@@ -4,6 +4,7 @@ import { useState, useCallback } from 'react'
 import { getBrowserClient } from '@/lib/supabase'
 import type { SessionSection, TeamMember, Lever } from '@/lib/types'
 import RichTextEditor from '@/components/RichTextEditor'
+import ImageUploader  from '@/components/ImageUploader'
 
 // ─── Shared styles ────────────────────────────────────────────────────────
 
@@ -22,6 +23,7 @@ type Content = {
   body:         string
   links:        LinkItem[]
   image_url:    string
+  images:       string[]
 }
 
 type Props = {
@@ -43,7 +45,7 @@ const FOCUS_LABELS: Record<string, string> = {
 
 // ─── Component ────────────────────────────────────────────────────────────
 
-export default function DeepDiveForm({ section, teamMembers, levers }: Props) {
+export default function DeepDiveForm({ section, sessionId, teamMembers, levers }: Props) {
   const raw = section.content as Partial<Content>
 
   const [is_active,    setIsActive]     = useState(section.is_active)
@@ -55,6 +57,7 @@ export default function DeepDiveForm({ section, teamMembers, levers }: Props) {
     (raw.links ?? []).length > 0 ? (raw.links as LinkItem[]) : [{ url: '', label: '' }],
   )
   const [image_url,    setImageUrl]     = useState(raw.image_url    ?? '')
+  const [images,       setImages]       = useState<string[]>(raw.images ?? [])
   const [uploading,    setUploading]    = useState(false)
   const [saving,       setSaving]       = useState(false)
   const [saved,        setSaved]        = useState(false)
@@ -69,6 +72,7 @@ export default function DeepDiveForm({ section, teamMembers, levers }: Props) {
       body:         patch.body         ?? body,
       links:        patch.links        ?? links,
       image_url:    patch.image_url    ?? image_url,
+      images:       patch.images       ?? images,
     }
     const active = patch.is_active !== undefined ? patch.is_active : is_active
     const { error: err } = await getBrowserClient()
@@ -78,7 +82,7 @@ export default function DeepDiveForm({ section, teamMembers, levers }: Props) {
     if (err) { setSaving(false); setSaveError(true); setTimeout(() => setSaveError(false), 3000); return }
     setSaving(false); setSaved(true)
     setTimeout(() => setSaved(false), 2000)
-  }, [title, presenter_id, lever_id, body, links, image_url, is_active, section.id])
+  }, [title, presenter_id, lever_id, body, links, image_url, images, is_active, section.id])
 
   function toggleActive() {
     const next = !is_active
@@ -86,16 +90,16 @@ export default function DeepDiveForm({ section, teamMembers, levers }: Props) {
     persist({ is_active: next })
   }
 
-  // Image upload
-  async function handleImage(e: React.ChangeEvent<HTMLInputElement>) {
+  // Cover image upload
+  async function handleCoverImage(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
     if (!file) return
     setUploading(true)
-    const path = `deep-dive/${section.id}/${Date.now()}-${file.name}`
+    const path = `${sessionId}/${section.id}/cover-${Date.now()}-${file.name}`
     const supabase = getBrowserClient()
-    const { data } = await supabase.storage.from('mmu-uploads').upload(path, file, { upsert: true })
+    const { data } = await supabase.storage.from('session-images').upload(path, file, { upsert: true })
     if (data) {
-      const { data: pub } = supabase.storage.from('mmu-uploads').getPublicUrl(data.path)
+      const { data: pub } = supabase.storage.from('session-images').getPublicUrl(data.path)
       setImageUrl(pub.publicUrl)
       persist({ image_url: pub.publicUrl })
     }
@@ -197,10 +201,11 @@ export default function DeepDiveForm({ section, teamMembers, levers }: Props) {
           onChange={(html) => { setBody(html); persist({ body: html }) }}
           placeholder="Context, findings, analysis…"
           minHeight={200}
+          showTable
         />
       </div>
 
-      {/* Image */}
+      {/* Cover image */}
       <div>
         <label className={fieldLabel}>Cover image</label>
         <div className="space-y-3">
@@ -212,10 +217,20 @@ export default function DeepDiveForm({ section, teamMembers, levers }: Props) {
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
               <path d="M8 3v10M3 8h10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
             </svg>
-            {uploading ? 'Uploading…' : 'Upload image'}
-            <input type="file" accept="image/*" className="sr-only" onChange={handleImage} />
+            {uploading ? 'Uploading…' : 'Upload cover image'}
+            <input type="file" accept="image/*" className="sr-only" onChange={handleCoverImage} />
           </label>
         </div>
+      </div>
+
+      {/* Additional images */}
+      <div>
+        <label className={fieldLabel}>Additional images</label>
+        <ImageUploader
+          images={images}
+          folder={`${sessionId}/${section.id}`}
+          onChange={(imgs) => { setImages(imgs); persist({ images: imgs }) }}
+        />
       </div>
 
       {/* Links */}

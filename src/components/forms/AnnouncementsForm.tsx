@@ -3,6 +3,7 @@
 import { useState, useCallback } from 'react'
 import { getBrowserClient } from '@/lib/supabase'
 import type { SessionSection, TeamMember } from '@/lib/types'
+import ImageUploader from '@/components/ImageUploader'
 
 // ─── Shared styles ────────────────────────────────────────────────────────
 
@@ -21,6 +22,7 @@ type AnnouncementItem = {
 type Content = {
   presenter_id: string
   items:        AnnouncementItem[]
+  images:       string[]
 }
 
 type Props = {
@@ -31,7 +33,7 @@ type Props = {
 
 // ─── Component ────────────────────────────────────────────────────────────
 
-export default function AnnouncementsForm({ section, teamMembers }: Props) {
+export default function AnnouncementsForm({ section, sessionId, teamMembers }: Props) {
   const raw = section.content as Partial<Content>
 
   const [presenter_id, setPresenter] = useState(raw.presenter_id ?? '')
@@ -40,6 +42,7 @@ export default function AnnouncementsForm({ section, teamMembers }: Props) {
       ? (raw.items as AnnouncementItem[])
       : [{ text: '', url: '', image_url: '' }],
   )
+  const [images,     setImages]     = useState<string[]>(raw.images ?? [])
   const [uploading,  setUploading]  = useState<number | null>(null)
   const [saving,     setSaving]     = useState(false)
   const [saved,      setSaved]      = useState(false)
@@ -50,6 +53,7 @@ export default function AnnouncementsForm({ section, teamMembers }: Props) {
     const content: Content = {
       presenter_id: patch.presenter_id ?? presenter_id,
       items:        patch.items        ?? items,
+      images:       patch.images       ?? images,
     }
     const { error: err } = await getBrowserClient()
       .from('session_sections')
@@ -58,7 +62,7 @@ export default function AnnouncementsForm({ section, teamMembers }: Props) {
     if (err) { setSaving(false); setSaveError(true); setTimeout(() => setSaveError(false), 3000); return }
     setSaving(false); setSaved(true)
     setTimeout(() => setSaved(false), 2000)
-  }, [presenter_id, items, section.id])
+  }, [presenter_id, items, images, section.id])
 
   function updateItem(i: number, field: keyof AnnouncementItem, value: string) {
     const next = items.map((item, idx) => idx === i ? { ...item, [field]: value } : item)
@@ -66,15 +70,15 @@ export default function AnnouncementsForm({ section, teamMembers }: Props) {
     persist({ items: next })
   }
 
-  async function handleImage(i: number, e: React.ChangeEvent<HTMLInputElement>) {
+  async function handleItemImage(i: number, e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
     if (!file) return
     setUploading(i)
-    const path = `announcements/${section.id}/${Date.now()}-${file.name}`
+    const path = `${sessionId}/${section.id}/item-${i}-${Date.now()}-${file.name}`
     const supabase = getBrowserClient()
-    const { data } = await supabase.storage.from('mmu-uploads').upload(path, file, { upsert: true })
+    const { data } = await supabase.storage.from('session-images').upload(path, file, { upsert: true })
     if (data) {
-      const { data: pub } = supabase.storage.from('mmu-uploads').getPublicUrl(data.path)
+      const { data: pub } = supabase.storage.from('session-images').getPublicUrl(data.path)
       updateItem(i, 'image_url', pub.publicUrl)
     }
     setUploading(null)
@@ -146,7 +150,7 @@ export default function AnnouncementsForm({ section, teamMembers }: Props) {
                 className={inputCls}
               />
 
-              {/* Image */}
+              {/* Per-item image */}
               <div>
                 {item.image_url && (
                   // eslint-disable-next-line @next/next/no-img-element
@@ -156,8 +160,8 @@ export default function AnnouncementsForm({ section, teamMembers }: Props) {
                   <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
                     <path d="M7 2v10M2 7h10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
                   </svg>
-                  {uploading === i ? 'Uploading…' : 'Add image'}
-                  <input type="file" accept="image/*" className="sr-only" onChange={(e) => handleImage(i, e)} />
+                  {uploading === i ? 'Uploading…' : 'Add card image'}
+                  <input type="file" accept="image/*" className="sr-only" onChange={(e) => handleItemImage(i, e)} />
                 </label>
               </div>
             </div>
@@ -171,6 +175,16 @@ export default function AnnouncementsForm({ section, teamMembers }: Props) {
             + Add announcement
           </button>
         </div>
+      </div>
+
+      {/* Section-level images */}
+      <div>
+        <label className={fieldLabel}>Section images</label>
+        <ImageUploader
+          images={images}
+          folder={`${sessionId}/${section.id}`}
+          onChange={(imgs) => { setImages(imgs); persist({ images: imgs }) }}
+        />
       </div>
     </div>
   )

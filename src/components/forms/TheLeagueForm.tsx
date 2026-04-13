@@ -4,6 +4,7 @@ import { useState, useCallback } from 'react'
 import { getBrowserClient } from '@/lib/supabase'
 import type { SessionSection, TeamMember, LeaderboardEntry } from '@/lib/types'
 import RichTextEditor from '@/components/RichTextEditor'
+import ImageUploader  from '@/components/ImageUploader'
 
 // ─── Shared styles ────────────────────────────────────────────────────────
 
@@ -19,6 +20,7 @@ type Content = {
   presenter_id:  string
   concept:       string
   quiz:          QuizItem[]
+  images:        string[]
 }
 
 type ScoreDelta = Record<string, number>   // teamMemberId → delta (can be negative)
@@ -32,7 +34,7 @@ type Props = {
 
 // ─── Component ────────────────────────────────────────────────────────────
 
-export default function TheLeagueForm({ section, teamMembers, leaderboard }: Props) {
+export default function TheLeagueForm({ section, sessionId, teamMembers, leaderboard }: Props) {
   const raw = section.content as Partial<Content>
 
   const [is_active,    setIsActive]   = useState(section.is_active)
@@ -41,6 +43,7 @@ export default function TheLeagueForm({ section, teamMembers, leaderboard }: Pro
   const [quiz,         setQuiz]       = useState<QuizItem[]>(
     (raw.quiz ?? []).length > 0 ? (raw.quiz as QuizItem[]) : [{ question: '', answer: '' }],
   )
+  const [images,       setImages]     = useState<string[]>(raw.images ?? [])
   const [deltas,       setDeltas]     = useState<ScoreDelta>({})
   const [saving,       setSaving]     = useState(false)
   const [saved,        setSaved]      = useState(false)
@@ -56,6 +59,7 @@ export default function TheLeagueForm({ section, teamMembers, leaderboard }: Pro
       presenter_id: patch.presenter_id ?? presenter_id,
       concept:      patch.concept      ?? concept,
       quiz:         patch.quiz         ?? quiz,
+      images:       patch.images       ?? images,
     }
     const active = patch.is_active !== undefined ? patch.is_active : is_active
     const { error: err } = await getBrowserClient()
@@ -65,7 +69,7 @@ export default function TheLeagueForm({ section, teamMembers, leaderboard }: Pro
     if (err) { setSaving(false); setSaveError(true); setTimeout(() => setSaveError(false), 3000); return }
     setSaving(false); setSaved(true)
     setTimeout(() => setSaved(false), 2000)
-  }, [presenter_id, concept, quiz, is_active, section.id])
+  }, [presenter_id, concept, quiz, images, is_active, section.id])
 
   function toggleActive() {
     const next = !is_active
@@ -98,9 +102,7 @@ export default function TheLeagueForm({ section, teamMembers, leaderboard }: Pro
       .update({ score: newScore, updated_at: new Date().toISOString() })
       .eq('team_member_id', memberId)
     setScoreSaving(null)
-    // Reset delta for this member
     setDeltas((d) => ({ ...d, [memberId]: 0 }))
-    // Update local scoreMap (optimistic — re-render will pick up from server on next load)
     if (entry) entry.score = newScore
   }
 
@@ -194,6 +196,16 @@ export default function TheLeagueForm({ section, teamMembers, leaderboard }: Pro
             + Add question
           </button>
         </div>
+      </div>
+
+      {/* Images */}
+      <div>
+        <label className={fieldLabel}>Images</label>
+        <ImageUploader
+          images={images}
+          folder={`${sessionId}/${section.id}`}
+          onChange={(imgs) => { setImages(imgs); persist({ images: imgs }) }}
+        />
       </div>
 
       {/* Leaderboard score adjustments */}

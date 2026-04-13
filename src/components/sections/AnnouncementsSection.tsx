@@ -16,6 +16,7 @@ type AnnouncementItem = {
 type Content = {
   presenter_id: string
   items:        AnnouncementItem[]
+  images:       string[]
 }
 
 // ─── Component ────────────────────────────────────────────────────────────
@@ -53,6 +54,7 @@ export default function AnnouncementsSection({ section }: Props) {
   const content   = (section.content ?? {}) as Partial<Content>
   const presenter = members.find((m) => m.id === content.presenter_id)
   const items     = (content.items ?? []).filter((it) => it.text)
+  const images    = content.images ?? []
 
   return (
     <DarkPageLayout>
@@ -79,19 +81,40 @@ export default function AnnouncementsSection({ section }: Props) {
         {items.length === 0 ? (
           <p className="type-eyebrow text-white/65">No announcements yet</p>
         ) : (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 mb-10">
             {items.map((item, i) => (
               <AnnouncementCard key={i} item={item} />
             ))}
           </div>
         )}
 
+        {/* ── Section images ─────────────────────────────────────────── */}
+        <ImageGrid images={images} />
+
       </div>
     </DarkPageLayout>
   )
 }
 
-// ─── Announcement card ────────────────────────────────────────────────────
+// ─── Helpers ──────────────────────────────────────────────────────────────
+
+function ImageGrid({ images }: { images: string[] }) {
+  if (!images.length) return null
+  return (
+    <div className={`grid gap-3 ${images.length === 1 ? 'grid-cols-1 max-w-2xl' : images.length === 2 ? 'grid-cols-2' : 'grid-cols-3'}`}>
+      {images.map((url, i) => (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          key={i}
+          src={url}
+          alt=""
+          className="w-full rounded-xl object-cover border border-white/10"
+          style={{ maxHeight: '360px' }}
+        />
+      ))}
+    </div>
+  )
+}
 
 function AnnouncementCard({ item }: { item: AnnouncementItem }) {
   const inner = (
@@ -129,8 +152,6 @@ function AnnouncementCard({ item }: { item: AnnouncementItem }) {
   }
   return inner
 }
-
-// ─── Avatar helper ────────────────────────────────────────────────────────
 
 function MemberAvatar({ member, size }: { member: TeamMember | undefined; size: number }) {
   const s = `${size}px`
