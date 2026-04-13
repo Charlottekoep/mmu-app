@@ -6,9 +6,9 @@ import type { SessionSection, TeamMember } from '@/lib/types'
 
 // ─── Shared styles ────────────────────────────────────────────────────────
 
-const fieldLabel = 'block text-[11px] font-bold uppercase tracking-widest text-white/30 mb-1.5'
-const inputCls   = 'w-full rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2.5 text-[14px] text-white placeholder-white/20 outline-none transition-colors focus:border-primary/50'
-const selectCls  = 'w-full rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2.5 text-[14px] text-white outline-none transition-colors focus:border-primary/50 appearance-none'
+const fieldLabel = 'block text-[11px] font-bold uppercase tracking-widest text-[#2969FF] mb-1.5'
+const inputCls   = 'w-full rounded-lg border border-[#DEDEDE] bg-white px-3 py-2.5 text-[14px] text-[#262626] placeholder-[#969696] outline-none transition-colors focus:border-[#2969FF]'
+const selectCls  = 'w-full rounded-lg border border-[#DEDEDE] bg-white px-3 py-2.5 text-[14px] text-[#262626] outline-none transition-colors focus:border-[#2969FF] appearance-none'
 const textareaCls = `${inputCls} resize-none`
 
 // ─── Types ────────────────────────────────────────────────────────────────
@@ -72,15 +72,15 @@ export default function ShowAndTellForm({ section, teamMembers }: Props) {
       <SaveIndicator saving={saving} saved={saved} error={saveError} />
 
       {/* Active toggle */}
-      <div className="flex items-center justify-between rounded-xl border border-white/10 bg-white/[0.04] px-5 py-4">
+      <div className="flex items-center justify-between rounded-xl border border-[#DEDEDE] bg-white px-5 py-4">
         <div>
-          <p className="text-[14px] font-medium text-white">Include in this session</p>
-          <p className="text-[12px] text-white/30">Toggle off to skip Show &amp; Tell this week</p>
+          <p className="text-[14px] font-medium text-[#262626]">Include in this session</p>
+          <p className="text-[12px] text-[#5A5A5A]">Toggle off to skip Show &amp; Tell this week</p>
         </div>
         <button
           type="button"
           onClick={toggleActive}
-          className={`relative h-6 w-11 flex-shrink-0 rounded-full transition-colors ${is_active ? 'bg-primary' : 'bg-white/15'}`}
+          className={`relative h-6 w-11 flex-shrink-0 rounded-full transition-colors ${is_active ? 'bg-primary' : 'bg-[#DEDEDE]'}`}
           role="switch"
           aria-checked={is_active}
         >
@@ -91,7 +91,7 @@ export default function ShowAndTellForm({ section, teamMembers }: Props) {
       </div>
 
       {!is_active && (
-        <p className="text-[13px] text-white/30 italic">This section is currently hidden from the presentation.</p>
+        <p className="text-[13px] text-[#969696] italic">This section is currently hidden from the presentation.</p>
       )}
 
       {/* Presenter */}
@@ -166,7 +166,7 @@ export default function ShowAndTellForm({ section, teamMembers }: Props) {
 function SaveIndicator({ saving, saved, error }: { saving: boolean; saved: boolean; error: boolean }) {
   if (!saving && !saved && !error) return null
   return (
-    <div className={`fixed bottom-6 right-8 z-10 rounded-full px-4 py-2 text-[12px] backdrop-blur-sm ${error ? 'bg-red/20 text-red' : 'bg-white/10 text-white/60'}`}>
+    <div className={`fixed bottom-6 right-8 z-10 rounded-full px-4 py-2 text-[12px] shadow-md ${error ? 'bg-red text-white' : 'bg-[#262626] text-white'}`}>
       {saving ? 'Saving…' : error ? 'Save failed' : 'Saved ✓'}
     </div>
   )

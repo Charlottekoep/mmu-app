@@ -129,14 +129,14 @@ export default function NorthStarUpdateForm({ section, sessionId, levers, snapsh
     <div className="px-8 py-10 space-y-12">
       {/* Global save indicator */}
       {(saving || saved || saveError) && (
-        <div className={`fixed bottom-6 right-8 z-10 rounded-full px-4 py-2 text-[12px] backdrop-blur-sm ${saveError ? 'bg-red/20 text-red' : 'bg-white/10 text-white/60'}`}>
+        <div className={`fixed bottom-6 right-8 z-10 rounded-full px-4 py-2 text-[12px] shadow-md ${saveError ? 'bg-red text-white' : 'bg-[#262626] text-white'}`}>
           {saving ? 'Saving…' : saveError ? 'Save failed' : 'Saved ✓'}
         </div>
       )}
 
       {groups.map(({ key, label, levers: groupLevers }) => (
         <section key={key}>
-          <p className="type-eyebrow text-white/30 mb-5">{label}</p>
+          <p className="type-eyebrow text-[#2969FF] mb-5">{label}</p>
           <div className="space-y-3">
             {groupLevers.map((lever) => {
               const state = states[lever.id]
@@ -175,7 +175,7 @@ function LeverRow({ lever, state, isSaving, isSaved, onChange }: LeverRowProps) 
   const ragColor = { green: '#1FC881', amber: '#FFAB00', red: '#D50000' }[state.rag_status] ?? '#FFAB00'
 
   return (
-    <div className="rounded-xl border border-white/10 bg-white/[0.04] overflow-hidden">
+    <div className="rounded-xl border border-[#DEDEDE] bg-white overflow-hidden">
       {/* Header row */}
       <div className="flex items-center gap-4 px-4 py-3">
         {/* RAG dot */}
@@ -183,8 +183,8 @@ function LeverRow({ lever, state, isSaving, isSaved, onChange }: LeverRowProps) 
 
         {/* Name */}
         <div className="flex-1 min-w-0">
-          <p className="text-[13px] font-bold text-white truncate">{lever.name}</p>
-          <p className="text-[11px] text-white/30 truncate">{lever.owner}</p>
+          <p className="text-[13px] font-bold text-[#262626] truncate">{lever.name}</p>
+          <p className="text-[11px] text-[#969696] truncate">{lever.owner}</p>
         </div>
 
         {/* Current state input */}
@@ -192,7 +192,7 @@ function LeverRow({ lever, state, isSaving, isSaved, onChange }: LeverRowProps) 
           type="text"
           value={state.current_state}
           onChange={(e) => onChange({ current_state: e.target.value })}
-          className="w-28 rounded-lg border border-white/10 bg-white/[0.06] px-2.5 py-1.5 text-[13px] text-white placeholder-white/20 outline-none focus:border-primary/50 transition-colors"
+          className="w-28 rounded-lg border border-[#DEDEDE] bg-white px-2.5 py-1.5 text-[13px] text-[#262626] placeholder-[#969696] outline-none focus:border-[#2969FF] transition-colors"
           placeholder="Current…"
           aria-label={`Current value for ${lever.name}`}
         />
@@ -231,8 +231,8 @@ function LeverRow({ lever, state, isSaving, isSaved, onChange }: LeverRowProps) 
               aria-label={`Set ${lever.name} trend to ${opt.value}`}
               className={`h-7 w-7 rounded text-[14px] transition-all ${
                 state.trend === opt.value
-                  ? 'bg-white/15 text-white'
-                  : 'text-white/20 hover:bg-white/10 hover:text-white/50'
+                  ? 'bg-[#2969FF]/10 text-[#2969FF]'
+                  : 'text-[#969696] hover:bg-[#F7F7F7] hover:text-[#262626]'
               }`}
             >
               {opt.label}
@@ -241,7 +241,7 @@ function LeverRow({ lever, state, isSaving, isSaved, onChange }: LeverRowProps) 
         </div>
 
         {/* Save indicator */}
-        <span className="w-12 text-right text-[11px] text-white/20">
+        <span className="w-12 text-right text-[11px] text-[#969696]">
           {isSaving ? '…' : isSaved ? '✓' : ''}
         </span>
 
@@ -249,7 +249,7 @@ function LeverRow({ lever, state, isSaving, isSaved, onChange }: LeverRowProps) 
         <button
           type="button"
           onClick={() => setExpanded((v) => !v)}
-          className="text-white/20 hover:text-white/50 transition-colors"
+          className="text-[#969696] hover:text-[#262626] transition-colors"
           aria-label={expanded ? 'Collapse notes' : 'Expand notes'}
         >
           <svg
@@ -264,8 +264,8 @@ function LeverRow({ lever, state, isSaving, isSaved, onChange }: LeverRowProps) 
 
       {/* Notes area */}
       {expanded && (
-        <div className="border-t border-white/10 px-4 py-3">
-          <label className="block text-[10px] font-bold uppercase tracking-widest text-white/20 mb-1.5">
+        <div className="border-t border-[#DEDEDE] px-4 py-3">
+          <label className="block text-[10px] font-bold uppercase tracking-widest text-[#2969FF] mb-1.5">
             Notes
           </label>
           <textarea
@@ -273,7 +273,7 @@ function LeverRow({ lever, state, isSaving, isSaved, onChange }: LeverRowProps) 
             onChange={(e) => onChange({ notes: e.target.value })}
             rows={3}
             placeholder="Context, blockers, next steps…"
-            className="w-full resize-none rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-[13px] text-white/80 placeholder-white/20 outline-none focus:border-primary/50 transition-colors"
+            className="w-full resize-none rounded-lg border border-[#DEDEDE] bg-white px-3 py-2 text-[13px] text-[#262626] placeholder-[#969696] outline-none focus:border-[#2969FF] transition-colors"
           />
         </div>
       )}

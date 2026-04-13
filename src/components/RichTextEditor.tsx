@@ -20,8 +20,8 @@ function Toolbar({ editor }: ToolbarProps) {
       onClick={onClick}
       className={`flex h-7 w-7 items-center justify-center rounded text-[13px] font-bold transition-colors ${
         active
-          ? 'bg-primary/20 text-primary'
-          : 'text-white/40 hover:bg-white/10 hover:text-white'
+          ? 'bg-[#2969FF]/15 text-[#2969FF]'
+          : 'text-[#969696] hover:bg-[#F7F7F7] hover:text-[#262626]'
       }`}
     >
       {children}
@@ -29,10 +29,10 @@ function Toolbar({ editor }: ToolbarProps) {
   )
 
   return (
-    <div className="flex items-center gap-0.5 border-b border-white/10 px-3 py-2">
+    <div className="flex items-center gap-0.5 border-b border-[#DEDEDE] px-3 py-2">
       {btn(editor.isActive('bold'),   () => editor.chain().focus().toggleBold().run(),           'Bold',           'B')}
       {btn(editor.isActive('italic'), () => editor.chain().focus().toggleItalic().run(),         'Italic',         <em>I</em>)}
-      <div className="mx-1.5 h-4 w-px bg-white/10" />
+      <div className="mx-1.5 h-4 w-px bg-[#DEDEDE]" />
       {btn(editor.isActive('bulletList'),  () => editor.chain().focus().toggleBulletList().run(),  'Bullet list',    '•–')}
       {btn(editor.isActive('orderedList'), () => editor.chain().focus().toggleOrderedList().run(), 'Numbered list',  '1.')}
     </div>
@@ -58,7 +58,7 @@ export default function RichTextEditor({ value, onChange, placeholder, minHeight
     },
     editorProps: {
       attributes: {
-        class: 'outline-none prose-sm max-w-none text-white/80 [&_ul]:list-disc [&_ul]:pl-4 [&_ol]:list-decimal [&_ol]:pl-4 [&_p]:my-1 [&_li]:my-0.5',
+        class: 'outline-none prose-sm max-w-none text-[#262626] [&_ul]:list-disc [&_ul]:pl-4 [&_ol]:list-decimal [&_ol]:pl-4 [&_p]:my-1 [&_li]:my-0.5',
       },
     },
   })
@@ -71,12 +71,12 @@ export default function RichTextEditor({ value, onChange, placeholder, minHeight
   }, [value]) // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
-    <div className="overflow-hidden rounded-lg border border-white/10 bg-white/[0.04] focus-within:border-primary/50">
+    <div className="overflow-hidden rounded-lg border border-[#DEDEDE] bg-white focus-within:border-[#2969FF]">
       <Toolbar editor={editor} />
       <div className="px-3 py-2.5" style={{ minHeight }}>
         {!editor?.getText() && placeholder && !editor?.isFocused && (
           <p
-            className="pointer-events-none absolute text-[14px] text-white/20"
+            className="pointer-events-none absolute text-[14px] text-[#969696]"
             aria-hidden="true"
           >
             {placeholder}

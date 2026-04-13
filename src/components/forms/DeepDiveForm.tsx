@@ -7,9 +7,9 @@ import RichTextEditor from '@/components/RichTextEditor'
 
 // ─── Shared styles ────────────────────────────────────────────────────────
 
-const fieldLabel = 'block text-[11px] font-bold uppercase tracking-widest text-white/30 mb-1.5'
-const inputCls   = 'w-full rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2.5 text-[14px] text-white placeholder-white/20 outline-none transition-colors focus:border-primary/50'
-const selectCls  = 'w-full rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2.5 text-[14px] text-white outline-none transition-colors focus:border-primary/50 appearance-none'
+const fieldLabel = 'block text-[11px] font-bold uppercase tracking-widest text-[#2969FF] mb-1.5'
+const inputCls   = 'w-full rounded-lg border border-[#DEDEDE] bg-white px-3 py-2.5 text-[14px] text-[#262626] placeholder-[#969696] outline-none transition-colors focus:border-[#2969FF]'
+const selectCls  = 'w-full rounded-lg border border-[#DEDEDE] bg-white px-3 py-2.5 text-[14px] text-[#262626] outline-none transition-colors focus:border-[#2969FF] appearance-none'
 
 // ─── Types ────────────────────────────────────────────────────────────────
 
@@ -175,9 +175,9 @@ export default function DeepDiveForm({ section, teamMembers, levers }: Props) {
         <div className="space-y-3">
           {image_url && (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={image_url} alt="Cover" className="max-h-48 rounded-lg object-cover border border-white/10" />
+            <img src={image_url} alt="Cover" className="max-h-48 rounded-lg object-cover border border-[#DEDEDE]" />
           )}
-          <label className="flex cursor-pointer items-center gap-3 rounded-lg border border-dashed border-white/20 px-4 py-3 text-[13px] text-white/40 hover:border-white/40 hover:text-white/60 transition-colors">
+          <label className="flex cursor-pointer items-center gap-3 rounded-lg border border-dashed border-[#DEDEDE] px-4 py-3 text-[13px] text-[#969696] hover:border-[#2969FF]/50 hover:text-[#5A5A5A] transition-colors">
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
               <path d="M8 3v10M3 8h10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
             </svg>
@@ -212,7 +212,7 @@ export default function DeepDiveForm({ section, teamMembers, levers }: Props) {
               <button
                 type="button"
                 onClick={() => removeLink(i)}
-                className="flex-shrink-0 text-white/20 hover:text-red transition-colors"
+                className="flex-shrink-0 text-[#969696] hover:text-red transition-colors"
                 aria-label="Remove link"
               >
                 <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
@@ -237,7 +237,7 @@ export default function DeepDiveForm({ section, teamMembers, levers }: Props) {
 function SaveIndicator({ saving, saved, error }: { saving: boolean; saved: boolean; error: boolean }) {
   if (!saving && !saved && !error) return null
   return (
-    <div className={`fixed bottom-6 right-8 z-10 rounded-full px-4 py-2 text-[12px] backdrop-blur-sm ${error ? 'bg-red/20 text-red' : 'bg-white/10 text-white/60'}`}>
+    <div className={`fixed bottom-6 right-8 z-10 rounded-full px-4 py-2 text-[12px] shadow-md ${error ? 'bg-red text-white' : 'bg-[#262626] text-white'}`}>
       {saving ? 'Saving…' : error ? 'Save failed' : 'Saved ✓'}
     </div>
   )

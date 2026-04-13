@@ -6,9 +6,9 @@ import type { SessionSection, TeamMember } from '@/lib/types'
 
 // ─── Shared styles ────────────────────────────────────────────────────────
 
-const fieldLabel = 'block text-[11px] font-bold uppercase tracking-widest text-white/30 mb-1.5'
-const inputCls   = 'w-full rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2.5 text-[14px] text-white placeholder-white/20 outline-none transition-colors focus:border-primary/50'
-const selectCls  = 'w-full rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2.5 text-[14px] text-white outline-none transition-colors focus:border-primary/50 appearance-none'
+const fieldLabel = 'block text-[11px] font-bold uppercase tracking-widest text-[#2969FF] mb-1.5'
+const inputCls   = 'w-full rounded-lg border border-[#DEDEDE] bg-white px-3 py-2.5 text-[14px] text-[#262626] placeholder-[#969696] outline-none transition-colors focus:border-[#2969FF]'
+const selectCls  = 'w-full rounded-lg border border-[#DEDEDE] bg-white px-3 py-2.5 text-[14px] text-[#262626] outline-none transition-colors focus:border-[#2969FF] appearance-none'
 
 // ─── Types ────────────────────────────────────────────────────────────────
 
@@ -110,14 +110,14 @@ export default function AnnouncementsForm({ section, teamMembers }: Props) {
           {items.map((item, i) => (
             <div
               key={i}
-              className="rounded-xl border border-white/10 bg-white/[0.04] p-4 space-y-3"
+              className="rounded-xl border border-[#DEDEDE] bg-white p-4 space-y-3"
             >
               <div className="flex items-start justify-between gap-3">
-                <span className="type-eyebrow text-white/20 mt-0.5">#{i + 1}</span>
+                <span className="type-eyebrow text-[#969696] mt-0.5">#{i + 1}</span>
                 <button
                   type="button"
                   onClick={() => removeItem(i)}
-                  className="flex-shrink-0 text-white/20 hover:text-red transition-colors"
+                  className="flex-shrink-0 text-[#969696] hover:text-red transition-colors"
                   aria-label="Remove announcement"
                 >
                   <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
@@ -150,9 +150,9 @@ export default function AnnouncementsForm({ section, teamMembers }: Props) {
               <div>
                 {item.image_url && (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img src={item.image_url} alt="" className="mb-2 max-h-32 rounded-lg object-cover border border-white/10" />
+                  <img src={item.image_url} alt="" className="mb-2 max-h-32 rounded-lg object-cover border border-[#DEDEDE]" />
                 )}
-                <label className="flex cursor-pointer items-center gap-2 text-[12px] text-white/30 hover:text-white/50 transition-colors">
+                <label className="flex cursor-pointer items-center gap-2 text-[12px] text-[#969696] hover:text-[#5A5A5A] transition-colors">
                   <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
                     <path d="M7 2v10M2 7h10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
                   </svg>
@@ -179,7 +179,7 @@ export default function AnnouncementsForm({ section, teamMembers }: Props) {
 function SaveIndicator({ saving, saved, error }: { saving: boolean; saved: boolean; error: boolean }) {
   if (!saving && !saved && !error) return null
   return (
-    <div className={`fixed bottom-6 right-8 z-10 rounded-full px-4 py-2 text-[12px] backdrop-blur-sm ${error ? 'bg-red/20 text-red' : 'bg-white/10 text-white/60'}`}>
+    <div className={`fixed bottom-6 right-8 z-10 rounded-full px-4 py-2 text-[12px] shadow-md ${error ? 'bg-red text-white' : 'bg-[#262626] text-white'}`}>
       {saving ? 'Saving…' : error ? 'Save failed' : 'Saved ✓'}
     </div>
   )

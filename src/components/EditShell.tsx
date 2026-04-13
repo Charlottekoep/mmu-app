@@ -71,7 +71,7 @@ export default function EditShell({
       default:
         return (
           <div className="flex h-64 items-center justify-center">
-            <p className="type-eyebrow text-white/30">No form for this section yet</p>
+            <p className="type-eyebrow text-[#969696]">No form for this section yet</p>
           </div>
         )
     }
@@ -84,20 +84,20 @@ export default function EditShell({
   })
 
   return (
-    <div className="flex h-screen flex-col bg-[#000023] text-white overflow-hidden">
+    <div className="flex h-screen flex-col bg-[#F7F7F7] text-[#262626] overflow-hidden">
 
       {/* ── Global top nav ──────────────────────────────────────────────── */}
-      <nav className="flex flex-shrink-0 items-center justify-between border-b border-white/10 bg-[#050c2a] px-8 py-3.5">
+      <nav className="flex flex-shrink-0 items-center justify-between border-b border-[#DEDEDE] bg-white px-8 py-3.5">
         {/* Root logo */}
         <div className="flex items-center gap-3">
           <span
-            className="text-[22px] font-black text-white"
+            className="text-[22px] font-black text-[#262626]"
             style={{ fontFamily: 'var(--font-lato)', letterSpacing: '-0.02em' }}
           >
             Root
           </span>
-          <span className="hidden h-4 w-px bg-white/15 sm:block" />
-          <span className="hidden text-[12px] text-white/30 sm:block">MMU Editor</span>
+          <span className="hidden h-4 w-px bg-[#DEDEDE] sm:block" />
+          <span className="hidden text-[12px] text-[#969696] sm:block">MMU Editor</span>
         </div>
 
         {/* Preview MMU */}
@@ -116,11 +116,11 @@ export default function EditShell({
       <div className="flex flex-1 overflow-hidden">
 
         {/* Left sidebar */}
-        <aside className="flex w-56 flex-shrink-0 flex-col border-r border-white/10 bg-[#050c2a]">
+        <aside className="flex w-56 flex-shrink-0 flex-col border-r border-[#DEDEDE] bg-white">
           {/* Session info */}
-          <div className="border-b border-white/10 px-5 py-4">
-            <p className="type-eyebrow text-white/30">MMU #{session.session_number}</p>
-            <p className="mt-0.5 text-[12px] text-white/40">{sessionDate}</p>
+          <div className="border-b border-[#DEDEDE] px-5 py-4">
+            <p className="type-eyebrow text-[#2969FF]">MMU #{session.session_number}</p>
+            <p className="mt-0.5 text-[12px] text-[#5A5A5A]">{sessionDate}</p>
           </div>
 
           {/* Sections list */}
@@ -134,14 +134,14 @@ export default function EditShell({
                   onClick={() => setActiveId(s.id)}
                   className={`flex w-full items-center gap-3 px-5 py-3 text-left transition-colors ${
                     isActive
-                      ? 'bg-primary/15 text-white'
-                      : 'text-white/40 hover:bg-white/5 hover:text-white/70'
+                      ? 'bg-[#2969FF]/10 text-[#2969FF]'
+                      : 'text-[#5A5A5A] hover:bg-[#F7F7F7] hover:text-[#262626]'
                   }`}
                 >
                   <span className="text-base leading-none">{meta?.icon ?? '▸'}</span>
                   <span className="text-[13px] font-medium">{meta?.label ?? s.section_type}</span>
                   {!s.is_active && (
-                    <span className="ml-auto text-[10px] text-white/20">off</span>
+                    <span className="ml-auto text-[10px] text-[#969696]">off</span>
                   )}
                 </button>
               )
@@ -149,10 +149,10 @@ export default function EditShell({
           </nav>
 
           {/* Back to home */}
-          <div className="border-t border-white/10 px-5 py-4">
+          <div className="border-t border-[#DEDEDE] px-5 py-4">
             <Link
               href="/"
-              className="flex items-center gap-2 text-[12px] text-white/30 hover:text-white/60 transition-colors"
+              className="flex items-center gap-2 text-[12px] text-[#969696] hover:text-[#5A5A5A] transition-colors"
             >
               <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
                 <path d="M8 2L4 6L8 10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
@@ -165,26 +165,26 @@ export default function EditShell({
         {/* Main content */}
         <div className="flex flex-1 flex-col min-w-0">
           {/* Section header */}
-          <header className="flex flex-shrink-0 items-center border-b border-white/10 bg-[#050c2a] px-8 py-3.5">
+          <header className="flex flex-shrink-0 items-center border-b border-[#DEDEDE] bg-white px-8 py-3.5">
             <div>
-              <h1 className="text-[15px] font-bold text-white">
+              <h1 className="text-[15px] font-bold text-[#262626]">
                 {activeSection
                   ? (SECTION_META[activeSection.section_type]?.label ?? activeSection.section_type)
                   : '—'}
               </h1>
-              <p className="mt-0.5 text-[11px] text-white/25">
+              <p className="mt-0.5 text-[11px] text-[#969696]">
                 Fill in content before the meeting
               </p>
             </div>
           </header>
 
           {/* Form area */}
-          <main className="flex-1 overflow-y-auto">
+          <main className="flex-1 overflow-y-auto bg-[#F7F7F7]">
             {activeSection ? (
               renderForm(activeSection)
             ) : (
               <div className="flex h-full items-center justify-center">
-                <p className="type-eyebrow text-white/20">Select a section to edit</p>
+                <p className="type-eyebrow text-[#969696]">Select a section to edit</p>
               </div>
             )}
           </main>

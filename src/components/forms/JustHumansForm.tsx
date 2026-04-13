@@ -7,8 +7,8 @@ import RichTextEditor from '@/components/RichTextEditor'
 
 // ─── Shared field styles ──────────────────────────────────────────────────
 
-const fieldLabel = 'block text-[11px] font-bold uppercase tracking-widest text-white/30 mb-1.5'
-const selectCls  = 'w-full rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2.5 text-[14px] text-white outline-none transition-colors focus:border-primary/50 appearance-none'
+const fieldLabel = 'block text-[11px] font-bold uppercase tracking-widest text-[#2969FF] mb-1.5'
+const selectCls  = 'w-full rounded-lg border border-[#DEDEDE] bg-white px-3 py-2.5 text-[14px] text-[#262626] outline-none transition-colors focus:border-[#2969FF] appearance-none'
 
 // ─── Types ────────────────────────────────────────────────────────────────
 
@@ -118,7 +118,7 @@ export default function JustHumansForm({ section, teamMembers }: Props) {
 function MemberAvatar({ member }: { member: TeamMember | undefined }) {
   if (!member) {
     return (
-      <div className="h-9 w-9 flex-shrink-0 rounded-full bg-white/10 border border-white/10" />
+      <div className="h-9 w-9 flex-shrink-0 rounded-full bg-[#F0F0F0] border border-[#DEDEDE]" />
     )
   }
   if (member.photo_url) {
@@ -127,7 +127,7 @@ function MemberAvatar({ member }: { member: TeamMember | undefined }) {
       <img
         src={member.photo_url}
         alt={member.name}
-        className="h-9 w-9 flex-shrink-0 rounded-full object-cover border border-white/10"
+        className="h-9 w-9 flex-shrink-0 rounded-full object-cover border border-[#DEDEDE]"
       />
     )
   }
@@ -141,7 +141,7 @@ function MemberAvatar({ member }: { member: TeamMember | undefined }) {
 function SaveIndicator({ saving, saved, error }: { saving: boolean; saved: boolean; error: boolean }) {
   if (!saving && !saved && !error) return null
   return (
-    <div className={`fixed bottom-6 right-8 z-10 rounded-full px-4 py-2 text-[12px] backdrop-blur-sm ${error ? 'bg-red/20 text-red' : 'bg-white/10 text-white/60'}`}>
+    <div className={`fixed bottom-6 right-8 z-10 rounded-full px-4 py-2 text-[12px] shadow-md ${error ? 'bg-red text-white' : 'bg-[#262626] text-white'}`}>
       {saving ? 'Saving…' : error ? 'Save failed' : 'Saved ✓'}
     </div>
   )
