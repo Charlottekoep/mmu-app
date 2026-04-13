@@ -4,12 +4,12 @@ import DarkPageLayout from '@/components/DarkPageLayout'
 import StartSessionButton from '@/components/StartSessionButton'
 import type { MmuSession } from '@/lib/types'
 
-function formatDate(iso: string) {
-  return new Date(iso).toLocaleDateString('en-ZA', {
-    weekday: 'long',
-    day:     'numeric',
-    month:   'long',
-    year:    'numeric',
+function formatSessionTitle(isoDate: string) {
+  // "MMU 20 April 2026"
+  return 'MMU ' + new Date(isoDate + 'T00:00:00').toLocaleDateString('en-GB', {
+    day:   'numeric',
+    month: 'long',
+    year:  'numeric',
   })
 }
 
@@ -18,7 +18,7 @@ export default async function HomePage() {
   const { data } = await supabase
     .from('mmu_sessions')
     .select('*')
-    .order('session_number', { ascending: false })
+    .order('date', { ascending: false })
     .limit(10)
 
   const sessions: MmuSession[] = data ?? []
@@ -49,11 +49,8 @@ export default async function HomePage() {
                     className="flex items-center justify-between rounded-xl border border-white/10 bg-white/5 px-5 py-4 transition-colors hover:bg-white/10"
                   >
                     <div>
-                      <p className="type-eyebrow text-white/65">
-                        MMU #{s.session_number}
-                      </p>
-                      <p className="mt-1 text-[17px] leading-snug text-white">
-                        {formatDate(s.date)}
+                      <p className="text-[17px] leading-snug text-white">
+                        {formatSessionTitle(s.date)}
                       </p>
                     </div>
                     <svg

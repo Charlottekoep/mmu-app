@@ -10,6 +10,7 @@ import type {
   LeverSnapshot,
   LeaderboardEntry,
 } from '@/lib/types'
+import SessionDetailsForm  from '@/components/forms/SessionDetailsForm'
 import JustHumansForm      from '@/components/forms/JustHumansForm'
 import NorthStarUpdateForm from '@/components/forms/NorthStarUpdateForm'
 import DeepDiveForm        from '@/components/forms/DeepDiveForm'
@@ -41,6 +42,21 @@ type Props = {
 
 // ─── Shell ────────────────────────────────────────────────────────────────
 
+// ─── Date formatting ──────────────────────────────────────────────────────
+
+function formatSessionTitle(isoDate: string) {
+  // "20 April 2026"
+  return new Date(isoDate + 'T00:00:00').toLocaleDateString('en-GB', {
+    day:   'numeric',
+    month: 'long',
+    year:  'numeric',
+  })
+}
+
+// ─── Shell ────────────────────────────────────────────────────────────────
+
+const SESSION_DETAILS_ID = '__session__'
+
 export default function EditShell({
   session,
   sections,
@@ -49,13 +65,29 @@ export default function EditShell({
   snapshots,
   leaderboard,
 }: Props) {
-  const [activeId, setActiveId] = useState<string>(sections[0]?.id ?? '')
+  const [activeId,    setActiveId]    = useState<string>(SESSION_DETAILS_ID)
+  const [sessionDate, setSessionDate] = useState(session.date)
 
   const activeSection = sections.find((s) => s.id === activeId)
 
-  function renderForm(section: SessionSection) {
-    const common = { section, sessionId: session.id }
-    switch (section.section_type) {
+  function renderContent() {
+    if (activeId === SESSION_DETAILS_ID) {
+      return (
+        <SessionDetailsForm
+          session={session}
+          onDateChange={setSessionDate}
+        />
+      )
+    }
+    if (!activeSection) {
+      return (
+        <div className="flex h-full items-center justify-center">
+          <p className="type-eyebrow text-[#969696]">Select a section to edit</p>
+        </div>
+      )
+    }
+    const common = { section: activeSection, sessionId: session.id }
+    switch (activeSection.section_type) {
       case 'just_humans':
         return <JustHumansForm    {...common} teamMembers={teamMembers} />
       case 'north_star':
@@ -77,11 +109,12 @@ export default function EditShell({
     }
   }
 
-  const sessionDate = new Date(session.date + 'T00:00:00').toLocaleDateString('en-ZA', {
-    day:   'numeric',
-    month: 'long',
-    year:  'numeric',
-  })
+  const activeSectionLabel =
+    activeId === SESSION_DETAILS_ID
+      ? 'Welcome'
+      : activeSection
+        ? (SECTION_META[activeSection.section_type]?.label ?? activeSection.section_type)
+        : '—'
 
   return (
     <div className="flex h-screen flex-col bg-[#F7F7F7] text-[#262626] overflow-hidden">
@@ -119,12 +152,27 @@ export default function EditShell({
         <aside className="flex w-56 flex-shrink-0 flex-col border-r border-[#DEDEDE] bg-white">
           {/* Session info */}
           <div className="border-b border-[#DEDEDE] px-5 py-4">
-            <p className="type-eyebrow text-[#2969FF]">MMU #{session.session_number}</p>
-            <p className="mt-0.5 text-[12px] text-[#5A5A5A]">{sessionDate}</p>
+            <p className="type-eyebrow text-[#2969FF]">MMU</p>
+            <p className="mt-0.5 text-[13px] font-semibold text-[#262626]">
+              {formatSessionTitle(sessionDate)}
+            </p>
           </div>
 
           {/* Sections list */}
           <nav className="flex-1 overflow-y-auto py-3" aria-label="Sections">
+            {/* Welcome / session details */}
+            <button
+              onClick={() => setActiveId(SESSION_DETAILS_ID)}
+              className={`flex w-full items-center gap-3 px-5 py-3 text-left transition-colors ${
+                activeId === SESSION_DETAILS_ID
+                  ? 'bg-[#2969FF]/10 text-[#2969FF]'
+                  : 'text-[#5A5A5A] hover:bg-[#F7F7F7] hover:text-[#262626]'
+              }`}
+            >
+              <span className="text-base leading-none">🗓️</span>
+              <span className="text-[13px] font-medium">Welcome</span>
+            </button>
+
             {sections.map((s) => {
               const meta     = SECTION_META[s.section_type]
               const isActive = s.id === activeId
@@ -167,11 +215,7 @@ export default function EditShell({
           {/* Section header */}
           <header className="flex flex-shrink-0 items-center border-b border-[#DEDEDE] bg-white px-8 py-3.5">
             <div>
-              <h1 className="text-[15px] font-bold text-[#262626]">
-                {activeSection
-                  ? (SECTION_META[activeSection.section_type]?.label ?? activeSection.section_type)
-                  : '—'}
-              </h1>
+              <h1 className="text-[15px] font-bold text-[#262626]">{activeSectionLabel}</h1>
               <p className="mt-0.5 text-[11px] text-[#969696]">
                 Fill in content before the meeting
               </p>
@@ -180,13 +224,7 @@ export default function EditShell({
 
           {/* Form area */}
           <main className="flex-1 overflow-y-auto bg-[#F7F7F7]">
-            {activeSection ? (
-              renderForm(activeSection)
-            ) : (
-              <div className="flex h-full items-center justify-center">
-                <p className="type-eyebrow text-[#969696]">Select a section to edit</p>
-              </div>
-            )}
+            {renderContent()}
           </main>
         </div>
       </div>

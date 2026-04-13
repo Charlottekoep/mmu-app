@@ -23,13 +23,11 @@ type Props = {
 export default function WelcomeSection({ session, sections }: Props) {
   const activeSections = sections.filter((s) => s.is_active)
 
-  // Parse date without timezone shift
-  const date    = new Date(session.date + 'T00:00:00')
-  const dateStr = date.toLocaleDateString('en-GB', {
-    weekday: 'long',
-    day:     'numeric',
-    month:   'long',
-    year:    'numeric',
+  // "20 April 2026" — parsed without timezone shift
+  const dateStr = new Date(session.date + 'T00:00:00').toLocaleDateString('en-GB', {
+    day:   'numeric',
+    month: 'long',
+    year:  'numeric',
   })
 
   return (
@@ -46,27 +44,17 @@ export default function WelcomeSection({ session, sections }: Props) {
       />
 
       {/* ── Main content ──────────────────────────────────────────────── */}
-      <div className="relative z-10 flex max-w-3xl flex-col items-center px-12 text-center">
+      <div className="relative z-10 flex max-w-4xl flex-col items-center px-12 text-center">
         {/* Eyebrow */}
-        <p className="type-eyebrow tracking-[0.25em] text-white mb-6">
+        <p className="type-eyebrow tracking-[0.25em] text-white mb-8">
           Monday Mission Update
         </p>
 
-        {/* Date */}
-        <p
-          className="mb-5 text-[18px] font-light text-white/65"
-          style={{ letterSpacing: '0.04em' }}
-        >
-          {dateStr}
-        </p>
-
-        {/* Display title */}
-        <h1
-          className="mb-8 leading-none font-black"
-          style={{ fontSize: '100px', letterSpacing: '-0.03em' }}
-        >
-          <span style={{ color: '#2969FF' }}>MMU</span>
-          <span className="text-white"> #{session.session_number}</span>
+        {/* Display title: MMU 20 April 2026 */}
+        <h1 className="mb-8 leading-none font-black" style={{ letterSpacing: '-0.03em' }}>
+          <span style={{ color: '#2969FF', fontSize: '100px' }}>MMU</span>
+          <br />
+          <span className="text-white" style={{ fontSize: '72px' }}>{dateStr}</span>
         </h1>
 
         {/* Welcome message */}

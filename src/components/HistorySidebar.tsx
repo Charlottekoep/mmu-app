@@ -11,11 +11,12 @@ type Props = {
   currentSessionId?: string
 }
 
-function formatDate(iso: string) {
-  return new Date(iso).toLocaleDateString('en-ZA', {
-    day:    'numeric',
-    month:  'long',
-    year:   'numeric',
+function formatSessionTitle(isoDate: string) {
+  // "MMU 20 April 2026"
+  return 'MMU ' + new Date(isoDate + 'T00:00:00').toLocaleDateString('en-GB', {
+    day:   'numeric',
+    month: 'long',
+    year:  'numeric',
   })
 }
 
@@ -34,7 +35,7 @@ export default function HistorySidebar({
     getBrowserClient()
       .from('mmu_sessions')
       .select('*')
-      .order('session_number', { ascending: false })
+      .order('date', { ascending: false })
       .then(({ data }) => {
         setSessions(data ?? [])
         setLoading(false)
@@ -97,9 +98,8 @@ export default function HistorySidebar({
                   }`}
                 >
                   <div>
-                    <p className="type-eyebrow text-white/65">MMU #{s.session_number}</p>
-                    <p className="mt-1 text-[17px] leading-snug text-white">
-                      {formatDate(s.date)}
+                    <p className="text-[17px] leading-snug text-white">
+                      {formatSessionTitle(s.date)}
                     </p>
                   </div>
                   {isCurrent && (
