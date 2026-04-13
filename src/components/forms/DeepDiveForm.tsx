@@ -46,6 +46,7 @@ const FOCUS_LABELS: Record<string, string> = {
 export default function DeepDiveForm({ section, teamMembers, levers }: Props) {
   const raw = section.content as Partial<Content>
 
+  const [is_active,    setIsActive]     = useState(section.is_active)
   const [title,        setTitle]        = useState(raw.title        ?? '')
   const [presenter_id, setPresenter]    = useState(raw.presenter_id ?? '')
   const [lever_id,     setLever]        = useState(raw.lever_id     ?? '')
@@ -59,7 +60,7 @@ export default function DeepDiveForm({ section, teamMembers, levers }: Props) {
   const [saved,        setSaved]        = useState(false)
   const [saveError,    setSaveError]    = useState(false)
 
-  const persist = useCallback(async (patch: Partial<Content>) => {
+  const persist = useCallback(async (patch: Partial<Content & { is_active?: boolean }>) => {
     setSaving(true); setSaved(false); setSaveError(false)
     const content: Content = {
       title:        patch.title        ?? title,
@@ -69,14 +70,21 @@ export default function DeepDiveForm({ section, teamMembers, levers }: Props) {
       links:        patch.links        ?? links,
       image_url:    patch.image_url    ?? image_url,
     }
+    const active = patch.is_active !== undefined ? patch.is_active : is_active
     const { error: err } = await getBrowserClient()
       .from('session_sections')
-      .update({ content })
+      .update({ content, is_active: active })
       .eq('id', section.id)
     if (err) { setSaving(false); setSaveError(true); setTimeout(() => setSaveError(false), 3000); return }
     setSaving(false); setSaved(true)
     setTimeout(() => setSaved(false), 2000)
-  }, [title, presenter_id, lever_id, body, links, image_url, section.id])
+  }, [title, presenter_id, lever_id, body, links, image_url, is_active, section.id])
+
+  function toggleActive() {
+    const next = !is_active
+    setIsActive(next)
+    persist({ is_active: next })
+  }
 
   // Image upload
   async function handleImage(e: React.ChangeEvent<HTMLInputElement>) {
@@ -115,6 +123,29 @@ export default function DeepDiveForm({ section, teamMembers, levers }: Props) {
   return (
     <div className="mx-auto max-w-2xl px-8 py-10 space-y-8">
       <SaveIndicator saving={saving} saved={saved} error={saveError} />
+
+      {/* Active toggle */}
+      <div className="flex items-center justify-between rounded-xl border border-[#DEDEDE] bg-white px-5 py-4">
+        <div>
+          <p className="text-[14px] font-medium text-[#262626]">Include in this session</p>
+          <p className="text-[12px] text-[#5A5A5A]">Toggle off to skip Deep Dive this week</p>
+        </div>
+        <button
+          type="button"
+          onClick={toggleActive}
+          className={`relative h-6 w-11 flex-shrink-0 rounded-full transition-colors ${is_active ? 'bg-primary' : 'bg-[#DEDEDE]'}`}
+          role="switch"
+          aria-checked={is_active}
+        >
+          <span
+            className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform ${is_active ? 'translate-x-5' : 'translate-x-0.5'}`}
+          />
+        </button>
+      </div>
+
+      {!is_active && (
+        <p className="text-[13px] text-[#969696] italic">This section is currently hidden from the presentation.</p>
+      )}
 
       {/* Title */}
       <div>
