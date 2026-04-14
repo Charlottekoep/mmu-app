@@ -5,7 +5,7 @@ import { createPortal } from 'react-dom'
 import { getBrowserClient } from '@/lib/supabase'
 import type { Lever, SessionSection } from '@/lib/types'
 import DarkPageLayout from '@/components/DarkPageLayout'
-import FlipCard from '@/components/FlipCard'
+import FlipCard, { calcProgress, RAG_COLOR, type LeverUpdate } from '@/components/FlipCard'
 
 // ─── Focus area config ────────────────────────────────────────────────────
 
@@ -17,19 +17,7 @@ const GROUPS: { key: string; label: string }[] = [
   { key: 'enablers',              label: 'Enablers' },
 ]
 
-const RAG_COLOR: Record<string, string> = {
-  green: '#1FC881',
-  amber: '#FFAB00',
-  red:   '#D50000',
-}
-
 // ─── Types ────────────────────────────────────────────────────────────────
-
-type LeverUpdate = {
-  done:     string | null
-  planning: string | null
-  images:   string[]
-}
 
 type Props = { section: SessionSection; sessionId: string }
 
@@ -64,12 +52,9 @@ export default function NorthStarSection({ section, sessionId }: Props) {
       ])
 
       if (cancelled) return
-
       if (leverRes.error) { setError(true); setLoading(false); return }
 
-      const snapshotMap = new Map(
-        (snapRes.data ?? []).map((s) => [s.lever_id, s]),
-      )
+      const snapshotMap = new Map((snapRes.data ?? []).map((s) => [s.lever_id, s]))
 
       setLevers(
         (leverRes.data ?? []).map((lever) => {
@@ -178,7 +163,7 @@ export default function NorthStarSection({ section, sessionId }: Props) {
 
       </div>
 
-      {/* ── Expanded card modal (portal) ──────────────────────────── */}
+      {/* ── Full-screen expanded modal (portal escapes overflow-hidden) ── */}
       {mounted && expanded && createPortal(
         <ExpandedModal
           lever={expanded.lever}
@@ -191,7 +176,7 @@ export default function NorthStarSection({ section, sessionId }: Props) {
   )
 }
 
-// ─── Expanded modal ───────────────────────────────────────────────────────
+// ─── Full-screen expanded modal ───────────────────────────────────────────
 
 function ExpandedModal({
   lever,
@@ -202,15 +187,15 @@ function ExpandedModal({
   update:  LeverUpdate
   onClose: () => void
 }) {
-  const [visible,  setVisible]  = useState(false)
-  const [imgIdx,   setImgIdx]   = useState(0)
+  const [visible, setVisible] = useState(false)
 
   const ragColor    = RAG_COLOR[lever.rag_status] ?? RAG_COLOR.amber
-  const images      = update.images
+  const progress    = calcProgress(lever.current_state, lever.target, lever.rag_status)
   const hasDone     = !!update.done?.trim()
   const hasPlanning = !!update.planning?.trim()
+  const hasImages   = update.images.length > 0
 
-  // Fade/scale in on mount
+  // Fade in on mount
   useEffect(() => {
     const id = requestAnimationFrame(() => setVisible(true))
     return () => cancelAnimationFrame(id)
@@ -218,15 +203,11 @@ function ExpandedModal({
 
   // Escape key
   useEffect(() => {
-    function onKey(e: KeyboardEvent) {
-      if (e.key === 'Escape') close()
-      if (e.key === 'ArrowLeft'  && images.length > 1) setImgIdx((i) => Math.max(0, i - 1))
-      if (e.key === 'ArrowRight' && images.length > 1) setImgIdx((i) => Math.min(images.length - 1, i + 1))
-    }
+    function onKey(e: KeyboardEvent) { if (e.key === 'Escape') close() }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [images.length])
+  }, [])
 
   function close() {
     setVisible(false)
@@ -234,119 +215,108 @@ function ExpandedModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50">
-      {/* Backdrop */}
-      <div
-        className="absolute inset-0"
-        style={{
-          background:     'rgba(8, 14, 41, 0.85)',
-          backdropFilter: 'blur(6px)',
-          opacity:         visible ? 1 : 0,
-          transition:     'opacity 0.25s ease',
-        }}
+    <div
+      className="fixed inset-0 z-50 flex flex-col"
+      style={{
+        background: '#0F1B4A',
+        border:     '2px solid #2969FF',
+        opacity:    visible ? 1 : 0,
+        transform:  visible ? 'scale(1)' : 'scale(1.015)',
+        transition: 'opacity 0.28s ease, transform 0.28s ease',
+      }}
+    >
+      {/* ── Close button ─────────────────────────────────────────── */}
+      <button
+        type="button"
         onClick={close}
-      />
+        aria-label="Close"
+        className="absolute right-6 top-6 z-10 flex h-9 w-9 items-center justify-center rounded-full border border-white/20 text-white/50 transition-all hover:bg-white/10 hover:text-white"
+      >
+        <svg width="11" height="11" viewBox="0 0 11 11" fill="none" aria-hidden="true">
+          <path d="M1 1l9 9M10 1L1 10" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
+        </svg>
+      </button>
 
-      {/* Centering layer — pointer-events-none so backdrop clicks work */}
-      <div className="pointer-events-none absolute inset-0 flex items-center justify-center p-8">
-        <div
-          className="pointer-events-auto relative flex w-full max-w-3xl flex-col rounded-2xl shadow-2xl"
-          style={{
-            background: '#0F1B4A',
-            border:     '1.5px solid #2969FF',
-            maxHeight:  'calc(100vh - 80px)',
-            opacity:    visible ? 1 : 0,
-            transform:  visible ? 'scale(1)' : 'scale(0.96)',
-            transition: 'opacity 0.25s ease, transform 0.25s ease',
-          }}
+      {/* ── Header ───────────────────────────────────────────────── */}
+      <div className="flex-shrink-0 px-16 pt-14 pb-8">
+        <div className="flex items-center gap-2.5 mb-2">
+          <p className="type-eyebrow text-primary">{lever.owner}</p>
+          <div className="h-2 w-2 flex-shrink-0 rounded-full" style={{ background: ragColor }} />
+        </div>
+        <h1
+          className="font-black uppercase leading-none text-white"
+          style={{ fontSize: 'clamp(28px, 3.5vw, 48px)', letterSpacing: '0.04em' }}
         >
-          {/* Close button */}
-          <button
-            type="button"
-            onClick={close}
-            aria-label="Close"
-            className="absolute right-4 top-4 z-10 flex h-8 w-8 items-center justify-center rounded-full border border-white/15 text-white/40 transition-all hover:bg-white/10 hover:text-white"
-          >
-            <svg width="10" height="10" viewBox="0 0 10 10" fill="none" aria-hidden="true">
-              <path d="M1 1l8 8M9 1L1 9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-            </svg>
-          </button>
+          {lever.name}
+        </h1>
+      </div>
 
-          {/* Scrollable content */}
-          <div className="overflow-y-auto p-8 pr-14">
-
-            {/* Header: name + owner + RAG */}
-            <h2
-              className="font-bold uppercase leading-tight text-white"
-              style={{ fontSize: '26px', letterSpacing: '0.06em' }}
-            >
-              {lever.name}
-            </h2>
-            <div className="mt-2.5 flex items-center gap-2.5">
-              <div className="h-2 w-2 flex-shrink-0 rounded-full" style={{ background: ragColor }} />
-              <span className="type-eyebrow text-white/45">{lever.owner}</span>
+      {/* ── Main content ─────────────────────────────────────────── */}
+      <div
+        className={`flex-1 min-h-0 overflow-y-auto px-16 pb-8 grid gap-14 ${
+          hasImages ? 'grid-cols-[3fr_2fr]' : 'grid-cols-1'
+        }`}
+      >
+        {/* Left: update text */}
+        <div className="space-y-7 py-2">
+          {hasDone && (
+            <div>
+              <p className="type-eyebrow text-white/45 mb-3">What we&apos;ve done</p>
+              <BulletList text={update.done} />
             </div>
+          )}
+          {hasDone && hasPlanning && (
+            <div className="border-t border-white/10" />
+          )}
+          {hasPlanning && (
+            <div>
+              <p className="type-eyebrow text-white/45 mb-3">What we&apos;re planning</p>
+              <BulletList text={update.planning} />
+            </div>
+          )}
+          {!hasDone && !hasPlanning && (
+            <p className="text-[17px] italic text-white/30">No update for this session.</p>
+          )}
+        </div>
 
-            {/* Body: two-column if images, full-width if not */}
-            <div className={`mt-8 grid gap-10 ${images.length > 0 ? 'grid-cols-[1fr_300px]' : 'grid-cols-1'}`}>
+        {/* Right: image grid — all images at natural aspect ratio */}
+        {hasImages && (
+          <div className="py-2">
+            <ImageGrid images={update.images} />
+          </div>
+        )}
+      </div>
 
-              {/* Left: update text as bullets */}
-              <div className="space-y-6">
-                {hasDone && (
-                  <div>
-                    <p className="type-eyebrow text-white/40 mb-3">What we&apos;ve done</p>
-                    <ModalBullets text={update.done} />
-                  </div>
-                )}
-                {hasDone && hasPlanning && (
-                  <div className="border-t border-white/10" />
-                )}
-                {hasPlanning && (
-                  <div>
-                    <p className="type-eyebrow text-white/40 mb-3">What we&apos;re planning</p>
-                    <ModalBullets text={update.planning} />
-                  </div>
-                )}
-                {!hasDone && !hasPlanning && (
-                  <p className="text-[16px] italic text-white/30">No update for this session.</p>
-                )}
-              </div>
-
-              {/* Right: image carousel */}
-              {images.length > 0 && (
-                <div className="flex flex-col items-center gap-4">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={images[imgIdx]}
-                    alt=""
-                    className="w-full h-auto rounded-xl border border-white/10"
-                    style={{ maxHeight: '340px', objectFit: 'contain' }}
-                  />
-                  {images.length > 1 && (
-                    <div className="flex items-center gap-3">
-                      <button
-                        type="button"
-                        onClick={() => setImgIdx((i) => Math.max(0, i - 1))}
-                        disabled={imgIdx === 0}
-                        className="rounded-full border border-white/20 px-3 py-1.5 text-[12px] text-white/60 transition-all hover:bg-white/10 hover:text-white disabled:opacity-25"
-                      >
-                        ← Prev
-                      </button>
-                      <span className="type-eyebrow text-white/30">{imgIdx + 1} / {images.length}</span>
-                      <button
-                        type="button"
-                        onClick={() => setImgIdx((i) => Math.min(images.length - 1, i + 1))}
-                        disabled={imgIdx === images.length - 1}
-                        className="rounded-full border border-white/20 px-3 py-1.5 text-[12px] text-white/60 transition-all hover:bg-white/10 hover:text-white disabled:opacity-25"
-                      >
-                        Next →
-                      </button>
-                    </div>
-                  )}
-                </div>
+      {/* ── Bottom strip: measure / current / target / progress ──── */}
+      <div className="flex-shrink-0 border-t border-white/10 px-16 py-5">
+        <div className="flex items-start gap-10">
+          {lever.measure && (
+            <div className="flex-1 min-w-0">
+              <p className="type-eyebrow text-white/35 mb-1">Measure</p>
+              <p className="text-[13px] text-white/55 leading-snug line-clamp-2">{lever.measure}</p>
+            </div>
+          )}
+          <div className="flex-shrink-0">
+            <p className="type-eyebrow text-white/35 mb-1">Current</p>
+            <p className="text-[18px] font-bold text-white leading-none">{lever.current_state}</p>
+          </div>
+          <div className="flex-shrink-0">
+            <p className="type-eyebrow text-white/35 mb-1">Target</p>
+            <p className="text-[18px] font-bold text-white/50 leading-none">{lever.target}</p>
+          </div>
+          <div className="flex-shrink-0 w-40">
+            <p className="type-eyebrow text-white/35 mb-2">Progress</p>
+            <div className="h-1.5 overflow-hidden rounded-full bg-white/10">
+              {progress !== null && (
+                <div
+                  className="h-full rounded-full"
+                  style={{ width: `${progress}%`, background: ragColor }}
+                />
               )}
-
             </div>
+            {progress !== null && (
+              <p className="mt-1 text-[11px] text-white/30">{Math.round(progress)}%</p>
+            )}
           </div>
         </div>
       </div>
@@ -354,19 +324,55 @@ function ExpandedModal({
   )
 }
 
-// ─── Modal bullet list ────────────────────────────────────────────────────
+// ─── Bullet list ──────────────────────────────────────────────────────────
 
-function ModalBullets({ text }: { text: string | null | undefined }) {
+function BulletList({ text }: { text: string | null | undefined }) {
   if (!text?.trim()) return null
   const lines = text.split('\n').filter((l) => l.trim())
   return (
     <ul className="m-0 list-none space-y-3 p-0">
       {lines.map((line, i) => (
-        <li key={i} className="flex gap-3 text-[19px] leading-snug text-white/80">
+        <li key={i} className="flex gap-3 leading-snug text-white/80" style={{ fontSize: '19px' }}>
           <span className="mt-[3px] flex-shrink-0 text-white/25">•</span>
           <span>{line.trim()}</span>
         </li>
       ))}
     </ul>
+  )
+}
+
+// ─── Image grid ───────────────────────────────────────────────────────────
+
+function ImageGrid({ images }: { images: string[] }) {
+  if (images.length === 1) {
+    return (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img src={images[0]} alt="" className="w-full h-auto rounded-xl border border-white/10" />
+    )
+  }
+
+  if (images.length === 2) {
+    return (
+      <div className="grid gap-3">
+        {images.map((url, i) => (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img key={i} src={url} alt="" className="w-full h-auto rounded-xl border border-white/10" />
+        ))}
+      </div>
+    )
+  }
+
+  // 3 images: 2 on top, 1 spanning full width below
+  return (
+    <div className="grid gap-3">
+      <div className="grid grid-cols-2 gap-3">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={images[0]} alt="" className="w-full h-auto rounded-xl border border-white/10" />
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={images[1]} alt="" className="w-full h-auto rounded-xl border border-white/10" />
+      </div>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src={images[2]} alt="" className="w-full h-auto rounded-xl border border-white/10" />
+    </div>
   )
 }
