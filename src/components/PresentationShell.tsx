@@ -150,19 +150,23 @@ export default function PresentationShell({ session, sections }: Props) {
         className="fixed inset-x-0 top-0 z-20 flex items-center justify-between px-8 py-6 pointer-events-none"
         aria-hidden="true"
       >
-        {/* History — top left */}
-        <button
-          aria-hidden="false"
-          onClick={() => setSidebarOpen(true)}
-          className="pointer-events-auto flex items-center gap-2.5 rounded-full border border-white/20 bg-secondary/60 px-4 py-2.5 type-eyebrow text-white/60 backdrop-blur-sm transition-all hover:bg-white/10 hover:text-white"
-        >
-          <svg width="15" height="11" viewBox="0 0 15 11" fill="none" aria-hidden="true">
-            <rect width="15" height="1.5" rx="0.75" fill="currentColor" />
-            <rect x="0" y="4.75" width="11" height="1.5" rx="0.75" fill="currentColor" />
-            <rect x="0" y="9.5"  width="7"  height="1.5" rx="0.75" fill="currentColor" />
-          </svg>
-          History
-        </button>
+        {/* Logo + History — top left */}
+        <div className="pointer-events-auto flex items-center gap-4">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/RootLogo-RGB-FullColWhtxt.svg" alt="Root" className="h-6 w-auto" />
+          <button
+            aria-hidden="false"
+            onClick={() => setSidebarOpen(true)}
+            className="flex items-center gap-2.5 rounded-full border border-white/20 bg-secondary/60 px-4 py-2.5 type-eyebrow text-white/60 backdrop-blur-sm transition-all hover:bg-white/10 hover:text-white"
+          >
+            <svg width="15" height="11" viewBox="0 0 15 11" fill="none" aria-hidden="true">
+              <rect width="15" height="1.5" rx="0.75" fill="currentColor" />
+              <rect x="0" y="4.75" width="11" height="1.5" rx="0.75" fill="currentColor" />
+              <rect x="0" y="9.5"  width="7"  height="1.5" rx="0.75" fill="currentColor" />
+            </svg>
+            History
+          </button>
+        </div>
 
         {/* Session label — centre */}
         <span className="type-eyebrow text-white/30">

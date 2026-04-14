@@ -25,7 +25,12 @@ export default async function HomePage() {
 
   return (
     <DarkPageLayout>
-      <div className="flex min-h-screen flex-col items-center justify-center px-8 py-20">
+      <div className="flex min-h-screen flex-col items-center justify-center px-8 py-20 relative">
+        {/* Root logo — top left */}
+        <div className="absolute top-8 left-8">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/RootLogo-RGB-FullColWhtxt.svg" alt="Root" className="h-8 w-auto" />
+        </div>
 
         {/* ── Branding ─────────────────────────────────────────────────── */}
         <div className="mb-14 text-center">

@@ -123,12 +123,8 @@ export default function EditShell({
       <nav className="flex flex-shrink-0 items-center justify-between border-b border-[#DEDEDE] bg-white px-8 py-3.5">
         {/* Root logo */}
         <div className="flex items-center gap-3">
-          <span
-            className="text-[22px] font-black text-[#262626]"
-            style={{ fontFamily: 'var(--font-lato)', letterSpacing: '-0.02em' }}
-          >
-            Root
-          </span>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/RootLogo-RGB-FullColWhtxt.svg" alt="Root" className="h-7 w-auto" />
           <span className="hidden h-4 w-px bg-[#DEDEDE] sm:block" />
           <span className="hidden text-[12px] text-[#969696] sm:block">MMU Editor</span>
         </div>
