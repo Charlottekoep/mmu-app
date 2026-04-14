@@ -4,7 +4,6 @@ import { useState, useEffect, useCallback, useMemo } from 'react'
 import Link from 'next/link'
 import DarkPageLayout    from '@/components/DarkPageLayout'
 import HistorySidebar    from '@/components/HistorySidebar'
-import ReactionPanel     from '@/components/ReactionPanel'
 import WelcomeSection    from '@/components/sections/WelcomeSection'
 import NorthStarSection  from '@/components/sections/NorthStarSection'
 import JustHumansSection from '@/components/sections/JustHumansSection'
@@ -261,15 +260,6 @@ export default function PresentationShell({ session, sections, initialSectionId 
         </div>
       )}
 
-      {/* ── Reaction panel — all sections except The League ──────────── */}
-      {currentSlide && currentSlide.kind === 'section' &&
-       currentSlide.section.section_type !== 'the_league' && (
-        <ReactionPanel
-          key={currentSlide.section.id}
-          sessionId={session.id}
-          sectionType={currentSlide.section.section_type}
-        />
-      )}
     </>
   )
 }

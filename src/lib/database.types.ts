@@ -180,32 +180,6 @@ export type Database = {
           },
         ]
       }
-      reactions: {
-        Row: {
-          id:            string
-          session_id:    string
-          section_type:  string
-          reaction_text: string
-          created_at:    string
-        }
-        Insert: {
-          id?:           string
-          session_id:    string
-          section_type:  string
-          reaction_text: string
-          created_at?:   string
-        }
-        Update: Partial<Database['public']['Tables']['reactions']['Row']>
-        Relationships: [
-          {
-            foreignKeyName: 'reactions_session_id_fkey'
-            columns: ['session_id']
-            isOneToOne: false
-            referencedRelation: 'mmu_sessions'
-            referencedColumns: ['id']
-          },
-        ]
-      }
     }
     Views:     Record<string, never>
     Functions: Record<string, never>
