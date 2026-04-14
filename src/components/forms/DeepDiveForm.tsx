@@ -23,7 +23,6 @@ type Content = {
   lever_id:     string
   body:         string
   links:        LinkItem[]
-  image_url:    string
   images:       string[]
 }
 
@@ -57,9 +56,7 @@ export default function DeepDiveForm({ section, sessionId, teamMembers, levers }
   const [links,        setLinks]        = useState<LinkItem[]>(
     (raw.links ?? []).length > 0 ? (raw.links as LinkItem[]) : [{ url: '', label: '' }],
   )
-  const [image_url,    setImageUrl]     = useState(raw.image_url    ?? '')
   const [images,       setImages]       = useState<string[]>(raw.images ?? [])
-  const [uploading,    setUploading]    = useState(false)
   const [saving,       setSaving]       = useState(false)
   const [saved,        setSaved]        = useState(false)
   const [saveError,    setSaveError]    = useState(false)
@@ -72,7 +69,6 @@ export default function DeepDiveForm({ section, sessionId, teamMembers, levers }
       lever_id:     patch.lever_id     ?? lever_id,
       body:         patch.body         ?? body,
       links:        patch.links        ?? links,
-      image_url:    patch.image_url    ?? image_url,
       images:       patch.images       ?? images,
     }
     const active = patch.is_active !== undefined ? patch.is_active : is_active
@@ -83,28 +79,12 @@ export default function DeepDiveForm({ section, sessionId, teamMembers, levers }
     if (err) { setSaving(false); setSaveError(true); setTimeout(() => setSaveError(false), 3000); return }
     setSaving(false); setSaved(true)
     setTimeout(() => setSaved(false), 2000)
-  }, [title, presenter_id, lever_id, body, links, image_url, images, is_active, section.id])
+  }, [title, presenter_id, lever_id, body, links, images, is_active, section.id])
 
   function toggleActive() {
     const next = !is_active
     setIsActive(next)
     persist({ is_active: next })
-  }
-
-  // Cover image upload
-  async function handleCoverImage(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0]
-    if (!file) return
-    setUploading(true)
-    const path = `${sessionId}/${section.id}/cover-${Date.now()}-${file.name}`
-    const supabase = getBrowserClient()
-    const { data } = await supabase.storage.from('session-images').upload(path, file, { upsert: true })
-    if (data) {
-      const { data: pub } = supabase.storage.from('session-images').getPublicUrl(data.path)
-      setImageUrl(pub.publicUrl)
-      persist({ image_url: pub.publicUrl })
-    }
-    setUploading(false)
   }
 
   // Links
@@ -209,25 +189,7 @@ export default function DeepDiveForm({ section, sessionId, teamMembers, levers }
         />
       </div>
 
-      {/* Cover image */}
-      <div>
-        <label className={fieldLabel}>Cover image</label>
-        <div className="space-y-3">
-          {image_url && (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={image_url} alt="Cover" className="max-h-48 rounded-lg object-cover border border-[#DEDEDE]" />
-          )}
-          <label className="flex cursor-pointer items-center gap-3 rounded-lg border border-dashed border-[#DEDEDE] px-4 py-3 text-[13px] text-[#969696] hover:border-[#2969FF]/50 hover:text-[#5A5A5A] transition-colors">
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-              <path d="M8 3v10M3 8h10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-            </svg>
-            {uploading ? 'Uploading…' : 'Upload cover image'}
-            <input type="file" accept="image/*" className="sr-only" onChange={handleCoverImage} />
-          </label>
-        </div>
-      </div>
-
-      {/* Additional images */}
+      {/* Images */}
       <div>
         <label className={fieldLabel}>Additional images</label>
         <ImageUploader

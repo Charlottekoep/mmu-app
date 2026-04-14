@@ -190,7 +190,11 @@ export default function PresentationShell({ session, sections, initialSectionId 
         {/* Edit — top right */}
         <Link
           aria-hidden="false"
-          href={`/edit/${session.id}`}
+          href={
+            slides[index]?.kind === 'section'
+              ? `/edit/${session.id}?section=${slides[index].section.id}`
+              : `/edit/${session.id}`
+          }
           className="pointer-events-auto rounded-full border border-white/20 bg-secondary/60 px-4 py-2.5 type-eyebrow text-white/60 backdrop-blur-sm transition-all hover:bg-white/10 hover:text-white"
         >
           Edit

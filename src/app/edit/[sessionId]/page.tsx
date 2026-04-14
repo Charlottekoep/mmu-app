@@ -4,10 +4,13 @@ import EditShell from '@/components/EditShell'
 
 export default async function EditPage({
   params,
+  searchParams,
 }: {
-  params: Promise<{ sessionId: string }>
+  params:       Promise<{ sessionId: string }>
+  searchParams: Promise<{ section?: string }>
 }) {
-  const { sessionId } = await params
+  const { sessionId }                    = await params
+  const { section: initialSectionId }   = await searchParams
   const supabase = getServerClient()
 
   const [
@@ -40,6 +43,7 @@ export default async function EditPage({
       levers={levers ?? []}
       snapshots={snapshots ?? []}
       leaderboard={leaderboard ?? []}
+      initialSectionId={initialSectionId}
     />
   )
 }

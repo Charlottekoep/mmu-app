@@ -16,7 +16,6 @@ type Content = {
   lever_id:     string
   body:         string
   links:        LinkItem[]
-  image_url:    string
   images:       string[]
 }
 
@@ -126,16 +125,6 @@ export default function DeepDiveSection({ section, sessionId }: Props) {
         <h2 className="type-h2 text-white mb-10">
           {content.title ?? 'Deep Dive'}
         </h2>
-
-        {/* ── Cover image ────────────────────────────────────────────── */}
-        {content.image_url && (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={content.image_url}
-            alt=""
-            className="mb-10 w-full h-auto rounded-2xl border border-white/10"
-          />
-        )}
 
         {/* ── Body ───────────────────────────────────────────────────── */}
         {content.body && (

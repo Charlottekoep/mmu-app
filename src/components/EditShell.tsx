@@ -32,12 +32,13 @@ const SECTION_META: Record<string, { label: string; icon: string }> = {
 // ─── Props ────────────────────────────────────────────────────────────────
 
 type Props = {
-  session:     MmuSession
-  sections:    SessionSection[]
-  teamMembers: TeamMember[]
-  levers:      Lever[]
-  snapshots:   LeverSnapshot[]
-  leaderboard: LeaderboardEntry[]
+  session:           MmuSession
+  sections:          SessionSection[]
+  teamMembers:       TeamMember[]
+  levers:            Lever[]
+  snapshots:         LeverSnapshot[]
+  leaderboard:       LeaderboardEntry[]
+  initialSectionId?: string
 }
 
 // ─── Shell ────────────────────────────────────────────────────────────────
@@ -64,8 +65,13 @@ export default function EditShell({
   levers,
   snapshots,
   leaderboard,
+  initialSectionId,
 }: Props) {
-  const [activeId,    setActiveId]    = useState<string>(SESSION_DETAILS_ID)
+  const [activeId,    setActiveId]    = useState<string>(() =>
+    initialSectionId && sections.some((s) => s.id === initialSectionId)
+      ? initialSectionId
+      : SESSION_DETAILS_ID,
+  )
   const [sessionDate, setSessionDate] = useState(session.date)
 
   const activeSection = sections.find((s) => s.id === activeId)
