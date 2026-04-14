@@ -144,35 +144,59 @@ export default function FlipCard({ lever, update, compact = false }: Props) {
             style={{ background: ragColor }}
           />
 
-          {/* Owner */}
+          {/* 1. Owner */}
           <p className="type-eyebrow text-primary pr-6 truncate">{lever.owner}</p>
 
-          {/* Name */}
+          {/* 2. Lever name */}
           <h3
             className="mt-1.5 line-clamp-2 font-bold uppercase leading-tight text-white"
             style={{
-              fontSize:      compact ? '13px' : '16px',
+              fontSize:      compact ? '13px' : '17px',
               letterSpacing: '0.06em',
             }}
           >
             {lever.name}
           </h3>
 
-          {/* Measure */}
+          {/* 3. Measure */}
           {lever.measure && (
-            <p className="mt-2 line-clamp-2 text-[11px] leading-snug text-white/45">
-              {lever.measure}
-            </p>
+            <div className="mt-3">
+              <p className="type-eyebrow text-white/40">Measure</p>
+              <p
+                className="mt-1 line-clamp-2 leading-snug text-white/65"
+                style={{ fontSize: compact ? '10px' : '12px' }}
+              >
+                {lever.measure}
+              </p>
+            </div>
           )}
 
-          {/* Current → Target */}
-          <p className="mt-auto pt-3 text-[15px] font-bold leading-none text-white">
-            {lever.current_state}
-            <span className="mx-1.5 font-normal text-white/30">→</span>
-            {lever.target}
-          </p>
+          {/* Push current/target to bottom */}
+          <div className="flex-1" />
 
-          {/* Progress bar */}
+          {/* 4. Current + Target columns */}
+          <div className="flex gap-5 pt-2">
+            <div>
+              <p className="type-eyebrow text-white/40">Current</p>
+              <p
+                className="mt-1 font-bold leading-none text-white"
+                style={{ fontSize: compact ? '14px' : '20px' }}
+              >
+                {lever.current_state}
+              </p>
+            </div>
+            <div>
+              <p className="type-eyebrow text-white/40">Target</p>
+              <p
+                className="mt-1 font-bold leading-none text-white/50"
+                style={{ fontSize: compact ? '14px' : '20px' }}
+              >
+                {lever.target}
+              </p>
+            </div>
+          </div>
+
+          {/* 5. Progress bar */}
           <div className="mt-3 h-1 overflow-hidden rounded-full bg-white/10">
             {progress !== null && (
               <div
