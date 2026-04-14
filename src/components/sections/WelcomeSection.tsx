@@ -60,8 +60,8 @@ export default function WelcomeSection({ session, sections }: Props) {
         {/* Welcome message */}
         {session.welcome_message && (
           <p
-            className="mb-12 max-w-xl text-[20px] leading-relaxed text-white/65"
-            style={{ fontWeight: 300 }}
+            className="my-12 max-w-2xl text-[26px] leading-relaxed"
+            style={{ fontWeight: 700, color: '#2969FF' }}
           >
             {session.welcome_message}
           </p>
