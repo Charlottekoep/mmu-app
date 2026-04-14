@@ -76,22 +76,25 @@ export default function WelcomeSection({ session, sections, onNavigate }: Props)
         <div className="w-full grid grid-cols-2 gap-4">
 
           {/* Promises */}
-          <div className="rounded-xl p-5 text-left" style={{ background: '#2969FF' }}>
-            <div className="mb-2 text-xl leading-none">🤝</div>
-            <p className="type-eyebrow text-white/70 mb-3">Promises</p>
+          <div
+            className="rounded-xl p-5 text-left border border-white/10"
+            style={{ background: 'rgba(255,255,255,0.06)' }}
+          >
+            <div className="mb-2 text-2xl leading-none">🤝</div>
+            <p className="type-eyebrow text-primary mb-3">Promises</p>
             <ul className="space-y-2">
-              <li className="text-[15px] leading-snug text-white/85">
+              <li className="text-[15px] leading-snug text-white/75">
                 To provide a{' '}
                 <strong className="font-bold text-white">flexible</strong>,{' '}
                 <strong className="font-bold text-white">reliable</strong>,{' '}
                 <strong className="font-bold text-white">elegant</strong> platform
               </li>
-              <li className="text-[15px] leading-snug text-white/85">
+              <li className="text-[15px] leading-snug text-white/75">
                 That our clients will work with{' '}
                 <strong className="font-bold text-white">friendly</strong>,{' '}
                 <strong className="font-bold text-white">resourceful</strong> professionals
               </li>
-              <li className="text-[15px] leading-snug text-white/85">
+              <li className="text-[15px] leading-snug text-white/75">
                 That we will go{' '}
                 <strong className="font-bold text-white">above and beyond</strong> for our clients
               </li>
@@ -101,10 +104,10 @@ export default function WelcomeSection({ session, sections, onNavigate }: Props)
           {/* Values */}
           <div
             className="rounded-xl p-5 text-left border border-white/10"
-            style={{ background: '#0F1B4A' }}
+            style={{ background: 'rgba(255,255,255,0.06)' }}
           >
-            <div className="mb-2 text-xl leading-none">🧢</div>
-            <p className="type-eyebrow text-white/70 mb-3">Values</p>
+            <div className="mb-2 text-2xl leading-none">🧢</div>
+            <p className="type-eyebrow text-primary mb-3">Values</p>
             <ul className="space-y-2">
               <li className="text-[15px] leading-snug text-white/75">
                 We <strong className="font-bold text-white">lead by example</strong>

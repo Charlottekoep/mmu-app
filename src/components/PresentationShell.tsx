@@ -161,7 +161,7 @@ export default function PresentationShell({ session, sections, initialSectionId 
 
       {/* ── Top bar (fixed overlay) ────────────────────────────────── */}
       <div
-        className="fixed inset-x-0 top-0 z-20 flex items-center justify-between px-8 py-6 pointer-events-none"
+        className="fixed inset-x-0 top-0 z-20 grid grid-cols-3 items-center px-8 py-6 pointer-events-none"
         aria-hidden="true"
       >
         {/* Logo + History — top left */}
@@ -182,23 +182,27 @@ export default function PresentationShell({ session, sections, initialSectionId 
           </button>
         </div>
 
-        {/* Session label — centre */}
-        <span className="type-eyebrow text-white/30">
-          MMU&nbsp;{new Date(session.date + 'T00:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}
-        </span>
+        {/* Session label — truly centred via grid middle column */}
+        <div className="flex justify-center">
+          <span className="type-eyebrow text-white/30 whitespace-nowrap">
+            MMU&nbsp;{new Date(session.date + 'T00:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}
+          </span>
+        </div>
 
         {/* Edit — top right */}
-        <Link
-          aria-hidden="false"
-          href={
-            slides[index]?.kind === 'section'
-              ? `/edit/${session.id}?section=${slides[index].section.id}`
-              : `/edit/${session.id}`
-          }
-          className="pointer-events-auto rounded-full border border-white/20 bg-secondary/60 px-4 py-2.5 type-eyebrow text-white/60 backdrop-blur-sm transition-all hover:bg-white/10 hover:text-white"
-        >
-          Edit
-        </Link>
+        <div className="flex justify-end">
+          <Link
+            aria-hidden="false"
+            href={
+              slides[index]?.kind === 'section'
+                ? `/edit/${session.id}?section=${slides[index].section.id}`
+                : `/edit/${session.id}`
+            }
+            className="pointer-events-auto rounded-full border border-white/20 bg-secondary/60 px-4 py-2.5 type-eyebrow text-white/60 backdrop-blur-sm transition-all hover:bg-white/10 hover:text-white"
+          >
+            Edit
+          </Link>
+        </div>
       </div>
 
       {/* ── Left arrow ───────────────────────────────────────────────── */}
