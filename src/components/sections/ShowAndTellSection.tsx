@@ -128,23 +128,6 @@ export default function ShowAndTellSection({ section }: Props) {
         {/* ── Images ─────────────────────────────────────────────────── */}
         <ImageGrid images={images} />
 
-        {/* ── Feedback area ──────────────────────────────────────────── */}
-        <div className="mt-10">
-          <p className="type-eyebrow text-white/20 mb-4">Reactions</p>
-          <div className="flex flex-wrap gap-4">
-            {(['👍', '💡', '🔥', '🤔'].map((emoji, i) => (
-              <div
-                key={i}
-                className="flex h-20 w-20 flex-col items-center justify-center rounded-xl border border-white/10 bg-white/[0.04] text-3xl text-white/15"
-              >
-                {emoji}
-              </div>
-            )))}
-            <div className="flex h-20 w-20 items-center justify-center rounded-xl border border-dashed border-white/10 text-[11px] font-bold uppercase tracking-widest text-white/15">
-              Reactions<br />coming soon
-            </div>
-          </div>
-        </div>
 
       </div>
     </DarkPageLayout>
