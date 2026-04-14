@@ -250,8 +250,7 @@ function ImageGrid({ images }: { images: string[] }) {
           key={i}
           src={url}
           alt=""
-          className="w-full rounded-xl object-cover border border-white/10"
-          style={{ maxHeight: '360px' }}
+          className="w-full h-auto rounded-xl border border-white/10"
         />
       ))}
     </div>
