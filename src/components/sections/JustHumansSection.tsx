@@ -57,91 +57,110 @@ export default function JustHumansSection({ section }: Props) {
 
   return (
     <DarkPageLayout>
-      <div className="h-screen overflow-y-auto px-14 pt-24 pb-20">
+      <div className="flex h-screen overflow-hidden">
 
-        {/* ── Header ─────────────────────────────────────────────────── */}
-        <div className="mb-12">
-          <p className="type-eyebrow text-white mb-2">Just Humans</p>
-          <h2 className="type-h2 text-white">
-            {subject ? subject.name : 'Team Spotlight'}
-          </h2>
-        </div>
+        {/* ── Left column — presenter → subject ──────────────────────── */}
+        <div className="relative flex w-[35%] flex-shrink-0 flex-col items-center justify-center border-r border-white/10 px-10 py-16">
 
-        {/* ── Profile cards ──────────────────────────────────────────── */}
-        <div className="flex items-center gap-8 mb-14">
           {/* Presenter card */}
-          <div className="flex flex-col items-center gap-4 rounded-2xl border border-white/10 bg-white/[0.05] p-8 min-w-[220px]">
-            <TeamAvatar member={presenter} size={120} className="border-2 border-white/15" />
-            <div className="text-center">
-              <p className="text-[16px] font-bold text-white">
-                {presenter?.name ?? '—'}
-              </p>
-              <p className="mt-1 text-[13px] text-white/65">{presenter?.role ?? ''}</p>
-            </div>
-            <span className="type-eyebrow text-white/65">Presenter</span>
-          </div>
+          <PersonCard member={presenter} label="Presenter" variant="default" />
 
-          {/* Arrow */}
-          <div className="flex flex-col items-center gap-2 text-white/20">
-            <svg width="32" height="32" viewBox="0 0 32 32" fill="none" aria-hidden="true">
-              <path
-                d="M6 16h20M18 8l8 8-8 8"
-                stroke="currentColor"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
+          {/* Connector */}
+          <div className="flex flex-col items-center gap-1.5 py-5">
+            <span className="type-eyebrow text-white/25">presents</span>
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true">
+              <path d="M9 3v12M4 10l5 5 5-5" stroke="rgba(255,255,255,0.2)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
-            <span className="type-eyebrow text-white/20">presents</span>
           </div>
 
           {/* Subject card */}
-          <div className="flex flex-col items-center gap-4 rounded-2xl border border-primary/25 bg-primary/[0.07] p-8 min-w-[220px]">
-            <TeamAvatar member={subject} size={120} className="border-2 border-primary/30" />
-            <div className="text-center">
-              <p className="text-[16px] font-bold text-white">
-                {subject?.name ?? '—'}
-              </p>
-              <p className="mt-1 text-[13px] text-white/65">{subject?.role ?? ''}</p>
-            </div>
-            <span className="type-eyebrow text-primary/60">In the spotlight</span>
-          </div>
+          <PersonCard member={subject} label="In the spotlight" variant="spotlight" />
+
         </div>
 
-        {/* ── Spotlight content ──────────────────────────────────────── */}
-        {content.spotlight && (
-          <div className="max-w-2xl mb-10">
-            <p className="type-eyebrow text-white mb-4">Spotlight</p>
+        {/* ── Right column — spotlight content ───────────────────────── */}
+        <div className="flex flex-1 flex-col justify-center overflow-y-auto px-14 py-16">
+
+          <p className="type-eyebrow text-white mb-3">Spotlight</p>
+
+          <h2 className="type-h2 text-white mb-8">
+            {subject?.name ?? 'Team Spotlight'}
+          </h2>
+
+          {content.spotlight && (
             <div
-              className="text-[16px] leading-relaxed text-white/65 [&_p]:mb-3 [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_li]:mb-1.5 [&_strong]:text-white [&_em]:italic"
+              className="max-w-2xl text-[18px] leading-relaxed text-white/70 [&_p]:mb-3 [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_li]:mb-1.5 [&_strong]:font-bold [&_strong]:text-white [&_em]:italic"
               dangerouslySetInnerHTML={{ __html: content.spotlight }}
             />
-          </div>
-        )}
+          )}
 
-        {/* ── Images ─────────────────────────────────────────────────── */}
-        <ImageGrid images={images} />
+          {images.length > 0 && (
+            <div
+              className={`mt-10 grid gap-3 ${
+                images.length === 1 ? 'grid-cols-1 max-w-2xl'
+                : images.length === 2 ? 'grid-cols-2'
+                : 'grid-cols-3'
+              }`}
+            >
+              {images.map((url, i) => (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  key={i}
+                  src={url}
+                  alt=""
+                  className="w-full h-auto rounded-xl border border-white/10"
+                />
+              ))}
+            </div>
+          )}
 
+        </div>
       </div>
     </DarkPageLayout>
   )
 }
 
-// ─── Helpers ──────────────────────────────────────────────────────────────
+// ─── Person card ──────────────────────────────────────────────────────────
 
-function ImageGrid({ images }: { images: string[] }) {
-  if (!images.length) return null
+type CardVariant = 'default' | 'spotlight'
+
+function PersonCard({
+  member,
+  label,
+  variant,
+}: {
+  member:  TeamMember | undefined
+  label:   string
+  variant: CardVariant
+}) {
+  const isSpotlight = variant === 'spotlight'
   return (
-    <div className={`grid gap-3 ${images.length === 1 ? 'grid-cols-1 max-w-2xl' : images.length === 2 ? 'grid-cols-2' : 'grid-cols-3'}`}>
-      {images.map((url, i) => (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
-          key={i}
-          src={url}
-          alt=""
-          className="w-full h-auto rounded-xl border border-white/10"
-        />
-      ))}
+    <div
+      className="flex w-full max-w-[260px] flex-col items-center gap-5 rounded-2xl p-8"
+      style={{
+        border:     isSpotlight ? '1px solid rgba(41,105,255,0.30)' : '1px solid rgba(255,255,255,0.10)',
+        background: isSpotlight ? 'rgba(41,105,255,0.07)'           : 'rgba(255,255,255,0.04)',
+      }}
+    >
+      <TeamAvatar
+        member={member}
+        size={100}
+        className={isSpotlight ? 'border-2 border-primary/35' : 'border-2 border-white/15'}
+      />
+      <div className="text-center">
+        <p className="text-[17px] font-bold text-white leading-snug">
+          {member?.name ?? '—'}
+        </p>
+        {member?.role && (
+          <p className="mt-1 text-[13px] text-white/50">{member.role}</p>
+        )}
+      </div>
+      <span
+        className="type-eyebrow"
+        style={{ color: isSpotlight ? 'rgba(41,105,255,0.75)' : 'rgba(255,255,255,0.35)' }}
+      >
+        {label}
+      </span>
     </div>
   )
 }
