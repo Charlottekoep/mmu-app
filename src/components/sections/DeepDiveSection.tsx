@@ -133,7 +133,7 @@ export default function DeepDiveSection({ section, sessionId }: Props) {
           <img
             src={content.image_url}
             alt=""
-            className="mb-10 max-h-72 w-full rounded-2xl object-cover border border-white/10"
+            className="mb-10 w-full h-auto rounded-2xl border border-white/10"
           />
         )}
 
@@ -177,15 +177,19 @@ export default function DeepDiveSection({ section, sessionId }: Props) {
 
 function ImageGrid({ images }: { images: string[] }) {
   if (!images.length) return null
+  const cols =
+    images.length === 1 ? 'grid-cols-1 max-w-2xl'
+    : images.length === 2 ? 'grid-cols-2'
+    : 'grid-cols-3'
   return (
-    <div className={`grid gap-3 mb-10 ${images.length === 1 ? 'grid-cols-1 max-w-2xl' : images.length === 2 ? 'grid-cols-2' : 'grid-cols-3'}`}>
+    <div className={`grid gap-4 mb-10 ${cols}`}>
       {images.map((url, i) => (
         // eslint-disable-next-line @next/next/no-img-element
         <img
           key={i}
           src={url}
           alt=""
-          className="w-full h-auto rounded-xl border border-white/10"
+          className="w-full h-auto rounded-xl border border-white/10 object-contain"
         />
       ))}
     </div>

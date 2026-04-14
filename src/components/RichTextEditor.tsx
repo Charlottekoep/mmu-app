@@ -108,6 +108,7 @@ export default function RichTextEditor({
           '[&_ul]:list-disc [&_ul]:pl-4 [&_ol]:list-decimal [&_ol]:pl-4 [&_p]:my-1 [&_li]:my-0.5',
           showTable ? 'tiptap-with-table' : '',
         ].join(' ').trim(),
+        ...(placeholder ? { 'data-placeholder': placeholder } : {}),
       },
     },
   })
@@ -121,6 +122,20 @@ export default function RichTextEditor({
 
   return (
     <>
+      <style>{`
+        .tiptap-editor .ProseMirror {
+          min-height: ${minHeight - 20}px;
+          outline: none;
+        }
+        .tiptap-editor .ProseMirror.is-editor-empty:not(:focus)::before {
+          content: attr(data-placeholder);
+          color: #969696;
+          font-size: 14px;
+          float: left;
+          height: 0;
+          pointer-events: none;
+        }
+      `}</style>
       {showTable && (
         <style>{`
           .tiptap-with-table table { border-collapse: collapse; width: 100%; margin: 8px 0; }
@@ -130,17 +145,13 @@ export default function RichTextEditor({
           .tiptap-with-table .selectedCell { background: #EEF3FF; }
         `}</style>
       )}
-      <div className="overflow-hidden rounded-lg border border-[#DEDEDE] bg-white focus-within:border-[#2969FF]">
+      <div className="tiptap-editor overflow-hidden rounded-lg border border-[#DEDEDE] bg-white focus-within:border-[#2969FF]">
         <Toolbar editor={editor} showTable={showTable} />
-        <div className="px-3 py-2.5" style={{ minHeight }}>
-          {!editor?.getText() && placeholder && !editor?.isFocused && (
-            <p
-              className="pointer-events-none absolute text-[14px] text-[#969696]"
-              aria-hidden="true"
-            >
-              {placeholder}
-            </p>
-          )}
+        <div
+          className="cursor-text px-3 py-2.5"
+          style={{ minHeight }}
+          onClick={() => editor?.commands.focus()}
+        >
           <EditorContent editor={editor} />
         </div>
       </div>
