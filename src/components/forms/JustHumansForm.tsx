@@ -5,6 +5,7 @@ import { getBrowserClient } from '@/lib/supabase'
 import type { SessionSection, TeamMember } from '@/lib/types'
 import RichTextEditor from '@/components/RichTextEditor'
 import ImageUploader  from '@/components/ImageUploader'
+import TeamAvatar     from '@/components/TeamAvatar'
 
 // ─── Shared field styles ──────────────────────────────────────────────────
 
@@ -71,7 +72,7 @@ export default function JustHumansForm({ section, sessionId, teamMembers }: Prop
       <div>
         <label className={fieldLabel}>Presenter</label>
         <div className="flex items-center gap-3">
-          <MemberAvatar member={presenter} />
+          <TeamAvatar member={presenter} size={36} className="border border-[#DEDEDE]" />
           <select
             value={presenter_id}
             onChange={(e) => { setPresenter(e.target.value); save({ presenter_id: e.target.value }) }}
@@ -89,7 +90,7 @@ export default function JustHumansForm({ section, sessionId, teamMembers }: Prop
       <div>
         <label className={fieldLabel}>Spotlight on</label>
         <div className="flex items-center gap-3">
-          <MemberAvatar member={subject} />
+          <TeamAvatar member={subject} size={36} className="border border-[#DEDEDE]" />
           <select
             value={subject_id}
             onChange={(e) => { setSubject(e.target.value); save({ subject_id: e.target.value }) }}
@@ -128,29 +129,6 @@ export default function JustHumansForm({ section, sessionId, teamMembers }: Prop
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────
-
-function MemberAvatar({ member }: { member: TeamMember | undefined }) {
-  if (!member) {
-    return (
-      <div className="h-9 w-9 flex-shrink-0 rounded-full bg-[#F0F0F0] border border-[#DEDEDE]" />
-    )
-  }
-  if (member.photo_url) {
-    return (
-      // eslint-disable-next-line @next/next/no-img-element
-      <img
-        src={member.photo_url}
-        alt={member.name}
-        className="h-9 w-9 flex-shrink-0 rounded-full object-cover border border-[#DEDEDE]"
-      />
-    )
-  }
-  return (
-    <div className="h-9 w-9 flex-shrink-0 rounded-full bg-primary/20 border border-primary/30 flex items-center justify-center text-[13px] font-bold text-primary">
-      {member.name[0]}
-    </div>
-  )
-}
 
 function SaveIndicator({ saving, saved, error }: { saving: boolean; saved: boolean; error: boolean }) {
   if (!saving && !saved && !error) return null

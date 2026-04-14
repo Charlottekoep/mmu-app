@@ -5,6 +5,7 @@ import { getBrowserClient } from '@/lib/supabase'
 import type { SessionSection, TeamMember } from '@/lib/types'
 import RichTextEditor from '@/components/RichTextEditor'
 import ImageUploader  from '@/components/ImageUploader'
+import TeamAvatar     from '@/components/TeamAvatar'
 
 // ─── Shared styles ────────────────────────────────────────────────────────
 
@@ -105,14 +106,17 @@ export default function ShowAndTellForm({ section, sessionId, teamMembers }: Pro
       {/* Presenter */}
       <div>
         <label className={fieldLabel}>Presenter</label>
-        <select
-          value={presenter_id}
-          onChange={(e) => { setPresenter(e.target.value); persist({ presenter_id: e.target.value }) }}
-          className={selectCls}
-        >
+        <div className="flex items-center gap-3">
+          <TeamAvatar member={teamMembers.find((m) => m.id === presenter_id)} size={36} className="border border-[#DEDEDE]" />
+          <select
+            value={presenter_id}
+            onChange={(e) => { setPresenter(e.target.value); persist({ presenter_id: e.target.value }) }}
+            className={selectCls}
+          >
           <option value="">— select —</option>
           {teamMembers.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
         </select>
+        </div>
       </div>
 
       {/* Topic */}

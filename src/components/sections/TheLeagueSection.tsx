@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { getBrowserClient } from '@/lib/supabase'
 import type { SessionSection, TeamMember, LeaderboardEntry } from '@/lib/types'
 import DarkPageLayout from '@/components/DarkPageLayout'
+import TeamAvatar    from '@/components/TeamAvatar'
 
 // ─── Types ────────────────────────────────────────────────────────────────
 
@@ -99,7 +100,7 @@ export default function TheLeagueSection({ section }: Props) {
           </div>
           {presenter && (
             <div className="flex items-center gap-3">
-              <MemberAvatar member={presenter} size={40} />
+              <TeamAvatar member={presenter} size={40} className="border border-white/15" />
               <div>
                 <p className="text-[13px] font-bold text-white">{presenter.name}</p>
                 <p className="text-[11px] text-white/65">{presenter.role}</p>
@@ -206,7 +207,7 @@ export default function TheLeagueSection({ section }: Props) {
                     </span>
 
                     {/* Avatar */}
-                    <MemberAvatar member={entry.member} size={32} />
+                    <TeamAvatar member={entry.member} size={32} className="border border-white/15" />
 
                     {/* Name */}
                     <span
@@ -253,29 +254,6 @@ function ImageGrid({ images }: { images: string[] }) {
           className="w-full h-auto rounded-xl border border-white/10"
         />
       ))}
-    </div>
-  )
-}
-
-function MemberAvatar({ member, size }: { member: TeamMember | undefined; size: number }) {
-  const s = `${size}px`
-  if (!member) return <div className="rounded-full bg-white/10" style={{ width: s, height: s }} />
-
-  if (member.photo_url) {
-    return (
-      // eslint-disable-next-line @next/next/no-img-element
-      <img src={member.photo_url} alt={member.name}
-        className="flex-shrink-0 rounded-full object-cover border border-white/15"
-        style={{ width: s, height: s }}
-      />
-    )
-  }
-  return (
-    <div
-      className="flex flex-shrink-0 items-center justify-center rounded-full bg-primary/20 font-black text-primary"
-      style={{ width: s, height: s, fontSize: `${size * 0.4}px` }}
-    >
-      {member.name[0]}
     </div>
   )
 }

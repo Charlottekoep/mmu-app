@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { getBrowserClient } from '@/lib/supabase'
 import type { SessionSection, TeamMember } from '@/lib/types'
 import DarkPageLayout from '@/components/DarkPageLayout'
+import TeamAvatar    from '@/components/TeamAvatar'
 
 // ─── Content type ─────────────────────────────────────────────────────────
 
@@ -70,7 +71,7 @@ export default function JustHumansSection({ section }: Props) {
         <div className="flex items-center gap-8 mb-14">
           {/* Presenter card */}
           <div className="flex flex-col items-center gap-4 rounded-2xl border border-white/10 bg-white/[0.05] p-8 min-w-[220px]">
-            <MemberAvatar member={presenter} size={120} />
+            <TeamAvatar member={presenter} size={120} className="border-2 border-white/15" />
             <div className="text-center">
               <p className="text-[16px] font-bold text-white">
                 {presenter?.name ?? '—'}
@@ -96,7 +97,7 @@ export default function JustHumansSection({ section }: Props) {
 
           {/* Subject card */}
           <div className="flex flex-col items-center gap-4 rounded-2xl border border-primary/25 bg-primary/[0.07] p-8 min-w-[220px]">
-            <MemberAvatar member={subject} size={120} />
+            <TeamAvatar member={subject} size={120} className="border-2 border-primary/30" />
             <div className="text-center">
               <p className="text-[16px] font-bold text-white">
                 {subject?.name ?? '—'}
@@ -141,40 +142,6 @@ function ImageGrid({ images }: { images: string[] }) {
           className="w-full h-auto rounded-xl border border-white/10"
         />
       ))}
-    </div>
-  )
-}
-
-function MemberAvatar({ member, size }: { member: TeamMember | undefined; size: number }) {
-  const s = `${size}px`
-
-  if (!member) {
-    return (
-      <div
-        className="rounded-full bg-white/10 border border-white/10 flex-shrink-0"
-        style={{ width: s, height: s }}
-      />
-    )
-  }
-
-  if (member.photo_url) {
-    return (
-      // eslint-disable-next-line @next/next/no-img-element
-      <img
-        src={member.photo_url}
-        alt={member.name}
-        className="rounded-full object-cover border-2 border-white/15 flex-shrink-0"
-        style={{ width: s, height: s }}
-      />
-    )
-  }
-
-  return (
-    <div
-      className="rounded-full bg-primary/20 border-2 border-primary/30 flex items-center justify-center flex-shrink-0 text-primary font-black"
-      style={{ width: s, height: s, fontSize: `${size * 0.38}px` }}
-    >
-      {member.name[0]}
     </div>
   )
 }
