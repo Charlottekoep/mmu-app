@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useMemo } from 'react'
 import Link from 'next/link'
 import DarkPageLayout    from '@/components/DarkPageLayout'
 import HistorySidebar    from '@/components/HistorySidebar'
+import ReactionPanel     from '@/components/ReactionPanel'
 import WelcomeSection    from '@/components/sections/WelcomeSection'
 import NorthStarSection  from '@/components/sections/NorthStarSection'
 import JustHumansSection from '@/components/sections/JustHumansSection'
@@ -102,6 +103,8 @@ export default function PresentationShell({ session, sections, initialSectionId 
 
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
+      // Don't navigate while the user is typing in an input
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return
       if (e.key === 'ArrowRight') next()
       if (e.key === 'ArrowLeft')  prev()
       if (e.key === 'Escape')     setSidebarOpen(false)
@@ -110,8 +113,9 @@ export default function PresentationShell({ session, sections, initialSectionId 
     return () => window.removeEventListener('keydown', onKey)
   }, [next, prev])
 
-  const hasPrev = index > 0
-  const hasNext = index < slides.length - 1
+  const hasPrev      = index > 0
+  const hasNext      = index < slides.length - 1
+  const currentSlide = slides[index]
 
   // Label for a slide (used in progress dots aria-label)
   function slideLabel(slide: Slide) {
@@ -194,8 +198,8 @@ export default function PresentationShell({ session, sections, initialSectionId 
           <Link
             aria-hidden="false"
             href={
-              slides[index]?.kind === 'section'
-                ? `/edit/${session.id}?section=${slides[index].section.id}`
+              currentSlide?.kind === 'section'
+                ? `/edit/${session.id}?section=${currentSlide.section.id}`
                 : `/edit/${session.id}`
             }
             className="pointer-events-auto rounded-full border border-white/20 bg-secondary/60 px-4 py-2.5 type-eyebrow text-white/60 backdrop-blur-sm transition-all hover:bg-white/10 hover:text-white"
@@ -255,6 +259,16 @@ export default function PresentationShell({ session, sections, initialSectionId 
             />
           ))}
         </div>
+      )}
+
+      {/* ── Reaction panel — all sections except The League ──────────── */}
+      {currentSlide && currentSlide.kind === 'section' &&
+       currentSlide.section.section_type !== 'the_league' && (
+        <ReactionPanel
+          key={currentSlide.section.id}
+          sessionId={session.id}
+          sectionType={currentSlide.section.section_type}
+        />
       )}
     </>
   )
