@@ -45,14 +45,15 @@ export default function WelcomeSection({ session, sections, onNavigate }: Props)
       />
 
       {/* ── Main content ──────────────────────────────────────────────── */}
-      <div className="relative z-10 flex max-w-4xl flex-col items-center px-12 text-center">
+      <div className="relative z-10 flex w-full max-w-5xl flex-col items-center px-12 text-center">
+
         {/* Eyebrow */}
-        <p className="type-eyebrow tracking-[0.25em] text-white mb-8">
+        <p className="type-eyebrow tracking-[0.25em] text-white mb-6">
           Monday Mission Update
         </p>
 
         {/* Display title: MMU 20 April 2026 */}
-        <h1 className="mb-8 leading-none font-black" style={{ letterSpacing: '-0.03em' }}>
+        <h1 className="mb-6 leading-none font-black" style={{ letterSpacing: '-0.03em' }}>
           <span style={{ color: '#2969FF', fontSize: '100px' }}>MMU</span>
           <br />
           <span className="text-white" style={{ fontSize: '72px' }}>{dateStr}</span>
@@ -61,16 +62,73 @@ export default function WelcomeSection({ session, sections, onNavigate }: Props)
         {/* Welcome message */}
         {session.welcome_message && (
           <p
-            className="my-12 max-w-2xl text-[26px] leading-relaxed"
+            className="my-8 max-w-2xl text-[26px] leading-relaxed"
             style={{ fontWeight: 700, color: '#2969FF' }}
           >
             {session.welcome_message}
           </p>
         )}
 
-        {/* Active section pills */}
+        {/* Divider */}
+        <div className="w-full border-t border-white/10 my-6" />
+
+        {/* ── Promises + Values ─────────────────────────────────────── */}
+        <div className="w-full grid grid-cols-2 gap-4">
+
+          {/* Promises */}
+          <div className="rounded-xl p-5 text-left" style={{ background: '#2969FF' }}>
+            <div className="mb-2 text-xl leading-none">🤝</div>
+            <p className="type-eyebrow text-white/70 mb-3">Promises</p>
+            <ul className="space-y-2">
+              <li className="text-[15px] leading-snug text-white/85">
+                To provide a{' '}
+                <strong className="font-bold text-white">flexible</strong>,{' '}
+                <strong className="font-bold text-white">reliable</strong>,{' '}
+                <strong className="font-bold text-white">elegant</strong> platform
+              </li>
+              <li className="text-[15px] leading-snug text-white/85">
+                That our clients will work with{' '}
+                <strong className="font-bold text-white">friendly</strong>,{' '}
+                <strong className="font-bold text-white">resourceful</strong> professionals
+              </li>
+              <li className="text-[15px] leading-snug text-white/85">
+                That we will go{' '}
+                <strong className="font-bold text-white">above and beyond</strong> for our clients
+              </li>
+            </ul>
+          </div>
+
+          {/* Values */}
+          <div
+            className="rounded-xl p-5 text-left border border-white/10"
+            style={{ background: '#0F1B4A' }}
+          >
+            <div className="mb-2 text-xl leading-none">🧢</div>
+            <p className="type-eyebrow text-white/70 mb-3">Values</p>
+            <ul className="space-y-2">
+              <li className="text-[15px] leading-snug text-white/75">
+                We <strong className="font-bold text-white">lead by example</strong>
+              </li>
+              <li className="text-[15px] leading-snug text-white/75">
+                We <strong className="font-bold text-white">exceed expectations</strong>
+              </li>
+              <li className="text-[15px] leading-snug text-white/75">
+                We <strong className="font-bold text-white">rally as one team</strong>
+              </li>
+              <li className="text-[15px] leading-snug text-white/75">
+                We <strong className="font-bold text-white">own the mission</strong>
+              </li>
+              <li className="text-[15px] leading-snug text-white/75">
+                We <strong className="font-bold text-white">rise to the challenge</strong>
+              </li>
+            </ul>
+          </div>
+
+        </div>
+
+        {/* ── Section pills ─────────────────────────────────────────── */}
         {activeSections.length > 0 && (
-          <div className="flex flex-wrap items-center justify-center gap-2">
+          <div className="mt-5 flex flex-wrap items-center justify-center gap-2">
             {activeSections.map((s) => (
               <button
                 key={s.id}
@@ -83,6 +141,7 @@ export default function WelcomeSection({ session, sections, onNavigate }: Props)
             ))}
           </div>
         )}
+
       </div>
 
       {/* ── Bottom gradient rule ───────────────────────────────────────── */}
