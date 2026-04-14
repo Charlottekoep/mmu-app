@@ -92,6 +92,7 @@ export type Database = {
           notes:           string | null
           done_update:     string | null
           planning_update: string | null
+          images:          string[]
           snapshotted_at:  string
         }
         Insert: {
@@ -104,6 +105,7 @@ export type Database = {
           notes?:           string | null
           done_update?:     string | null
           planning_update?: string | null
+          images?:          string[]
           snapshotted_at?:  string
         }
         Update: Partial<Database['public']['Tables']['lever_snapshots']['Row']>

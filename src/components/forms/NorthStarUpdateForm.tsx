@@ -25,6 +25,7 @@ type LeverState = {
   notes:           string
   done_update:     string
   planning_update: string
+  images:          string[]
 }
 
 type Props = {
@@ -65,6 +66,7 @@ export default function NorthStarUpdateForm({ section, sessionId, levers, snapsh
         notes:           snap?.notes            ?? lever.notes ?? '',
         done_update:     snap?.done_update      ?? '',
         planning_update: snap?.planning_update  ?? '',
+        images:          snap?.images           ?? [],
       }
     }
     return out
@@ -115,6 +117,7 @@ export default function NorthStarUpdateForm({ section, sessionId, levers, snapsh
       notes:           state.notes           || null,
       done_update:     state.done_update     || null,
       planning_update: state.planning_update || null,
+      images:          state.images,
       snapshotted_at:  new Date().toISOString(),
     })
 
@@ -162,6 +165,7 @@ export default function NorthStarUpdateForm({ section, sessionId, levers, snapsh
                 <LeverRow
                   key={lever.id}
                   lever={lever}
+                  sessionId={sessionId}
                   state={state}
                   isSaving={saving === lever.id}
                   isSaved={saved  === lever.id}
@@ -189,14 +193,15 @@ export default function NorthStarUpdateForm({ section, sessionId, levers, snapsh
 // ─── Lever row ────────────────────────────────────────────────────────────
 
 type LeverRowProps = {
-  lever:    Lever
-  state:    LeverState
-  isSaving: boolean
-  isSaved:  boolean
-  onChange: (patch: Partial<LeverState>) => void
+  lever:     Lever
+  sessionId: string
+  state:     LeverState
+  isSaving:  boolean
+  isSaved:   boolean
+  onChange:  (patch: Partial<LeverState>) => void
 }
 
-function LeverRow({ lever, state, isSaving, isSaved, onChange }: LeverRowProps) {
+function LeverRow({ lever, sessionId, state, isSaving, isSaved, onChange }: LeverRowProps) {
   const [expanded, setExpanded] = useState(false)
 
   const ragColor = { green: '#1FC881', amber: '#FFAB00', red: '#D50000' }[state.rag_status] ?? '#FFAB00'
@@ -314,6 +319,16 @@ function LeverRow({ lever, state, isSaving, isSaved, onChange }: LeverRowProps) 
               rows={3}
               placeholder="One item per line…"
               className="w-full resize-none rounded-lg border border-[#DEDEDE] bg-white px-3 py-2 text-[13px] text-[#262626] placeholder-[#969696] outline-none focus:border-[#2969FF] transition-colors"
+            />
+          </div>
+          <div className="px-4 py-3">
+            <label className="block text-[10px] font-bold uppercase tracking-widest text-[#2969FF] mb-1.5">
+              Images (up to 3)
+            </label>
+            <ImageUploader
+              images={state.images}
+              folder={`lever-images/${sessionId}/${lever.id}`}
+              onChange={(imgs) => onChange({ images: imgs.slice(0, 3) })}
             />
           </div>
         </div>

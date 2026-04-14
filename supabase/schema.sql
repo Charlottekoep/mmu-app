@@ -54,6 +54,7 @@ CREATE TABLE lever_snapshots (
   notes           text,
   done_update     text,
   planning_update text,
+  images          text[]      NOT NULL DEFAULT '{}',
   snapshotted_at  timestamptz NOT NULL DEFAULT now()
 );
 

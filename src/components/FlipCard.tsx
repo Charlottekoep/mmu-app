@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
 import type { Lever } from '@/lib/types'
 
 // ─── Progress helper ──────────────────────────────────────────────────────
@@ -72,14 +72,16 @@ const RAG_COLOR: Record<string, string> = {
 type Update = { done: string | null; planning: string | null }
 
 type Props = {
-  lever:    Lever
-  update?:  Update
-  compact?: boolean
+  lever:     Lever
+  update?:   Update
+  compact?:  boolean
+  onExpand?: () => void
 }
 
-export default function FlipCard({ lever, update, compact = false }: Props) {
+export default function FlipCard({ lever, update, compact = false, onExpand }: Props) {
   const [flipped, setFlipped] = useState(false)
   const backContentRef = useRef<HTMLDivElement>(null)
+  const clickTimerRef  = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const progress = calcProgress(lever.current_state, lever.target, lever.rag_status)
   const ragColor  = RAG_COLOR[lever.rag_status] ?? RAG_COLOR.amber
@@ -103,14 +105,28 @@ export default function FlipCard({ lever, update, compact = false }: Props) {
     })
   }, [update?.done, update?.planning])
 
-  const toggle = () => setFlipped((f) => !f)
+  const toggle = useCallback(() => setFlipped((f) => !f), [])
+
+  // Single click → flip; double click → expand
+  function handleClick() {
+    if (clickTimerRef.current !== null) {
+      clearTimeout(clickTimerRef.current)
+      clickTimerRef.current = null
+      onExpand?.()
+      return
+    }
+    clickTimerRef.current = setTimeout(() => {
+      clickTimerRef.current = null
+      toggle()
+    }, 220)
+  }
 
   return (
     <div
       role="button"
       tabIndex={0}
       aria-pressed={flipped}
-      onClick={toggle}
+      onClick={handleClick}
       onKeyDown={(e) => e.key === 'Enter' && toggle()}
       className="cursor-pointer select-none outline-none"
       style={{
@@ -249,10 +265,21 @@ export default function FlipCard({ lever, update, compact = false }: Props) {
             )}
           </div>
 
-          {/* Flip hint */}
-          <p className="flex-shrink-0 px-3.5 pb-2 text-right text-[10px] text-white/20">
-            tap to flip
-          </p>
+          {/* Bottom bar: expand button left, flip hint right */}
+          <div className="flex flex-shrink-0 items-center justify-between px-3.5 pb-2">
+            <button
+              type="button"
+              onClick={(e) => { e.stopPropagation(); onExpand?.() }}
+              aria-label="Expand card"
+              className="flex items-center gap-1 text-[10px] text-white/25 transition-colors hover:text-white/60"
+            >
+              <svg width="11" height="11" viewBox="0 0 11 11" fill="none" aria-hidden="true">
+                <path d="M1 4V1h3M7 1h3v3M10 7v3H7M4 10H1V7" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+              expand
+            </button>
+            <p className="text-[10px] text-white/20">tap to flip</p>
+          </div>
         </div>
 
       </div>

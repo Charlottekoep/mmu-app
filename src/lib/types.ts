@@ -68,5 +68,6 @@ export type LeverSnapshot = {
   notes:           string | null
   done_update:     string | null
   planning_update: string | null
+  images:          string[]
   snapshotted_at:  string
 }
