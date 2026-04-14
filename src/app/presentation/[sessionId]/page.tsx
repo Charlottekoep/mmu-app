@@ -4,10 +4,13 @@ import PresentationShell from '@/components/PresentationShell'
 
 export default async function PresentationPage({
   params,
+  searchParams,
 }: {
-  params: Promise<{ sessionId: string }>
+  params:       Promise<{ sessionId: string }>
+  searchParams: Promise<{ section?: string }>
 }) {
-  const { sessionId } = await params
+  const { sessionId }          = await params
+  const { section: initialSectionId } = await searchParams
   const supabase = getServerClient()
 
   const [{ data: session }, { data: sections }] = await Promise.all([
@@ -26,5 +29,5 @@ export default async function PresentationPage({
 
   if (!session) notFound()
 
-  return <PresentationShell session={session} sections={sections ?? []} />
+  return <PresentationShell session={session} sections={sections ?? []} initialSectionId={initialSectionId} />
 }

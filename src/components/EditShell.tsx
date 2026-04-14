@@ -129,9 +129,13 @@ export default function EditShell({
           <span className="hidden text-[12px] text-[#969696] sm:block">MMU Editor</span>
         </div>
 
-        {/* Preview MMU */}
+        {/* Preview MMU — lands on the section currently being edited */}
         <Link
-          href={`/presentation/${session.id}`}
+          href={
+            activeId === SESSION_DETAILS_ID
+              ? `/presentation/${session.id}`
+              : `/presentation/${session.id}?section=${activeId}`
+          }
           className="flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-5 py-2 text-[13px] font-bold text-primary transition-all hover:bg-primary/20 hover:border-primary/50"
         >
           Preview MMU

@@ -72,12 +72,17 @@ function SectionRenderer({
 // ─── Shell ────────────────────────────────────────────────────────────────
 
 type Props = {
-  session:  MmuSession
-  sections: SessionSection[]
+  session:           MmuSession
+  sections:          SessionSection[]
+  initialSectionId?: string
 }
 
-export default function PresentationShell({ session, sections }: Props) {
-  const [index,       setIndex]       = useState(0)
+export default function PresentationShell({ session, sections, initialSectionId }: Props) {
+  const [index, setIndex] = useState(() => {
+    if (!initialSectionId) return 0
+    const idx = sections.findIndex((s) => s.id === initialSectionId)
+    return idx !== -1 ? idx + 1 : 0  // +1 because welcome occupies slot 0
+  })
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
   // Build the full slides array: welcome + DB sections
@@ -137,7 +142,16 @@ export default function PresentationShell({ session, sections }: Props) {
             className={i !== index ? 'hidden' : undefined}
           >
             {slide.kind === 'welcome' ? (
-              <WelcomeSection session={session} sections={sections} />
+              <WelcomeSection
+                session={session}
+                sections={sections}
+                onNavigate={(sectionId) => {
+                  const idx = slides.findIndex(
+                    (s) => s.kind === 'section' && s.section.id === sectionId,
+                  )
+                  if (idx !== -1) setIndex(idx)
+                }}
+              />
             ) : (
               <SectionRenderer section={slide.section} sessionId={session.id} />
             )}

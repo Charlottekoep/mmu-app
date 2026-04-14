@@ -16,11 +16,12 @@ const SECTION_LABELS: Record<string, string> = {
 // ─── Component ────────────────────────────────────────────────────────────
 
 type Props = {
-  session:  MmuSession
-  sections: SessionSection[]
+  session:     MmuSession
+  sections:    SessionSection[]
+  onNavigate?: (sectionId: string) => void
 }
 
-export default function WelcomeSection({ session, sections }: Props) {
+export default function WelcomeSection({ session, sections, onNavigate }: Props) {
   const activeSections = sections.filter((s) => s.is_active)
 
   // "20 April 2026" — parsed without timezone shift
@@ -71,12 +72,14 @@ export default function WelcomeSection({ session, sections }: Props) {
         {activeSections.length > 0 && (
           <div className="flex flex-wrap items-center justify-center gap-2">
             {activeSections.map((s) => (
-              <span
+              <button
                 key={s.id}
-                className="rounded-full border border-white/20 bg-white/[0.08] px-3.5 py-1.5 text-[11px] font-bold uppercase tracking-widest text-white/65"
+                type="button"
+                onClick={() => onNavigate?.(s.id)}
+                className="cursor-pointer rounded-full border border-white/20 bg-white/[0.08] px-3.5 py-1.5 text-[11px] font-bold uppercase tracking-widest text-white/65 transition-all hover:border-white/35 hover:bg-white/[0.18] hover:text-white/90"
               >
                 {SECTION_LABELS[s.section_type] ?? s.section_type}
-              </span>
+              </button>
             ))}
           </div>
         )}
