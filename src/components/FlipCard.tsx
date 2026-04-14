@@ -117,6 +117,8 @@ export default function FlipCard({ lever, update, compact = false }: Props) {
         perspective:       '1200px',
         WebkitPerspective: '1200px',
         height:            `${cardH}px`,
+        opacity:           hasUpdate ? 1 : 0.55,
+        transition:        'opacity 0.3s ease',
       }}
     >
       {/* Rotating inner */}
@@ -132,10 +134,12 @@ export default function FlipCard({ lever, update, compact = false }: Props) {
 
         {/* ── Front ─────────────────────────────────────────────────── */}
         <div
-          className="absolute inset-0 flex flex-col rounded-xl border border-white/10 bg-white/[0.06] p-5 shadow-elevated"
+          className="absolute inset-0 flex flex-col rounded-xl border bg-white/[0.06] p-5 shadow-elevated"
           style={{
             backfaceVisibility:       'hidden',
             WebkitBackfaceVisibility: 'hidden',
+            borderColor:              hasUpdate ? '#2969FF' : 'rgba(255,255,255,0.10)',
+            transition:               'border-color 0.3s ease',
           }}
         >
           {/* RAG dot */}
@@ -206,9 +210,14 @@ export default function FlipCard({ lever, update, compact = false }: Props) {
             )}
           </div>
 
-          {/* Update indicator — small blue dot when there's content on back */}
+          {/* Flip hint icon — animated, only when there's an update on the back */}
           {hasUpdate && (
-            <div className="absolute bottom-3 right-3.5 h-1.5 w-1.5 rounded-full bg-primary/60" />
+            <div className="absolute bottom-3 right-3.5 animate-pulse text-[#2969FF]" aria-hidden="true">
+              <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+                <path d="M11 6A5 5 0 1 1 6 1.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                <path d="M11 1.5V6H6.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </div>
           )}
         </div>
 
