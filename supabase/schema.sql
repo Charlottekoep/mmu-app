@@ -50,9 +50,11 @@ CREATE TABLE lever_snapshots (
   lever_id       uuid        NOT NULL REFERENCES levers       (id) ON DELETE CASCADE,
   current_state  text        NOT NULL,
   rag_status     text        NOT NULL CHECK (rag_status IN ('green', 'amber', 'red')),
-  trend          text                 CHECK (trend      IN ('up', 'down', 'flat')),
-  notes          text,
-  snapshotted_at timestamptz NOT NULL DEFAULT now()
+  trend           text                 CHECK (trend      IN ('up', 'down', 'flat')),
+  notes           text,
+  done_update     text,
+  planning_update text,
+  snapshotted_at  timestamptz NOT NULL DEFAULT now()
 );
 
 CREATE TABLE session_sections (

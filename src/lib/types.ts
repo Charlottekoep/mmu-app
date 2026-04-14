@@ -59,12 +59,14 @@ export type LeaderboardEntry = {
 }
 
 export type LeverSnapshot = {
-  id:             string
-  session_id:     string
-  lever_id:       string
-  current_state:  string
-  rag_status:     RagStatus
-  trend:          'up' | 'down' | 'flat' | null
-  notes:          string | null
-  snapshotted_at: string
+  id:              string
+  session_id:      string
+  lever_id:        string
+  current_state:   string
+  rag_status:      RagStatus
+  trend:           'up' | 'down' | 'flat' | null
+  notes:           string | null
+  done_update:     string | null
+  planning_update: string | null
+  snapshotted_at:  string
 }

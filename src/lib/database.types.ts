@@ -83,24 +83,28 @@ export type Database = {
       }
       lever_snapshots: {
         Row: {
-          id:             string
-          session_id:     string
-          lever_id:       string
-          current_state:  string
-          rag_status:     RagStatus
-          trend:          Trend | null
-          notes:          string | null
-          snapshotted_at: string
-        }
-        Insert: {
-          id?:             string
+          id:              string
           session_id:      string
           lever_id:        string
           current_state:   string
           rag_status:      RagStatus
-          trend?:          Trend | null
-          notes?:          string | null
-          snapshotted_at?: string
+          trend:           Trend | null
+          notes:           string | null
+          done_update:     string | null
+          planning_update: string | null
+          snapshotted_at:  string
+        }
+        Insert: {
+          id?:              string
+          session_id:       string
+          lever_id:         string
+          current_state:    string
+          rag_status:       RagStatus
+          trend?:           Trend | null
+          notes?:           string | null
+          done_update?:     string | null
+          planning_update?: string | null
+          snapshotted_at?:  string
         }
         Update: Partial<Database['public']['Tables']['lever_snapshots']['Row']>
         Relationships: [

@@ -20,10 +20,13 @@ const GROUPS: { key: string; label: string }[] = [
 
 type Props = { section: SessionSection; sessionId: string }
 
+type LeverUpdate = { done: string | null; planning: string | null }
+
 export default function NorthStarSection({ section, sessionId }: Props) {
-  const [levers, setLevers]   = useState<Lever[]>([])
+  const [levers,  setLevers]  = useState<Lever[]>([])
+  const [updates, setUpdates] = useState<Map<string, LeverUpdate>>(new Map())
   const [loading, setLoading] = useState(true)
-  const [error, setError]     = useState(false)
+  const [error,   setError]   = useState(false)
 
   const images = Array.isArray((section.content as { images?: string[] })?.images)
     ? (section.content as { images: string[] }).images
@@ -65,6 +68,16 @@ export default function NorthStarSection({ section, sessionId }: Props) {
           }
         }),
       )
+
+      setUpdates(
+        new Map(
+          (snapRes.data ?? []).map((s) => [
+            s.lever_id,
+            { done: s.done_update ?? null, planning: s.planning_update ?? null },
+          ]),
+        ),
+      )
+
       setLoading(false)
     }
 
@@ -121,6 +134,7 @@ export default function NorthStarSection({ section, sessionId }: Props) {
                   <FlipCard
                     key={lever.id}
                     lever={lever}
+                    update={updates.get(lever.id)}
                     compact={key === 'north_star'}
                   />
                 ))}

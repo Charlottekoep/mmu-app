@@ -18,11 +18,13 @@ const GROUPS: { key: string; label: string }[] = [
 // ─── Types ────────────────────────────────────────────────────────────────
 
 type LeverState = {
-  lever_id:      string
-  current_state: string
-  rag_status:    RagStatus
-  trend:         'up' | 'flat' | 'down' | null
-  notes:         string
+  lever_id:        string
+  current_state:   string
+  rag_status:      RagStatus
+  trend:           'up' | 'flat' | 'down' | null
+  notes:           string
+  done_update:     string
+  planning_update: string
 }
 
 type Props = {
@@ -56,11 +58,13 @@ export default function NorthStarUpdateForm({ section, sessionId, levers, snapsh
     for (const lever of levers) {
       const snap = snapshotMap.get(lever.id)
       out[lever.id] = {
-        lever_id:      lever.id,
-        current_state: snap?.current_state ?? lever.current_state,
-        rag_status:    snap?.rag_status    ?? lever.rag_status,
-        trend:         snap?.trend         ?? lever.trend,
-        notes:         snap?.notes         ?? lever.notes ?? '',
+        lever_id:        lever.id,
+        current_state:   snap?.current_state   ?? lever.current_state,
+        rag_status:      snap?.rag_status       ?? lever.rag_status,
+        trend:           snap?.trend            ?? lever.trend,
+        notes:           snap?.notes            ?? lever.notes ?? '',
+        done_update:     snap?.done_update      ?? '',
+        planning_update: snap?.planning_update  ?? '',
       }
     }
     return out
@@ -103,13 +107,15 @@ export default function NorthStarUpdateForm({ section, sessionId, levers, snapsh
     }
 
     const { error: insErr } = await supabase.from('lever_snapshots').insert({
-      session_id:     sessionId,
-      lever_id:       leverId,
-      current_state:  state.current_state,
-      rag_status:     state.rag_status,
-      trend:          state.trend,
-      notes:          state.notes || null,
-      snapshotted_at: new Date().toISOString(),
+      session_id:      sessionId,
+      lever_id:        leverId,
+      current_state:   state.current_state,
+      rag_status:      state.rag_status,
+      trend:           state.trend,
+      notes:           state.notes           || null,
+      done_update:     state.done_update     || null,
+      planning_update: state.planning_update || null,
+      snapshotted_at:  new Date().toISOString(),
     })
 
     if (insErr) {
@@ -283,19 +289,33 @@ function LeverRow({ lever, state, isSaving, isSaved, onChange }: LeverRowProps) 
         </button>
       </div>
 
-      {/* Notes area */}
+      {/* Update text areas */}
       {expanded && (
-        <div className="border-t border-[#DEDEDE] px-4 py-3">
-          <label className="block text-[10px] font-bold uppercase tracking-widest text-[#2969FF] mb-1.5">
-            Notes
-          </label>
-          <textarea
-            value={state.notes}
-            onChange={(e) => onChange({ notes: e.target.value })}
-            rows={3}
-            placeholder="Context, blockers, next steps…"
-            className="w-full resize-none rounded-lg border border-[#DEDEDE] bg-white px-3 py-2 text-[13px] text-[#262626] placeholder-[#969696] outline-none focus:border-[#2969FF] transition-colors"
-          />
+        <div className="border-t border-[#DEDEDE] divide-y divide-[#DEDEDE]">
+          <div className="px-4 py-3">
+            <label className="block text-[10px] font-bold uppercase tracking-widest text-[#2969FF] mb-1.5">
+              What have we done to move the needle?
+            </label>
+            <textarea
+              value={state.done_update}
+              onChange={(e) => onChange({ done_update: e.target.value })}
+              rows={3}
+              placeholder="One item per line…"
+              className="w-full resize-none rounded-lg border border-[#DEDEDE] bg-white px-3 py-2 text-[13px] text-[#262626] placeholder-[#969696] outline-none focus:border-[#2969FF] transition-colors"
+            />
+          </div>
+          <div className="px-4 py-3">
+            <label className="block text-[10px] font-bold uppercase tracking-widest text-[#2969FF] mb-1.5">
+              What are we planning?
+            </label>
+            <textarea
+              value={state.planning_update}
+              onChange={(e) => onChange({ planning_update: e.target.value })}
+              rows={3}
+              placeholder="One item per line…"
+              className="w-full resize-none rounded-lg border border-[#DEDEDE] bg-white px-3 py-2 text-[13px] text-[#262626] placeholder-[#969696] outline-none focus:border-[#2969FF] transition-colors"
+            />
+          </div>
         </div>
       )}
     </div>
