@@ -49,13 +49,35 @@ export default function SessionDetailsForm({ session, teamMembers, welcomeSectio
   }
 
   async function saveWelcomeContent(patch: Record<string, unknown>) {
-    if (!welcomeSection) return
     setSaving(true); setSaved(false); setError(false)
-    const content = { ...(welcomeSection.content ?? {}), ...patch }
+
+    let sectionId: string
+    let existingContent: Record<string, unknown>
+
+    if (welcomeSection) {
+      sectionId      = welcomeSection.id
+      existingContent = welcomeSection.content ?? {}
+    } else {
+      // Welcome section row doesn't exist yet — create it on the fly
+      const { data: created, error: createErr } = await getBrowserClient()
+        .from('session_sections')
+        .insert({ session_id: session.id, section_type: 'welcome', display_order: 0, is_active: true, content: {} })
+        .select()
+        .single()
+      if (createErr || !created) {
+        setSaving(false); setError(true)
+        setTimeout(() => setError(false), 3000)
+        return
+      }
+      sectionId      = created.id
+      existingContent = {}
+    }
+
+    const content = { ...existingContent, ...patch }
     const { error: err } = await getBrowserClient()
       .from('session_sections')
       .update({ content })
-      .eq('id', welcomeSection.id)
+      .eq('id', sectionId)
     if (err) {
       setSaving(false); setError(true)
       setTimeout(() => setError(false), 3000)

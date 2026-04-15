@@ -28,21 +28,56 @@ type Props = {
 export default function WelcomeSection({ session, sections, welcomeSection, onNavigate }: Props) {
   const [hostMember, setHostMember] = useState<TeamMember | null>(null)
 
-  const hostId = (welcomeSection?.content as { host_id?: string } | undefined)?.host_id
+  // Prefer the prop if it carries content; otherwise fetch the welcome section
+  // from the DB directly (handles sessions created before the welcome row existed).
+  const propHostId = (welcomeSection?.content as { host_id?: string } | undefined)?.host_id
 
   useEffect(() => {
-    if (!hostId) { setHostMember(null); return }
     let cancelled = false
-    getBrowserClient()
-      .from('team_members')
-      .select('*')
-      .eq('id', hostId)
-      .single()
-      .then(({ data }) => {
-        if (!cancelled && data) setHostMember(data)
-      })
+
+    async function resolveHost() {
+      let hostId = propHostId
+
+      // If prop didn't carry a host_id, fetch the welcome section from DB
+      if (!hostId) {
+        const { data: ws } = await getBrowserClient()
+          .from('session_sections')
+          .select('content')
+          .eq('session_id', session.id)
+          .eq('section_type', 'welcome')
+          .single()
+
+        hostId = (ws?.content as { host_id?: string } | null)?.host_id
+        console.log('[WelcomeSection] fetched welcome section content:', ws?.content)
+      } else {
+        console.log('[WelcomeSection] welcome section content from prop:', welcomeSection?.content)
+      }
+
+      if (!hostId || cancelled) {
+        if (!cancelled) setHostMember(null)
+        return
+      }
+
+      const { data: member } = await getBrowserClient()
+        .from('team_members')
+        .select('*')
+        .eq('id', hostId)
+        .single()
+
+      if (!cancelled) {
+        setHostMember(member ?? null)
+        if (member) {
+          const photoUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/team-photos/${member.name}.png`
+          console.log('[WelcomeSection] host member:', member.name, '| photo URL:', photoUrl)
+        } else {
+          console.log('[WelcomeSection] no team member found for hostId:', hostId)
+        }
+      }
+    }
+
+    resolveHost()
     return () => { cancelled = true }
-  }, [hostId])
+  }, [propHostId, session.id, welcomeSection?.content])
 
   const activeSections = sections.filter((s) => s.is_active && s.section_type !== 'welcome')
 
