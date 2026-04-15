@@ -2,28 +2,31 @@
 
 import { useEffect, useState } from 'react'
 import { getBrowserClient } from '@/lib/supabase'
-import type { SessionSection, TeamMember, LeaderboardEntry } from '@/lib/types'
-import DarkPageLayout    from '@/components/DarkPageLayout'
-import TeamAvatar        from '@/components/TeamAvatar'
-import PresenterBadge   from '@/components/PresenterBadge'
+import type { SessionSection, TeamMember } from '@/lib/types'
+import DarkPageLayout  from '@/components/DarkPageLayout'
+import TeamAvatar      from '@/components/TeamAvatar'
+import PresenterBadge  from '@/components/PresenterBadge'
 
 // ─── Types ────────────────────────────────────────────────────────────────
 
 type QuizItem = { question: string; answer: string }
 
+type LeaderboardRow = { name: string; score: number }
+
 type Content = {
-  presenter_id: string
-  concept:      string
-  quiz:         QuizItem[]
-  images:       string[]
+  presenter_id:    string
+  concept:         string
+  quiz:            QuizItem[]
+  images:          string[]
+  leaderboard_data: LeaderboardRow[]
 }
 
-type RankedEntry = LeaderboardEntry & { member: TeamMember }
+type RankedEntry = LeaderboardRow & { member?: TeamMember }
 
 // ─── Medal colours ────────────────────────────────────────────────────────
 
 const MEDAL: Record<number, { color: string; bg: string; label: string }> = {
-  0: { color: '#FFD700', bg: 'rgba(255,215,0,0.12)',  label: '🥇' },
+  0: { color: '#FFD700', bg: 'rgba(255,215,0,0.12)',   label: '🥇' },
   1: { color: '#C0C0C0', bg: 'rgba(192,192,192,0.10)', label: '🥈' },
   2: { color: '#CD7F32', bg: 'rgba(205,127,50,0.10)',  label: '🥉' },
 }
@@ -33,25 +36,24 @@ const MEDAL: Record<number, { color: string; bg: string; label: string }> = {
 type Props = { section: SessionSection; sessionId: string }
 
 export default function TheLeagueSection({ section }: Props) {
-  const [members,     setMembers]     = useState<TeamMember[]>([])
-  const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([])
-  const [loading,     setLoading]     = useState(true)
-  const [error,       setError]       = useState(false)
-  const [revealed,    setRevealed]    = useState<Set<number>>(new Set())
-  const [quizIndex,   setQuizIndex]   = useState(0)
+  const [members,           setMembers]           = useState<TeamMember[]>([])
+  const [loading,           setLoading]           = useState(true)
+  const [error,             setError]             = useState(false)
+  const [questionsRevealed, setQuestionsRevealed] = useState(false)
+  const [answersRevealed,   setAnswersRevealed]   = useState(false)
 
   useEffect(() => {
     let cancelled = false
-    Promise.all([
-      getBrowserClient().from('team_members').select('*').order('name'),
-      getBrowserClient().from('leaderboard_entries').select('*').order('score', { ascending: false }),
-    ]).then(([membersRes, lbRes]) => {
-      if (cancelled) return
-      if (membersRes.error) { setError(true); setLoading(false); return }
-      setMembers(membersRes.data ?? [])
-      setLeaderboard(lbRes.data ?? [])
-      setLoading(false)
-    })
+    getBrowserClient()
+      .from('team_members')
+      .select('*')
+      .order('name')
+      .then(({ data, error: err }) => {
+        if (cancelled) return
+        if (err) { setError(true); setLoading(false); return }
+        setMembers(data ?? [])
+        setLoading(false)
+      })
     return () => { cancelled = true }
   }, [])
 
@@ -72,22 +74,13 @@ export default function TheLeagueSection({ section }: Props) {
   const quiz      = (content.quiz ?? []).filter((q) => q.question)
   const images    = content.images ?? []
 
-  // Join leaderboard with members and sort by score desc
-  const ranked: RankedEntry[] = leaderboard
-    .map((entry) => {
-      const member = members.find((m) => m.id === entry.team_member_id)
-      return member ? { ...entry, member } : null
-    })
-    .filter((e): e is RankedEntry => e !== null)
+  // Build ranked list from uploaded CSV data, enriched with team member avatars
+  const ranked: RankedEntry[] = (content.leaderboard_data ?? [])
+    .map((row) => ({
+      ...row,
+      member: members.find((m) => m.name.toLowerCase() === row.name.toLowerCase()),
+    }))
     .sort((a, b) => b.score - a.score)
-
-  function toggleReveal(i: number) {
-    setRevealed((prev) => {
-      const next = new Set(prev)
-      next.has(i) ? next.delete(i) : next.add(i)
-      return next
-    })
-  }
 
   return (
     <DarkPageLayout>
@@ -120,51 +113,47 @@ export default function TheLeagueSection({ section }: Props) {
             {quiz.length > 0 && (
               <section>
                 <p className="type-eyebrow text-white mb-4">
-                  Quiz · {quizIndex + 1}/{quiz.length}
+                  Quiz · {quiz.length} question{quiz.length !== 1 ? 's' : ''}
                 </p>
 
-                <div className="rounded-2xl border border-white/10 bg-white/[0.05] p-8 max-w-2xl">
-                  <p className="text-[18px] font-bold text-white mb-6">
-                    {quiz[quizIndex].question}
-                  </p>
+                {!questionsRevealed ? (
+                  <button
+                    type="button"
+                    onClick={() => setQuestionsRevealed(true)}
+                    className="rounded-xl border border-white/15 bg-white/[0.06] px-6 py-3.5 text-[14px] font-bold text-white transition-all hover:bg-white/10"
+                  >
+                    Reveal questions
+                  </button>
+                ) : (
+                  <div className="max-w-2xl space-y-4">
+                    {quiz.map((q, i) => (
+                      <div
+                        key={i}
+                        className="rounded-2xl border border-white/10 bg-white/[0.05] p-6"
+                      >
+                        <p className="type-eyebrow text-white/35 mb-2">Q{i + 1}</p>
+                        <p className="text-[18px] font-bold text-white">{q.question}</p>
 
-                  {revealed.has(quizIndex) ? (
-                    <div className="rounded-xl bg-green/10 border border-green/20 px-5 py-4">
-                      <p className="type-eyebrow text-green/70 mb-1.5">Answer</p>
-                      <p className="text-[16px] text-white/85">{quiz[quizIndex].answer}</p>
-                    </div>
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={() => toggleReveal(quizIndex)}
-                      className="rounded-xl border border-white/15 bg-white/[0.06] px-6 py-3 text-[13px] font-bold text-white/60 transition-all hover:bg-white/10 hover:text-white"
-                    >
-                      Reveal answer
-                    </button>
-                  )}
+                        {answersRevealed && q.answer && (
+                          <div className="mt-4 rounded-xl bg-green/10 border border-green/20 px-5 py-4">
+                            <p className="type-eyebrow text-green/70 mb-1.5">Answer</p>
+                            <p className="text-[15px] text-white/85">{q.answer}</p>
+                          </div>
+                        )}
+                      </div>
+                    ))}
 
-                  {/* Quiz navigation */}
-                  {quiz.length > 1 && (
-                    <div className="mt-6 flex items-center gap-3">
+                    {!answersRevealed && (
                       <button
                         type="button"
-                        onClick={() => setQuizIndex((i) => Math.max(0, i - 1))}
-                        disabled={quizIndex === 0}
-                        className="rounded-full border border-white/20 px-4 py-1.5 text-[12px] text-white/65 transition-all hover:border-white/40 hover:text-white disabled:opacity-25"
+                        onClick={() => setAnswersRevealed(true)}
+                        className="mt-2 rounded-xl border border-green/30 bg-green/10 px-6 py-3.5 text-[14px] font-bold text-green/80 transition-all hover:bg-green/15 hover:text-green"
                       >
-                        ← Prev
+                        Reveal answers
                       </button>
-                      <button
-                        type="button"
-                        onClick={() => setQuizIndex((i) => Math.min(quiz.length - 1, i + 1))}
-                        disabled={quizIndex === quiz.length - 1}
-                        className="rounded-full border border-white/20 px-4 py-1.5 text-[12px] text-white/65 transition-all hover:border-white/40 hover:text-white disabled:opacity-25"
-                      >
-                        Next →
-                      </button>
-                    </div>
-                  )}
-                </div>
+                    )}
+                  </div>
+                )}
               </section>
             )}
 
@@ -181,13 +170,13 @@ export default function TheLeagueSection({ section }: Props) {
                 const medal = MEDAL[rank]
                 return (
                   <div
-                    key={entry.id}
+                    key={rank}
                     className="flex items-center gap-3 rounded-xl px-4 py-3 transition-all"
                     style={{
-                      background:   medal ? medal.bg    : 'rgba(255,255,255,0.03)',
-                      borderColor:  medal ? medal.color : 'rgba(255,255,255,0.08)',
-                      borderWidth:  '1px',
-                      borderStyle:  'solid',
+                      background:  medal ? medal.bg    : 'rgba(255,255,255,0.03)',
+                      borderColor: medal ? medal.color : 'rgba(255,255,255,0.08)',
+                      borderWidth: '1px',
+                      borderStyle: 'solid',
                     }}
                   >
                     {/* Rank */}
@@ -199,7 +188,7 @@ export default function TheLeagueSection({ section }: Props) {
                       )}
                     </span>
 
-                    {/* Avatar */}
+                    {/* Avatar — matched by name, graceful fallback if no match */}
                     <TeamAvatar member={entry.member} size={32} className="border border-white/15" />
 
                     {/* Name */}
@@ -207,7 +196,7 @@ export default function TheLeagueSection({ section }: Props) {
                       className="flex-1 text-[14px] font-medium truncate"
                       style={{ color: medal ? medal.color : 'rgba(255,255,255,0.9)' }}
                     >
-                      {entry.member.name}
+                      {entry.name}
                     </span>
 
                     {/* Score */}

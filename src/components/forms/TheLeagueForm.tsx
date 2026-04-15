@@ -1,8 +1,8 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useRef } from 'react'
 import { getBrowserClient } from '@/lib/supabase'
-import type { SessionSection, TeamMember, LeaderboardEntry } from '@/lib/types'
+import type { SessionSection, TeamMember } from '@/lib/types'
 import RichTextEditor from '@/components/RichTextEditor'
 import ImageUploader  from '@/components/ImageUploader'
 import TeamAvatar     from '@/components/TeamAvatar'
@@ -17,50 +17,51 @@ const selectCls  = 'w-full rounded-lg border border-[#DEDEDE] bg-white px-3 py-2
 
 type QuizItem = { question: string; answer: string }
 
-type Content = {
-  presenter_id:  string
-  concept:       string
-  quiz:          QuizItem[]
-  images:        string[]
-}
+type LeaderboardRow = { name: string; score: number }
 
-type ScoreDelta = Record<string, number>   // teamMemberId → delta (can be negative)
+type Content = {
+  presenter_id:    string
+  concept:         string
+  quiz:            QuizItem[]
+  images:          string[]
+  leaderboard_data: LeaderboardRow[]
+}
 
 type Props = {
   section:     SessionSection
   sessionId:   string
   teamMembers: TeamMember[]
-  leaderboard: LeaderboardEntry[]
 }
 
 // ─── Component ────────────────────────────────────────────────────────────
 
-export default function TheLeagueForm({ section, sessionId, teamMembers, leaderboard }: Props) {
+export default function TheLeagueForm({ section, sessionId, teamMembers }: Props) {
   const raw = section.content as Partial<Content>
 
-  const [is_active,    setIsActive]   = useState(section.is_active)
-  const [presenter_id, setPresenter]  = useState(raw.presenter_id  ?? '')
-  const [concept,      setConcept]    = useState(raw.concept       ?? '')
-  const [quiz,         setQuiz]       = useState<QuizItem[]>(
+  const [is_active,        setIsActive]        = useState(section.is_active)
+  const [presenter_id,     setPresenter]        = useState(raw.presenter_id   ?? '')
+  const [concept,          setConcept]          = useState(raw.concept        ?? '')
+  const [quiz,             setQuiz]             = useState<QuizItem[]>(
     (raw.quiz ?? []).length > 0 ? (raw.quiz as QuizItem[]) : [{ question: '', answer: '' }],
   )
-  const [images,       setImages]     = useState<string[]>(raw.images ?? [])
-  const [deltas,       setDeltas]     = useState<ScoreDelta>({})
-  const [saving,       setSaving]     = useState(false)
-  const [saved,        setSaved]      = useState(false)
-  const [saveError,    setSaveError]  = useState(false)
-  const [scoreSaving,  setScoreSaving] = useState<string | null>(null)
+  const [images,           setImages]           = useState<string[]>(raw.images ?? [])
+  const [leaderboard_data, setLeaderboardData]  = useState<LeaderboardRow[]>(raw.leaderboard_data ?? [])
+  const [csvPreview,       setCsvPreview]       = useState<LeaderboardRow[] | null>(null)
+  const [csvError,         setCsvError]         = useState<string | null>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
-  // Map leaderboard for quick lookup
-  const scoreMap = new Map(leaderboard.map((e) => [e.team_member_id, e]))
+  const [saving,    setSaving]    = useState(false)
+  const [saved,     setSaved]     = useState(false)
+  const [saveError, setSaveError] = useState(false)
 
   const persist = useCallback(async (patch: Partial<Content & { is_active?: boolean }>) => {
     setSaving(true); setSaved(false); setSaveError(false)
     const content: Content = {
-      presenter_id: patch.presenter_id ?? presenter_id,
-      concept:      patch.concept      ?? concept,
-      quiz:         patch.quiz         ?? quiz,
-      images:       patch.images       ?? images,
+      presenter_id:    patch.presenter_id    ?? presenter_id,
+      concept:         patch.concept         ?? concept,
+      quiz:            patch.quiz            ?? quiz,
+      images:          patch.images          ?? images,
+      leaderboard_data: patch.leaderboard_data ?? leaderboard_data,
     }
     const active = patch.is_active !== undefined ? patch.is_active : is_active
     const { error: err } = await getBrowserClient()
@@ -70,7 +71,7 @@ export default function TheLeagueForm({ section, sessionId, teamMembers, leaderb
     if (err) { setSaving(false); setSaveError(true); setTimeout(() => setSaveError(false), 3000); return }
     setSaving(false); setSaved(true)
     setTimeout(() => setSaved(false), 2000)
-  }, [presenter_id, concept, quiz, images, is_active, section.id])
+  }, [presenter_id, concept, quiz, images, leaderboard_data, is_active, section.id])
 
   function toggleActive() {
     const next = !is_active
@@ -78,33 +79,53 @@ export default function TheLeagueForm({ section, sessionId, teamMembers, leaderb
     persist({ is_active: next })
   }
 
-  // Quiz
-  function addQuiz()           { setQuiz((q) => [...q, { question: '', answer: '' }]) }
+  // Quiz helpers
+  function addQuiz() { setQuiz((q) => [...q, { question: '', answer: '' }]) }
   function removeQuiz(i: number) {
     const next = quiz.filter((_, idx) => idx !== i)
     setQuiz(next); persist({ quiz: next })
   }
 
-  // Score delta helper
-  function getDelta(memberId: string) { return deltas[memberId] ?? 0 }
-  function setDelta(memberId: string, val: number) {
-    setDeltas((d) => ({ ...d, [memberId]: val }))
+  // CSV parsing
+  function handleCsvFile(e: React.ChangeEvent<HTMLInputElement>) {
+    setCsvError(null)
+    setCsvPreview(null)
+    const file = e.target.files?.[0]
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = (ev) => {
+      const text = (ev.target?.result as string) ?? ''
+      const rows = text.split(/\r?\n/).filter((r) => r.trim())
+      const parsed: LeaderboardRow[] = []
+      const startIndex = rows[0]?.toLowerCase().includes('name') ? 1 : 0
+      for (let i = startIndex; i < rows.length; i++) {
+        const [rawName, rawScore] = rows[i].split(',')
+        const name  = rawName?.trim()
+        const score = parseInt(rawScore?.trim() ?? '', 10)
+        if (name && !isNaN(score)) parsed.push({ name, score })
+      }
+      if (parsed.length === 0) {
+        setCsvError('No valid rows found. Expected columns: Name, Score')
+        return
+      }
+      parsed.sort((a, b) => b.score - a.score)
+      setCsvPreview(parsed)
+    }
+    reader.readAsText(file)
+    // Reset so same file can be re-uploaded
+    e.target.value = ''
   }
 
-  async function applyScore(memberId: string) {
-    const delta = getDelta(memberId)
-    if (delta === 0) return
-    const entry = scoreMap.get(memberId)
-    const currentScore = entry?.score ?? 0
-    const newScore = Math.max(0, currentScore + delta)
-    setScoreSaving(memberId)
-    await getBrowserClient()
-      .from('leaderboard_entries')
-      .update({ score: newScore, updated_at: new Date().toISOString() })
-      .eq('team_member_id', memberId)
-    setScoreSaving(null)
-    setDeltas((d) => ({ ...d, [memberId]: 0 }))
-    if (entry) entry.score = newScore
+  function confirmCsvUpload() {
+    if (!csvPreview) return
+    setLeaderboardData(csvPreview)
+    persist({ leaderboard_data: csvPreview })
+    setCsvPreview(null)
+  }
+
+  function cancelCsvUpload() {
+    setCsvPreview(null)
+    setCsvError(null)
   }
 
   return (
@@ -138,9 +159,9 @@ export default function TheLeagueForm({ section, sessionId, teamMembers, leaderb
             onChange={(e) => { setPresenter(e.target.value); persist({ presenter_id: e.target.value }) }}
             className={selectCls}
           >
-          <option value="">— select —</option>
-          {teamMembers.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
-        </select>
+            <option value="">— select —</option>
+            {teamMembers.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
+          </select>
         </div>
       </div>
 
@@ -187,7 +208,7 @@ export default function TheLeagueForm({ section, sessionId, teamMembers, leaderb
                 value={q.answer}
                 onChange={(e) => { const v = e.target.value; setQuiz((prev) => prev.map((item, idx) => idx === i ? { ...item, answer: v } : item)) }}
                 onBlur={() => persist({ quiz })}
-                placeholder="Answer…"
+                placeholder="Answer (hidden until revealed in presentation)…"
                 className={inputCls}
               />
             </div>
@@ -212,75 +233,105 @@ export default function TheLeagueForm({ section, sessionId, teamMembers, leaderb
         />
       </div>
 
-      {/* Leaderboard score adjustments */}
+      {/* Leaderboard CSV upload */}
       <div>
-        <label className={fieldLabel}>Score adjustments</label>
+        <label className={fieldLabel}>Upload leaderboard (CSV)</label>
         <p className="mb-3 text-[12px] text-[#5A5A5A]">
-          Award or deduct points after the quiz. Changes are permanent.
+          CSV must have two columns: <strong>Name</strong> and <strong>Score</strong>. Uploading replaces the current leaderboard for this session.
         </p>
-        <div className="space-y-2">
-          {teamMembers.map((member) => {
-            const entry   = scoreMap.get(member.id)
-            const score   = entry?.score ?? 0
-            const delta   = getDelta(member.id)
-            const pending = delta !== 0
-            return (
-              <div
-                key={member.id}
-                className="flex items-center gap-3 rounded-lg border border-[#DEDEDE] bg-white px-4 py-3"
-              >
-                {/* Member */}
-                <span className="flex-1 text-[13px] font-medium text-[#262626]">{member.name}</span>
 
-                {/* Current score */}
-                <span className="w-10 text-right text-[13px] text-[#5A5A5A]">
-                  {score + delta}
-                </span>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept=".csv,text/csv"
+          onChange={handleCsvFile}
+          className="hidden"
+          id="csv-upload"
+        />
+        <label
+          htmlFor="csv-upload"
+          className="inline-flex cursor-pointer items-center gap-2 rounded-xl border border-dashed border-[#2969FF]/40 bg-[#2969FF]/[0.04] px-5 py-3 text-[13px] font-medium text-[#2969FF] transition-all hover:bg-[#2969FF]/[0.08]"
+        >
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+            <path d="M8 2v9M4 7l4-5 4 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+            <path d="M2 13h12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+          </svg>
+          Choose CSV file
+        </label>
 
-                {/* − */}
+        {csvError && (
+          <p className="mt-2 text-[12px] text-red">{csvError}</p>
+        )}
+
+        {/* Preview table */}
+        {csvPreview && (
+          <div className="mt-4 rounded-xl border border-[#DEDEDE] bg-white overflow-hidden">
+            <div className="px-4 py-3 border-b border-[#DEDEDE] flex items-center justify-between">
+              <p className="text-[12px] font-semibold text-[#262626]">{csvPreview.length} rows imported — preview</p>
+              <div className="flex gap-2">
                 <button
                   type="button"
-                  onClick={() => setDelta(member.id, delta - 1)}
-                  className="flex h-7 w-7 items-center justify-center rounded border border-[#DEDEDE] text-[#5A5A5A] hover:border-red/40 hover:text-red transition-colors text-[16px]"
-                  aria-label={`Deduct point from ${member.name}`}
+                  onClick={cancelCsvUpload}
+                  className="rounded-full border border-[#DEDEDE] px-3 py-1 text-[11px] font-bold uppercase tracking-widest text-[#5A5A5A] hover:border-[#969696] transition-colors"
                 >
-                  −
+                  Cancel
                 </button>
-
-                {/* Delta pill */}
-                <span className={`w-12 text-center text-[13px] font-bold tabular-nums ${
-                  delta > 0 ? 'text-green' : delta < 0 ? 'text-red' : 'text-[#969696]'
-                }`}>
-                  {delta > 0 ? `+${delta}` : delta < 0 ? `${delta}` : '—'}
-                </span>
-
-                {/* + */}
                 <button
                   type="button"
-                  onClick={() => setDelta(member.id, delta + 1)}
-                  className="flex h-7 w-7 items-center justify-center rounded border border-[#DEDEDE] text-[#5A5A5A] hover:border-green/40 hover:text-green transition-colors text-[16px]"
-                  aria-label={`Award point to ${member.name}`}
+                  onClick={confirmCsvUpload}
+                  className="rounded-full bg-primary px-3 py-1 text-[11px] font-bold uppercase tracking-widest text-white hover:bg-primary/80 transition-colors"
                 >
-                  +
-                </button>
-
-                {/* Apply */}
-                <button
-                  type="button"
-                  onClick={() => applyScore(member.id)}
-                  disabled={!pending || scoreSaving === member.id}
-                  className={`ml-1 rounded-full px-3 py-1 text-[11px] font-bold uppercase tracking-widest transition-all ${
-                    pending
-                      ? 'bg-primary text-white hover:bg-primary/80'
-                      : 'bg-[#F7F7F7] text-[#969696] cursor-not-allowed'
-                  }`}
-                >
-                  {scoreSaving === member.id ? '…' : 'Apply'}
+                  Save leaderboard
                 </button>
               </div>
-            )
-          })}
-        </div>
+            </div>
+            <table className="w-full">
+              <thead>
+                <tr className="bg-[#F7F7F7]">
+                  <th className="px-4 py-2.5 text-left text-[11px] font-bold uppercase tracking-widest text-[#969696]">Rank</th>
+                  <th className="px-4 py-2.5 text-left text-[11px] font-bold uppercase tracking-widest text-[#969696]">Name</th>
+                  <th className="px-4 py-2.5 text-right text-[11px] font-bold uppercase tracking-widest text-[#969696]">Score</th>
+                </tr>
+              </thead>
+              <tbody>
+                {csvPreview.map((row, i) => (
+                  <tr key={i} className="border-t border-[#F0F0F0]">
+                    <td className="px-4 py-2.5 text-[13px] text-[#969696]">{i + 1}</td>
+                    <td className="px-4 py-2.5 text-[13px] font-medium text-[#262626]">{row.name}</td>
+                    <td className="px-4 py-2.5 text-right text-[13px] font-bold text-[#262626] tabular-nums">{row.score}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        {/* Current leaderboard summary */}
+        {!csvPreview && leaderboard_data.length > 0 && (
+          <div className="mt-3 rounded-xl border border-[#DEDEDE] bg-white overflow-hidden">
+            <div className="px-4 py-3 border-b border-[#DEDEDE]">
+              <p className="text-[12px] font-semibold text-[#262626]">Current leaderboard · {leaderboard_data.length} entries</p>
+            </div>
+            <table className="w-full">
+              <tbody>
+                {leaderboard_data.slice(0, 5).map((row, i) => (
+                  <tr key={i} className={i > 0 ? 'border-t border-[#F0F0F0]' : ''}>
+                    <td className="px-4 py-2 text-[12px] text-[#969696] w-8">{i + 1}</td>
+                    <td className="px-4 py-2 text-[12px] text-[#262626]">{row.name}</td>
+                    <td className="px-4 py-2 text-right text-[12px] font-bold text-[#262626] tabular-nums">{row.score}</td>
+                  </tr>
+                ))}
+                {leaderboard_data.length > 5 && (
+                  <tr className="border-t border-[#F0F0F0]">
+                    <td colSpan={3} className="px-4 py-2 text-[12px] text-[#969696] text-center">
+                      +{leaderboard_data.length - 5} more
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
     </div>
   )

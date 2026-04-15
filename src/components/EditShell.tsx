@@ -64,7 +64,6 @@ export default function EditShell({
   teamMembers,
   levers,
   snapshots,
-  leaderboard,
   initialSectionId,
 }: Props) {
   const [activeId,    setActiveId]    = useState<string>(() =>
@@ -105,7 +104,7 @@ export default function EditShell({
       case 'announcements':
         return <AnnouncementsForm {...common} teamMembers={teamMembers} />
       case 'the_league':
-        return <TheLeagueForm     {...common} teamMembers={teamMembers} leaderboard={leaderboard} />
+        return <TheLeagueForm     {...common} teamMembers={teamMembers} />
       default:
         return (
           <div className="flex h-64 items-center justify-center">
