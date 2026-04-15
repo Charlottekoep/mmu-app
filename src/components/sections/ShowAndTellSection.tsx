@@ -3,8 +3,8 @@
 import { useEffect, useState } from 'react'
 import { getBrowserClient } from '@/lib/supabase'
 import type { SessionSection, TeamMember } from '@/lib/types'
-import DarkPageLayout from '@/components/DarkPageLayout'
-import TeamAvatar    from '@/components/TeamAvatar'
+import DarkPageLayout    from '@/components/DarkPageLayout'
+import PresenterBadge   from '@/components/PresenterBadge'
 
 // ─── Content type ─────────────────────────────────────────────────────────
 
@@ -67,15 +67,7 @@ export default function ShowAndTellSection({ section }: Props) {
         {/* ── Header ─────────────────────────────────────────────────── */}
         <div className="mb-3 flex items-start justify-between">
           <p className="type-eyebrow text-white">Show &amp; Tell</p>
-          {presenter && (
-            <div className="flex items-center gap-3">
-              <TeamAvatar member={presenter} size={36} className="border border-white/15" />
-              <div>
-                <p className="text-[13px] font-bold text-white">{presenter.name}</p>
-                <p className="text-[11px] text-white/65">{presenter.role}</p>
-              </div>
-            </div>
-          )}
+          {presenter && <PresenterBadge presenter={presenter} />}
         </div>
 
         {/* ── Title + meta ───────────────────────────────────────────── */}

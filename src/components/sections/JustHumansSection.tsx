@@ -152,7 +152,7 @@ function PersonCard({
           {member?.name ?? '—'}
         </p>
         {member?.role && (
-          <p className="mt-1 text-[13px] text-white/50">{member.role}</p>
+          <p className="mt-1 type-eyebrow" style={{ color: '#2969FF' }}>{member.role}</p>
         )}
       </div>
       <span

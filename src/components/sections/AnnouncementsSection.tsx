@@ -3,8 +3,8 @@
 import { useEffect, useState } from 'react'
 import { getBrowserClient } from '@/lib/supabase'
 import type { SessionSection, TeamMember } from '@/lib/types'
-import DarkPageLayout from '@/components/DarkPageLayout'
-import TeamAvatar    from '@/components/TeamAvatar'
+import DarkPageLayout    from '@/components/DarkPageLayout'
+import PresenterBadge   from '@/components/PresenterBadge'
 
 // ─── Content types ────────────────────────────────────────────────────────
 
@@ -67,15 +67,7 @@ export default function AnnouncementsSection({ section }: Props) {
             <p className="type-eyebrow text-white mb-3">Team Announcements</p>
             <h2 className="type-h2 text-white">What&apos;s new</h2>
           </div>
-          {presenter && (
-            <div className="flex items-center gap-3">
-              <TeamAvatar member={presenter} size={40} className="border border-white/15" />
-              <div>
-                <p className="text-[13px] font-bold text-white">{presenter.name}</p>
-                <p className="text-[11px] text-white/65">{presenter.role}</p>
-              </div>
-            </div>
-          )}
+          {presenter && <PresenterBadge presenter={presenter} />}
         </div>
 
         {/* ── Announcement cards ─────────────────────────────────────── */}

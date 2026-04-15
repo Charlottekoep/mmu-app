@@ -3,8 +3,9 @@
 import { useEffect, useState } from 'react'
 import { getBrowserClient } from '@/lib/supabase'
 import type { SessionSection, TeamMember, LeaderboardEntry } from '@/lib/types'
-import DarkPageLayout from '@/components/DarkPageLayout'
-import TeamAvatar    from '@/components/TeamAvatar'
+import DarkPageLayout    from '@/components/DarkPageLayout'
+import TeamAvatar        from '@/components/TeamAvatar'
+import PresenterBadge   from '@/components/PresenterBadge'
 
 // ─── Types ────────────────────────────────────────────────────────────────
 
@@ -98,15 +99,7 @@ export default function TheLeagueSection({ section }: Props) {
             <p className="type-eyebrow text-white mb-3">The League</p>
             <h2 className="type-h2 text-white">Insurance IQ</h2>
           </div>
-          {presenter && (
-            <div className="flex items-center gap-3">
-              <TeamAvatar member={presenter} size={40} className="border border-white/15" />
-              <div>
-                <p className="text-[13px] font-bold text-white">{presenter.name}</p>
-                <p className="text-[11px] text-white/65">{presenter.role}</p>
-              </div>
-            </div>
-          )}
+          {presenter && <PresenterBadge presenter={presenter} />}
         </div>
 
         <div className="grid gap-10 lg:grid-cols-[1fr_320px]">
