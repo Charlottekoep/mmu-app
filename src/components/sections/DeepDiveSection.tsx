@@ -83,10 +83,41 @@ export default function DeepDiveSection({ section, sessionId }: Props) {
   return (
     <DarkPageLayout>
       <style>{`
-        .prose-table table { border-collapse: collapse; width: 100%; margin: 12px 0; }
-        .prose-table th, .prose-table td { border: 1px solid rgba(255,255,255,0.15); padding: 8px 12px; text-align: left; }
-        .prose-table th { background: rgba(255,255,255,0.08); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: rgba(255,255,255,0.9); }
-        .prose-table td { font-size: 14px; color: rgba(255,255,255,0.65); }
+        .prose-table table {
+          border-collapse: separate;
+          border-spacing: 0;
+          width: 100%;
+          margin: 16px 0;
+          background: rgba(255,255,255,0.04);
+          border: 1px solid rgba(255,255,255,0.20);
+          border-radius: 8px;
+          overflow: hidden;
+        }
+        .prose-table th {
+          background: #2969FF;
+          color: white;
+          font-size: 12px;
+          font-weight: 700;
+          text-transform: uppercase;
+          letter-spacing: 0.06em;
+          padding: 12px 16px;
+          text-align: left;
+          border-right: 1px solid rgba(255,255,255,0.25);
+          border-bottom: 1px solid rgba(255,255,255,0.30);
+        }
+        .prose-table th:last-child { border-right: none; }
+        .prose-table td {
+          color: white;
+          font-size: 14px;
+          padding: 12px 16px;
+          text-align: left;
+          border-right: 1px solid rgba(255,255,255,0.15);
+          border-bottom: 1px solid rgba(255,255,255,0.15);
+        }
+        .prose-table td:last-child { border-right: none; }
+        .prose-table tr:last-child td { border-bottom: none; }
+        .prose-table tbody tr:nth-child(even) td { background: rgba(255,255,255,0.08); }
+        .prose-table tbody tr:nth-child(odd) td { background: transparent; }
       `}</style>
       <div className="h-screen overflow-y-auto px-14 pt-24 pb-20">
 
