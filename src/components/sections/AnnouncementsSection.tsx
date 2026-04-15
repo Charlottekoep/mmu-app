@@ -73,13 +73,49 @@ export default function AnnouncementsSection({ section }: Props) {
         {/* ── Announcement cards ─────────────────────────────────────── */}
         {items.length === 0 ? (
           <p className="type-eyebrow text-white/65">No announcements yet</p>
-        ) : (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {items.map((item, i) => (
-              <AnnouncementCard key={i} item={item} />
-            ))}
-          </div>
-        )}
+        ) : (() => {
+          const withImage    = items.filter((it) => it.image_url)
+          const withoutImage = items.filter((it) => !it.image_url)
+          return (
+            <>
+              {/* Text-only announcements — bulleted list */}
+              {withoutImage.length > 0 && (
+                <ul className={`space-y-5 ${withImage.length > 0 ? 'mb-10' : ''}`}>
+                  {withoutImage.map((item, i) => (
+                    <li key={i} className="flex items-start gap-4">
+                      <span className="mt-[9px] h-1.5 w-1.5 flex-shrink-0 rounded-full bg-white/50" />
+                      <span className="text-[18px] font-medium leading-relaxed text-white/85">
+                        {item.text}
+                        {item.url && (
+                          <a
+                            href={item.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="ml-2 inline-flex items-center gap-1 text-[13px] text-primary/70 hover:text-primary"
+                          >
+                            <svg width="10" height="10" viewBox="0 0 10 10" fill="none" aria-hidden="true">
+                              <path d="M1 9L9 1M9 1H3.5M9 1v5.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/>
+                            </svg>
+                            Open link
+                          </a>
+                        )}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+
+              {/* Cards for announcements with images */}
+              {withImage.length > 0 && (
+                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                  {withImage.map((item, i) => (
+                    <AnnouncementCard key={i} item={item} />
+                  ))}
+                </div>
+              )}
+            </>
+          )
+        })()}
 
       </div>
     </DarkPageLayout>
@@ -91,14 +127,7 @@ export default function AnnouncementsSection({ section }: Props) {
 function AnnouncementCard({ item }: { item: AnnouncementItem }) {
   const inner = (
     <div className="group flex flex-col overflow-hidden rounded-2xl border border-white/10 bg-white/[0.05] transition-all hover:bg-white/[0.08]">
-      {item.image_url && (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
-          src={item.image_url}
-          alt=""
-          className="w-full h-auto object-contain"
-        />
-      )}
+      {/* Text at top */}
       <div className="flex flex-1 flex-col gap-3 p-5">
         <p className="text-[15px] font-medium leading-snug text-white">
           {item.text}
@@ -112,6 +141,13 @@ function AnnouncementCard({ item }: { item: AnnouncementItem }) {
           </p>
         )}
       </div>
+      {/* Image below text */}
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={item.image_url}
+        alt=""
+        className="w-full h-auto object-contain"
+      />
     </div>
   )
 
