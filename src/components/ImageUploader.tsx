@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { getBrowserClient } from '@/lib/supabase'
 
 // ─── Props ────────────────────────────────────────────────────────────────
@@ -16,10 +16,16 @@ type Props = {
 
 export default function ImageUploader({ images, onChange, folder }: Props) {
   const [uploading, setUploading] = useState(false)
+  const inputRef = useRef<HTMLInputElement>(null)
 
   async function handleFiles(e: React.ChangeEvent<HTMLInputElement>) {
     const files = Array.from(e.target.files ?? [])
     if (!files.length) return
+
+    // Save scroll position of nearest scrollable ancestor before any state change
+    const scrollEl = findScrollParent(e.currentTarget)
+    const savedScrollTop = scrollEl?.scrollTop ?? 0
+
     setUploading(true)
     const supabase = getBrowserClient()
     const urls: string[] = [...images]
@@ -37,7 +43,14 @@ export default function ImageUploader({ images, onChange, folder }: Props) {
     }
     onChange(urls)
     setUploading(false)
-    e.target.value = ''
+
+    // Reset input via ref — avoids focus-induced scroll from resetting e.target directly
+    if (inputRef.current) inputRef.current.value = ''
+
+    // Restore scroll after React has re-rendered with new images
+    if (scrollEl) {
+      requestAnimationFrame(() => { scrollEl.scrollTop = savedScrollTop })
+    }
   }
 
   function remove(url: string) {
@@ -47,14 +60,19 @@ export default function ImageUploader({ images, onChange, folder }: Props) {
   return (
     <div className="space-y-3">
       {images.length > 0 && (
-        <div className={`grid gap-2 ${images.length === 1 ? 'grid-cols-1' : images.length === 2 ? 'grid-cols-2' : 'grid-cols-3 sm:grid-cols-4'}`}>
+        // aspect-video gives each thumbnail a stable 16:9 box — prevents layout shift on upload
+        <div className={`grid gap-2 ${
+          images.length === 1 ? 'grid-cols-1' :
+          images.length === 2 ? 'grid-cols-2' :
+          'grid-cols-3 sm:grid-cols-4'
+        }`}>
           {images.map((url) => (
             <div
               key={url}
-              className="group relative overflow-hidden rounded-lg border border-[#DEDEDE] bg-[#F7F7F7]"
+              className="group relative aspect-video overflow-hidden rounded-lg border border-[#DEDEDE] bg-[#F7F7F7]"
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={url} alt="" className="h-24 w-full object-cover" />
+              <img src={url} alt="" className="h-full w-full object-cover" />
               <button
                 type="button"
                 onClick={() => remove(url)}
@@ -75,6 +93,7 @@ export default function ImageUploader({ images, onChange, folder }: Props) {
         </svg>
         {uploading ? 'Uploading…' : 'Add images'}
         <input
+          ref={inputRef}
           type="file"
           accept="image/*"
           multiple
@@ -85,4 +104,16 @@ export default function ImageUploader({ images, onChange, folder }: Props) {
       </label>
     </div>
   )
+}
+
+// Walk up the DOM to find the nearest element with overflow scroll/auto
+function findScrollParent(el: HTMLElement | null): HTMLElement | null {
+  if (!el) return null
+  let parent = el.parentElement
+  while (parent && parent !== document.documentElement) {
+    const { overflow, overflowY } = getComputedStyle(parent)
+    if (/(auto|scroll)/.test(overflow + overflowY)) return parent
+    parent = parent.parentElement
+  }
+  return null
 }

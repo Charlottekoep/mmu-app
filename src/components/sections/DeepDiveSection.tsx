@@ -11,12 +11,13 @@ import PresenterBadge   from '@/components/PresenterBadge'
 type LinkItem = { url: string; label: string }
 
 type Content = {
-  title:        string
-  presenter_id: string
-  lever_id:     string
-  body:         string
-  links:        LinkItem[]
-  images:       string[]
+  title:          string
+  presenter_id:   string
+  presenter_id_2: string
+  lever_id:       string
+  body:           string
+  links:          LinkItem[]
+  images:         string[]
 }
 
 type Props = { section: SessionSection; sessionId: string }
@@ -67,9 +68,10 @@ export default function DeepDiveSection({ section, sessionId }: Props) {
     )
   }
 
-  const content   = (section.content ?? {}) as Partial<Content>
-  const presenter = members.find((m) => m.id === content.presenter_id)
-  const images    = content.images ?? []
+  const content    = (section.content ?? {}) as Partial<Content>
+  const presenter  = members.find((m) => m.id === content.presenter_id)
+  const presenter2 = members.find((m) => m.id === content.presenter_id_2)
+  const images     = content.images ?? []
 
   // Resolve lever — use snapshot RAG if available
   const baseLever = levers.find((l) => l.id === content.lever_id)
@@ -141,7 +143,7 @@ export default function DeepDiveSection({ section, sessionId }: Props) {
           </div>
 
           {/* Presenter */}
-          {presenter && <PresenterBadge presenter={presenter} />}
+          {presenter && <PresenterBadge presenter={presenter} presenter2={presenter2} />}
         </div>
 
         {/* ── Title ──────────────────────────────────────────────────── */}
@@ -150,12 +152,30 @@ export default function DeepDiveSection({ section, sessionId }: Props) {
         </h2>
 
         {/* ── Body ───────────────────────────────────────────────────── */}
-        {content.body && (
-          <div
-            className="prose-table mb-10 max-w-3xl text-[16px] leading-relaxed text-white/65 [&_p]:mb-3 [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_li]:mb-1.5 [&_strong]:font-bold [&_strong]:text-white [&_em]:italic"
-            dangerouslySetInnerHTML={{ __html: content.body }}
-          />
-        )}
+        {content.body && (() => {
+          const bodyHtml   = content.body!
+          const hasTable   = /<table[\s>]/i.test(bodyHtml)
+          const textCls    = 'text-[16px] leading-relaxed text-white/65 [&_p]:mb-3 [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_li]:mb-1.5 [&_strong]:font-bold [&_strong]:text-white [&_em]:italic'
+          if (!hasTable) {
+            return (
+              <div
+                className={`prose-table mb-10 max-w-3xl ${textCls}`}
+                dangerouslySetInnerHTML={{ __html: bodyHtml }}
+              />
+            )
+          }
+          const tableMatch = bodyHtml.match(/<table[\s\S]*?<\/table>/i)
+          const tableHtml  = tableMatch?.[0] ?? ''
+          const textHtml   = bodyHtml.replace(/<table[\s\S]*?<\/table>/i, '').trim()
+          return (
+            <div className="prose-table mb-10 grid grid-cols-2 gap-10 items-start">
+              {textHtml && (
+                <div className={textCls} dangerouslySetInnerHTML={{ __html: textHtml }} />
+              )}
+              <div dangerouslySetInnerHTML={{ __html: tableHtml }} />
+            </div>
+          )
+        })()}
 
         {/* ── Additional images ──────────────────────────────────────── */}
         <ImageGrid images={images} />

@@ -17,13 +17,14 @@ const textareaCls = `${inputCls} resize-none`
 // ─── Types ────────────────────────────────────────────────────────────────
 
 type Content = {
-  presenter_id: string
-  topic:        string
-  duration_min: number
-  demo_url:     string
-  body:         string
-  watch_for:    string
-  images:       string[]
+  presenter_id:   string
+  presenter_id_2: string
+  topic:          string
+  duration_min:   number
+  demo_url:       string
+  body:           string
+  watch_for:      string
+  images:         string[]
 }
 
 type Props = {
@@ -37,8 +38,9 @@ type Props = {
 export default function ShowAndTellForm({ section, sessionId, teamMembers }: Props) {
   const raw = section.content as Partial<Content>
 
-  const [is_active,    setIsActive]    = useState(section.is_active)
-  const [presenter_id, setPresenter]   = useState(raw.presenter_id ?? '')
+  const [is_active,      setIsActive]   = useState(section.is_active)
+  const [presenter_id,   setPresenter]  = useState(raw.presenter_id   ?? '')
+  const [presenter_id_2, setPresenter2] = useState(raw.presenter_id_2 ?? '')
   const [topic,        setTopic]       = useState(raw.topic        ?? '')
   const [duration_min, setDuration]    = useState<number>(raw.duration_min ?? 10)
   const [demo_url,     setDemoUrl]     = useState(raw.demo_url     ?? '')
@@ -52,13 +54,14 @@ export default function ShowAndTellForm({ section, sessionId, teamMembers }: Pro
   const persist = useCallback(async (patch: Partial<Content & { is_active?: boolean }>) => {
     setSaving(true); setSaved(false); setSaveError(false)
     const content: Content = {
-      presenter_id: patch.presenter_id ?? presenter_id,
-      topic:        patch.topic        ?? topic,
-      duration_min: patch.duration_min ?? duration_min,
-      demo_url:     patch.demo_url     ?? demo_url,
-      body:         patch.body         ?? body,
-      watch_for:    patch.watch_for    ?? watch_for,
-      images:       patch.images       ?? images,
+      presenter_id:   patch.presenter_id   ?? presenter_id,
+      presenter_id_2: patch.presenter_id_2 ?? presenter_id_2,
+      topic:          patch.topic          ?? topic,
+      duration_min:   patch.duration_min   ?? duration_min,
+      demo_url:       patch.demo_url       ?? demo_url,
+      body:           patch.body           ?? body,
+      watch_for:      patch.watch_for      ?? watch_for,
+      images:         patch.images         ?? images,
     }
     const active = patch.is_active !== undefined ? patch.is_active : is_active
     const { error: err } = await getBrowserClient()
@@ -68,7 +71,7 @@ export default function ShowAndTellForm({ section, sessionId, teamMembers }: Pro
     if (err) { setSaving(false); setSaveError(true); setTimeout(() => setSaveError(false), 3000); return }
     setSaving(false); setSaved(true)
     setTimeout(() => setSaved(false), 2000)
-  }, [presenter_id, topic, duration_min, demo_url, body, watch_for, images, is_active, section.id])
+  }, [presenter_id, presenter_id_2, topic, duration_min, demo_url, body, watch_for, images, is_active, section.id])
 
   function toggleActive() {
     const next = !is_active
@@ -103,19 +106,38 @@ export default function ShowAndTellForm({ section, sessionId, teamMembers }: Pro
         <p className="text-[13px] text-[#969696] italic">This section is currently hidden from the presentation.</p>
       )}
 
-      {/* Presenter */}
+      {/* Presenters */}
       <div>
-        <label className={fieldLabel}>Presenter</label>
-        <div className="flex items-center gap-3">
-          <TeamAvatar member={teamMembers.find((m) => m.id === presenter_id)} size={36} className="border border-[#DEDEDE]" />
-          <select
-            value={presenter_id}
-            onChange={(e) => { setPresenter(e.target.value); persist({ presenter_id: e.target.value }) }}
-            className={selectCls}
-          >
-          <option value="">— select —</option>
-          {teamMembers.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
-        </select>
+        <label className={fieldLabel}>Presenters</label>
+        <div className="space-y-3">
+          <div>
+            <p className="text-[11px] text-[#969696] mb-1.5">Presenter 1</p>
+            <div className="flex items-center gap-3">
+              <TeamAvatar member={teamMembers.find((m) => m.id === presenter_id)} size={36} className="border border-[#DEDEDE]" />
+              <select
+                value={presenter_id}
+                onChange={(e) => { setPresenter(e.target.value); persist({ presenter_id: e.target.value }) }}
+                className={selectCls}
+              >
+                <option value="">— select —</option>
+                {teamMembers.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
+              </select>
+            </div>
+          </div>
+          <div>
+            <p className="text-[11px] text-[#969696] mb-1.5">Presenter 2 (optional)</p>
+            <div className="flex items-center gap-3">
+              <TeamAvatar member={teamMembers.find((m) => m.id === presenter_id_2)} size={36} className="border border-[#DEDEDE]" />
+              <select
+                value={presenter_id_2}
+                onChange={(e) => { setPresenter2(e.target.value); persist({ presenter_id_2: e.target.value }) }}
+                className={selectCls}
+              >
+                <option value="">— none —</option>
+                {teamMembers.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
+              </select>
+            </div>
+          </div>
         </div>
       </div>
 

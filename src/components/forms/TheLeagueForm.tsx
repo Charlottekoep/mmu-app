@@ -21,6 +21,7 @@ type LeaderboardRow = { name: string; score: number }
 
 type Content = {
   presenter_id:    string
+  presenter_id_2:  string
   concept:         string
   quiz:            QuizItem[]
   images:          string[]
@@ -40,6 +41,7 @@ export default function TheLeagueForm({ section, sessionId, teamMembers }: Props
 
   const [is_active,        setIsActive]        = useState(section.is_active)
   const [presenter_id,     setPresenter]        = useState(raw.presenter_id   ?? '')
+  const [presenter_id_2,   setPresenter2]       = useState(raw.presenter_id_2 ?? '')
   const [concept,          setConcept]          = useState(raw.concept        ?? '')
   const [quiz,             setQuiz]             = useState<QuizItem[]>(
     (raw.quiz ?? []).length > 0 ? (raw.quiz as QuizItem[]) : [{ question: '', answer: '' }],
@@ -57,10 +59,11 @@ export default function TheLeagueForm({ section, sessionId, teamMembers }: Props
   const persist = useCallback(async (patch: Partial<Content & { is_active?: boolean }>) => {
     setSaving(true); setSaved(false); setSaveError(false)
     const content: Content = {
-      presenter_id:    patch.presenter_id    ?? presenter_id,
-      concept:         patch.concept         ?? concept,
-      quiz:            patch.quiz            ?? quiz,
-      images:          patch.images          ?? images,
+      presenter_id:     patch.presenter_id    ?? presenter_id,
+      presenter_id_2:   patch.presenter_id_2  ?? presenter_id_2,
+      concept:          patch.concept         ?? concept,
+      quiz:             patch.quiz            ?? quiz,
+      images:           patch.images          ?? images,
       leaderboard_data: patch.leaderboard_data ?? leaderboard_data,
     }
     const active = patch.is_active !== undefined ? patch.is_active : is_active
@@ -71,7 +74,7 @@ export default function TheLeagueForm({ section, sessionId, teamMembers }: Props
     if (err) { setSaving(false); setSaveError(true); setTimeout(() => setSaveError(false), 3000); return }
     setSaving(false); setSaved(true)
     setTimeout(() => setSaved(false), 2000)
-  }, [presenter_id, concept, quiz, images, leaderboard_data, is_active, section.id])
+  }, [presenter_id, presenter_id_2, concept, quiz, images, leaderboard_data, is_active, section.id])
 
   function toggleActive() {
     const next = !is_active
@@ -149,19 +152,38 @@ export default function TheLeagueForm({ section, sessionId, teamMembers }: Props
         </button>
       </div>
 
-      {/* Presenter */}
+      {/* Presenters */}
       <div>
-        <label className={fieldLabel}>Presenter</label>
-        <div className="flex items-center gap-3">
-          <TeamAvatar member={teamMembers.find((m) => m.id === presenter_id)} size={36} className="border border-[#DEDEDE]" />
-          <select
-            value={presenter_id}
-            onChange={(e) => { setPresenter(e.target.value); persist({ presenter_id: e.target.value }) }}
-            className={selectCls}
-          >
-            <option value="">— select —</option>
-            {teamMembers.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
-          </select>
+        <label className={fieldLabel}>Presenters</label>
+        <div className="space-y-3">
+          <div>
+            <p className="text-[11px] text-[#969696] mb-1.5">Presenter 1</p>
+            <div className="flex items-center gap-3">
+              <TeamAvatar member={teamMembers.find((m) => m.id === presenter_id)} size={36} className="border border-[#DEDEDE]" />
+              <select
+                value={presenter_id}
+                onChange={(e) => { setPresenter(e.target.value); persist({ presenter_id: e.target.value }) }}
+                className={selectCls}
+              >
+                <option value="">— select —</option>
+                {teamMembers.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
+              </select>
+            </div>
+          </div>
+          <div>
+            <p className="text-[11px] text-[#969696] mb-1.5">Presenter 2 (optional)</p>
+            <div className="flex items-center gap-3">
+              <TeamAvatar member={teamMembers.find((m) => m.id === presenter_id_2)} size={36} className="border border-[#DEDEDE]" />
+              <select
+                value={presenter_id_2}
+                onChange={(e) => { setPresenter2(e.target.value); persist({ presenter_id_2: e.target.value }) }}
+                className={selectCls}
+              >
+                <option value="">— none —</option>
+                {teamMembers.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
+              </select>
+            </div>
+          </div>
         </div>
       </div>
 

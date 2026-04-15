@@ -2,31 +2,35 @@
 
 import { useState, useRef } from 'react'
 import { getBrowserClient } from '@/lib/supabase'
-import type { MmuSession } from '@/lib/types'
+import type { MmuSession, TeamMember } from '@/lib/types'
+import TeamAvatar from '@/components/TeamAvatar'
 
 // ─── Shared styles ────────────────────────────────────────────────────────
 
 const fieldLabel = 'block text-[11px] font-bold uppercase tracking-widest text-[#2969FF] mb-1.5'
 const inputCls   = 'w-full rounded-lg border border-[#DEDEDE] bg-white px-3 py-2.5 text-[14px] text-[#262626] outline-none transition-colors focus:border-[#2969FF]'
+const selectCls  = 'w-full rounded-lg border border-[#DEDEDE] bg-white px-3 py-2.5 text-[14px] text-[#262626] outline-none transition-colors focus:border-[#2969FF] appearance-none'
 
 // ─── Props ────────────────────────────────────────────────────────────────
 
 type Props = {
   session:      MmuSession
+  teamMembers:  TeamMember[]
   onDateChange: (date: string) => void
 }
 
 // ─── Component ────────────────────────────────────────────────────────────
 
-export default function SessionDetailsForm({ session, onDateChange }: Props) {
+export default function SessionDetailsForm({ session, teamMembers, onDateChange }: Props) {
   const [date,    setDate]    = useState(session.date)
   const [message, setMessage] = useState(session.welcome_message ?? '')
+  const [hostId,  setHostId]  = useState(session.host_id ?? '')
   const [saving,  setSaving]  = useState(false)
   const [saved,   setSaved]   = useState(false)
   const [error,   setError]   = useState(false)
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  async function saveField(patch: { date?: string; welcome_message?: string }) {
+  async function saveField(patch: Record<string, unknown>) {
     setSaving(true); setSaved(false); setError(false)
     const { error: err } = await getBrowserClient()
       .from('mmu_sessions')
@@ -53,6 +57,12 @@ export default function SessionDetailsForm({ session, onDateChange }: Props) {
     setMessage(val)
     if (debounceRef.current) clearTimeout(debounceRef.current)
     debounceRef.current = setTimeout(() => saveField({ welcome_message: val }), 800)
+  }
+
+  function handleHostChange(e: React.ChangeEvent<HTMLSelectElement>) {
+    const val = e.target.value
+    setHostId(val)
+    saveField({ host_id: val || null })
   }
 
   return (
@@ -85,6 +95,25 @@ export default function SessionDetailsForm({ session, onDateChange }: Props) {
         />
         <p className="mt-1.5 text-[12px] text-[#969696]">
           Displayed on the welcome slide during the presentation.
+        </p>
+      </div>
+
+      {/* Host */}
+      <div>
+        <label className={fieldLabel}>Your host</label>
+        <div className="flex items-center gap-3">
+          <TeamAvatar member={teamMembers.find((m) => m.id === hostId)} size={36} className="border border-[#DEDEDE]" />
+          <select
+            value={hostId}
+            onChange={handleHostChange}
+            className={selectCls}
+          >
+            <option value="">— select —</option>
+            {teamMembers.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
+          </select>
+        </div>
+        <p className="mt-1.5 text-[12px] text-[#969696]">
+          Shown in the top-right corner of the welcome slide.
         </p>
       </div>
     </div>

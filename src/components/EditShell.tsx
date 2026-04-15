@@ -80,6 +80,7 @@ export default function EditShell({
       return (
         <SessionDetailsForm
           session={session}
+          teamMembers={teamMembers}
           onDateChange={setSessionDate}
         />
       )

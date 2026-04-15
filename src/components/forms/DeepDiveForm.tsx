@@ -18,12 +18,13 @@ const selectCls  = 'w-full rounded-lg border border-[#DEDEDE] bg-white px-3 py-2
 type LinkItem = { url: string; label: string }
 
 type Content = {
-  title:        string
-  presenter_id: string
-  lever_id:     string
-  body:         string
-  links:        LinkItem[]
-  images:       string[]
+  title:          string
+  presenter_id:   string
+  presenter_id_2: string
+  lever_id:       string
+  body:           string
+  links:          LinkItem[]
+  images:         string[]
 }
 
 type Props = {
@@ -48,28 +49,30 @@ const FOCUS_LABELS: Record<string, string> = {
 export default function DeepDiveForm({ section, sessionId, teamMembers, levers }: Props) {
   const raw = section.content as Partial<Content>
 
-  const [is_active,    setIsActive]     = useState(section.is_active)
-  const [title,        setTitle]        = useState(raw.title        ?? '')
-  const [presenter_id, setPresenter]    = useState(raw.presenter_id ?? '')
-  const [lever_id,     setLever]        = useState(raw.lever_id     ?? '')
-  const [body,         setBody]         = useState(raw.body         ?? '')
-  const [links,        setLinks]        = useState<LinkItem[]>(
+  const [is_active,      setIsActive]   = useState(section.is_active)
+  const [title,          setTitle]      = useState(raw.title          ?? '')
+  const [presenter_id,   setPresenter]  = useState(raw.presenter_id   ?? '')
+  const [presenter_id_2, setPresenter2] = useState(raw.presenter_id_2 ?? '')
+  const [lever_id,       setLever]      = useState(raw.lever_id       ?? '')
+  const [body,           setBody]       = useState(raw.body           ?? '')
+  const [links,          setLinks]      = useState<LinkItem[]>(
     (raw.links ?? []).length > 0 ? (raw.links as LinkItem[]) : [{ url: '', label: '' }],
   )
-  const [images,       setImages]       = useState<string[]>(raw.images ?? [])
-  const [saving,       setSaving]       = useState(false)
-  const [saved,        setSaved]        = useState(false)
-  const [saveError,    setSaveError]    = useState(false)
+  const [images,         setImages]     = useState<string[]>(raw.images ?? [])
+  const [saving,         setSaving]     = useState(false)
+  const [saved,          setSaved]      = useState(false)
+  const [saveError,      setSaveError]  = useState(false)
 
   const persist = useCallback(async (patch: Partial<Content & { is_active?: boolean }>) => {
     setSaving(true); setSaved(false); setSaveError(false)
     const content: Content = {
-      title:        patch.title        ?? title,
-      presenter_id: patch.presenter_id ?? presenter_id,
-      lever_id:     patch.lever_id     ?? lever_id,
-      body:         patch.body         ?? body,
-      links:        patch.links        ?? links,
-      images:       patch.images       ?? images,
+      title:          patch.title          ?? title,
+      presenter_id:   patch.presenter_id   ?? presenter_id,
+      presenter_id_2: patch.presenter_id_2 ?? presenter_id_2,
+      lever_id:       patch.lever_id       ?? lever_id,
+      body:           patch.body           ?? body,
+      links:          patch.links          ?? links,
+      images:         patch.images         ?? images,
     }
     const active = patch.is_active !== undefined ? patch.is_active : is_active
     const { error: err } = await getBrowserClient()
@@ -79,7 +82,7 @@ export default function DeepDiveForm({ section, sessionId, teamMembers, levers }
     if (err) { setSaving(false); setSaveError(true); setTimeout(() => setSaveError(false), 3000); return }
     setSaving(false); setSaved(true)
     setTimeout(() => setSaved(false), 2000)
-  }, [title, presenter_id, lever_id, body, links, images, is_active, section.id])
+  }, [title, presenter_id, presenter_id_2, lever_id, body, links, images, is_active, section.id])
 
   function toggleActive() {
     const next = !is_active
@@ -93,7 +96,7 @@ export default function DeepDiveForm({ section, sessionId, teamMembers, levers }
     setLinks(next)
     persist({ links: next })
   }
-  function addLink()         { setLinks((l) => [...l, { url: '', label: '' }]) }
+  function addLink()             { setLinks((l) => [...l, { url: '', label: '' }]) }
   function removeLink(i: number) {
     const next = links.filter((_, idx) => idx !== i)
     setLinks(next); persist({ links: next })
@@ -122,9 +125,7 @@ export default function DeepDiveForm({ section, sessionId, teamMembers, levers }
           role="switch"
           aria-checked={is_active}
         >
-          <span
-            className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform ${is_active ? 'translate-x-5' : 'translate-x-0.5'}`}
-          />
+          <span className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform ${is_active ? 'translate-x-5' : 'translate-x-0.5'}`} />
         </button>
       </div>
 
@@ -144,19 +145,38 @@ export default function DeepDiveForm({ section, sessionId, teamMembers, levers }
         />
       </div>
 
-      {/* Presenter */}
+      {/* Presenters */}
       <div>
-        <label className={fieldLabel}>Presenter</label>
-        <div className="flex items-center gap-3">
-          <TeamAvatar member={teamMembers.find((m) => m.id === presenter_id)} size={36} className="border border-[#DEDEDE]" />
-          <select
-            value={presenter_id}
-            onChange={(e) => { setPresenter(e.target.value); persist({ presenter_id: e.target.value }) }}
-            className={selectCls}
-          >
-          <option value="">— select —</option>
-          {teamMembers.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
-        </select>
+        <label className={fieldLabel}>Presenters</label>
+        <div className="space-y-3">
+          <div>
+            <p className="text-[11px] text-[#969696] mb-1.5">Presenter 1</p>
+            <div className="flex items-center gap-3">
+              <TeamAvatar member={teamMembers.find((m) => m.id === presenter_id)} size={36} className="border border-[#DEDEDE]" />
+              <select
+                value={presenter_id}
+                onChange={(e) => { setPresenter(e.target.value); persist({ presenter_id: e.target.value }) }}
+                className={selectCls}
+              >
+                <option value="">— select —</option>
+                {teamMembers.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
+              </select>
+            </div>
+          </div>
+          <div>
+            <p className="text-[11px] text-[#969696] mb-1.5">Presenter 2 (optional)</p>
+            <div className="flex items-center gap-3">
+              <TeamAvatar member={teamMembers.find((m) => m.id === presenter_id_2)} size={36} className="border border-[#DEDEDE]" />
+              <select
+                value={presenter_id_2}
+                onChange={(e) => { setPresenter2(e.target.value); persist({ presenter_id_2: e.target.value }) }}
+                className={selectCls}
+              >
+                <option value="">— none —</option>
+                {teamMembers.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
+              </select>
+            </div>
+          </div>
         </div>
       </div>
 

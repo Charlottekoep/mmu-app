@@ -3,16 +3,18 @@
 import { useEffect, useState } from 'react'
 import { getBrowserClient } from '@/lib/supabase'
 import type { SessionSection, TeamMember } from '@/lib/types'
-import DarkPageLayout from '@/components/DarkPageLayout'
-import TeamAvatar    from '@/components/TeamAvatar'
+import DarkPageLayout  from '@/components/DarkPageLayout'
+import TeamAvatar      from '@/components/TeamAvatar'
+import PresenterBadge  from '@/components/PresenterBadge'
 
 // ─── Content type ─────────────────────────────────────────────────────────
 
 type Content = {
-  presenter_id: string
-  subject_id:   string
-  spotlight:    string
-  images:       string[]
+  presenter_id:   string
+  presenter_id_2: string
+  subject_id:     string
+  spotlight:      string
+  images:         string[]
 }
 
 // ─── Component ────────────────────────────────────────────────────────────
@@ -50,28 +52,18 @@ export default function JustHumansSection({ section }: Props) {
     )
   }
 
-  const content   = (section.content ?? {}) as Partial<Content>
-  const presenter = members.find((m) => m.id === content.presenter_id)
-  const subject   = members.find((m) => m.id === content.subject_id)
-  const images    = content.images ?? []
+  const content    = (section.content ?? {}) as Partial<Content>
+  const presenter  = members.find((m) => m.id === content.presenter_id)
+  const presenter2 = members.find((m) => m.id === content.presenter_id_2)
+  const subject    = members.find((m) => m.id === content.subject_id)
+  const images     = content.images ?? []
 
   return (
     <DarkPageLayout>
       <div className="flex h-screen overflow-hidden">
 
-        {/* ── Left column — presenter → subject ──────────────────────── */}
+        {/* ── Left column — subject only ──────────────────────────────── */}
         <div className="relative flex w-[35%] flex-shrink-0 flex-col items-center justify-center border-r border-white/10 px-10 py-16">
-
-          {/* Presenter card */}
-          <PersonCard member={presenter} label="Presenter" variant="default" />
-
-          {/* Connector */}
-          <div className="flex flex-col items-center gap-1.5 py-5">
-            <span className="type-eyebrow text-white/25">presents</span>
-            <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true">
-              <path d="M9 3v12M4 10l5 5 5-5" stroke="rgba(255,255,255,0.2)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-          </div>
 
           {/* Subject card */}
           <PersonCard member={subject} label="In the spotlight" variant="spotlight" />
@@ -79,7 +71,14 @@ export default function JustHumansSection({ section }: Props) {
         </div>
 
         {/* ── Right column — spotlight content ───────────────────────── */}
-        <div className="flex flex-1 flex-col justify-center overflow-y-auto px-14 py-16">
+        <div className="relative flex flex-1 flex-col justify-center overflow-y-auto px-14 py-16">
+
+          {/* Presenter badge — top right of content area */}
+          {presenter && (
+            <div className="absolute top-8 right-12 z-10">
+              <PresenterBadge presenter={presenter} presenter2={presenter2} />
+            </div>
+          )}
 
           <p className="type-eyebrow text-white mb-3">Spotlight</p>
 

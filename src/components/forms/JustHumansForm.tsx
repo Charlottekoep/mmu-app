@@ -15,10 +15,11 @@ const selectCls  = 'w-full rounded-lg border border-[#DEDEDE] bg-white px-3 py-2
 // ─── Types ────────────────────────────────────────────────────────────────
 
 type Content = {
-  presenter_id: string
-  subject_id:   string
-  spotlight:    string
-  images:       string[]
+  presenter_id:   string
+  presenter_id_2: string
+  subject_id:     string
+  spotlight:      string
+  images:         string[]
 }
 
 type Props = {
@@ -32,8 +33,9 @@ type Props = {
 export default function JustHumansForm({ section, sessionId, teamMembers }: Props) {
   const raw = section.content as Partial<Content>
 
-  const [presenter_id, setPresenter] = useState(raw.presenter_id ?? '')
-  const [subject_id,   setSubject]   = useState(raw.subject_id   ?? '')
+  const [presenter_id,   setPresenter]  = useState(raw.presenter_id   ?? '')
+  const [presenter_id_2, setPresenter2] = useState(raw.presenter_id_2 ?? '')
+  const [subject_id,     setSubject]    = useState(raw.subject_id     ?? '')
   const [spotlight,    setSpotlight] = useState(raw.spotlight    ?? '')
   const [images,       setImages]    = useState<string[]>(raw.images ?? [])
   const [saving,     setSaving]     = useState(false)
@@ -43,10 +45,11 @@ export default function JustHumansForm({ section, sessionId, teamMembers }: Prop
   const save = useCallback(async (patch: Partial<Content>) => {
     setSaving(true); setSaved(false); setSaveError(false)
     const content: Content = {
-      presenter_id: patch.presenter_id ?? presenter_id,
-      subject_id:   patch.subject_id   ?? subject_id,
-      spotlight:    patch.spotlight    ?? spotlight,
-      images:       patch.images       ?? images,
+      presenter_id:   patch.presenter_id   ?? presenter_id,
+      presenter_id_2: patch.presenter_id_2 ?? presenter_id_2,
+      subject_id:     patch.subject_id     ?? subject_id,
+      spotlight:      patch.spotlight      ?? spotlight,
+      images:         patch.images         ?? images,
     }
     const { error: err } = await getBrowserClient()
       .from('session_sections')
@@ -59,30 +62,50 @@ export default function JustHumansForm({ section, sessionId, teamMembers }: Prop
     }
     setSaving(false); setSaved(true)
     setTimeout(() => setSaved(false), 2000)
-  }, [presenter_id, subject_id, spotlight, images, section.id])
+  }, [presenter_id, presenter_id_2, subject_id, spotlight, images, section.id])
 
-  const presenter = teamMembers.find((m) => m.id === presenter_id)
-  const subject   = teamMembers.find((m) => m.id === subject_id)
+  const subject = teamMembers.find((m) => m.id === subject_id)
 
   return (
     <div className="mx-auto max-w-2xl px-8 py-10 space-y-8">
       <SaveIndicator saving={saving} saved={saved} error={saveError} />
 
-      {/* Presenter */}
+      {/* Presenters */}
       <div>
-        <label className={fieldLabel}>Presenter</label>
-        <div className="flex items-center gap-3">
-          <TeamAvatar member={presenter} size={36} className="border border-[#DEDEDE]" />
-          <select
-            value={presenter_id}
-            onChange={(e) => { setPresenter(e.target.value); save({ presenter_id: e.target.value }) }}
-            className={selectCls}
-          >
-            <option value="">— select —</option>
-            {teamMembers.map((m) => (
-              <option key={m.id} value={m.id}>{m.name}</option>
-            ))}
-          </select>
+        <label className={fieldLabel}>Presenters</label>
+        <div className="space-y-3">
+          <div>
+            <p className="text-[11px] text-[#969696] mb-1.5">Presenter 1</p>
+            <div className="flex items-center gap-3">
+              <TeamAvatar member={teamMembers.find((m) => m.id === presenter_id)} size={36} className="border border-[#DEDEDE]" />
+              <select
+                value={presenter_id}
+                onChange={(e) => { setPresenter(e.target.value); save({ presenter_id: e.target.value }) }}
+                className={selectCls}
+              >
+                <option value="">— select —</option>
+                {teamMembers.map((m) => (
+                  <option key={m.id} value={m.id}>{m.name}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+          <div>
+            <p className="text-[11px] text-[#969696] mb-1.5">Presenter 2 (optional)</p>
+            <div className="flex items-center gap-3">
+              <TeamAvatar member={teamMembers.find((m) => m.id === presenter_id_2)} size={36} className="border border-[#DEDEDE]" />
+              <select
+                value={presenter_id_2}
+                onChange={(e) => { setPresenter2(e.target.value); save({ presenter_id_2: e.target.value }) }}
+                className={selectCls}
+              >
+                <option value="">— none —</option>
+                {teamMembers.map((m) => (
+                  <option key={m.id} value={m.id}>{m.name}</option>
+                ))}
+              </select>
+            </div>
+          </div>
         </div>
       </div>
 

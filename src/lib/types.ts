@@ -13,6 +13,7 @@ export type MmuSession = {
   session_number:  number
   date:            string
   welcome_message: string | null
+  host_id:         string | null
   created_by:      string
   created_at:      string
 }

@@ -1,6 +1,9 @@
 'use client'
 
-import type { MmuSession, SessionSection } from '@/lib/types'
+import { useEffect, useState } from 'react'
+import { getBrowserClient } from '@/lib/supabase'
+import type { MmuSession, SessionSection, TeamMember } from '@/lib/types'
+import TeamAvatar from '@/components/TeamAvatar'
 
 // ─── Section labels for pills ─────────────────────────────────────────────
 
@@ -22,6 +25,22 @@ type Props = {
 }
 
 export default function WelcomeSection({ session, sections, onNavigate }: Props) {
+  const [hostMember, setHostMember] = useState<TeamMember | null>(null)
+
+  useEffect(() => {
+    if (!session.host_id) return
+    let cancelled = false
+    getBrowserClient()
+      .from('team_members')
+      .select('*')
+      .eq('id', session.host_id)
+      .single()
+      .then(({ data }) => {
+        if (!cancelled && data) setHostMember(data)
+      })
+    return () => { cancelled = true }
+  }, [session.host_id])
+
   const activeSections = sections.filter((s) => s.is_active)
 
   // "20 April 2026" — parsed without timezone shift
@@ -43,6 +62,22 @@ export default function WelcomeSection({ session, sections, onNavigate }: Props)
         className="pointer-events-none absolute -bottom-40 -left-40 h-[560px] w-[560px]"
         style={{ background: 'radial-gradient(circle, rgba(31,200,129,0.18) 0%, transparent 70%)' }}
       />
+
+      {/* ── Host badge — top right, below fixed nav bar ────────────────── */}
+      {hostMember && (
+        <div className="absolute top-24 right-12 z-10 flex flex-col items-end gap-2">
+          <p className="type-eyebrow text-white/35 tracking-widest">Your host</p>
+          <div className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.05] px-4 py-3">
+            <div className="text-right">
+              <p className="text-[15px] font-bold text-white leading-tight">{hostMember.name}</p>
+              {hostMember.role && (
+                <p className="mt-0.5 type-eyebrow" style={{ color: '#2969FF' }}>{hostMember.role}</p>
+              )}
+            </div>
+            <TeamAvatar member={hostMember} size={56} className="border-2 border-white/15" />
+          </div>
+        </div>
+      )}
 
       {/* ── Main content ──────────────────────────────────────────────── */}
       <div className="relative z-10 flex w-full max-w-5xl flex-col items-center px-12 text-center">

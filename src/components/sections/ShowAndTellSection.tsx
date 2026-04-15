@@ -9,13 +9,14 @@ import PresenterBadge   from '@/components/PresenterBadge'
 // ─── Content type ─────────────────────────────────────────────────────────
 
 type Content = {
-  presenter_id: string
-  topic:        string
-  duration_min: number
-  demo_url:     string
-  body:         string
-  watch_for:    string
-  images:       string[]
+  presenter_id:   string
+  presenter_id_2: string
+  topic:          string
+  duration_min:   number
+  demo_url:       string
+  body:           string
+  watch_for:      string
+  images:         string[]
 }
 
 // ─── Component ────────────────────────────────────────────────────────────
@@ -50,9 +51,10 @@ export default function ShowAndTellSection({ section }: Props) {
     )
   }
 
-  const content   = (section.content ?? {}) as Partial<Content>
-  const presenter = members.find((m) => m.id === content.presenter_id)
-  const images    = content.images ?? []
+  const content    = (section.content ?? {}) as Partial<Content>
+  const presenter  = members.find((m) => m.id === content.presenter_id)
+  const presenter2 = members.find((m) => m.id === content.presenter_id_2)
+  const images     = content.images ?? []
 
   return (
     <DarkPageLayout>
@@ -98,7 +100,7 @@ export default function ShowAndTellSection({ section }: Props) {
         {/* ── Header ─────────────────────────────────────────────────── */}
         <div className="mb-3 flex items-start justify-between">
           <p className="type-eyebrow text-white">Show &amp; Tell</p>
-          {presenter && <PresenterBadge presenter={presenter} />}
+          {presenter && <PresenterBadge presenter={presenter} presenter2={presenter2} />}
         </div>
 
         {/* ── Title + meta ───────────────────────────────────────────── */}

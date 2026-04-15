@@ -15,8 +15,9 @@ type AnnouncementItem = {
 }
 
 type Content = {
-  presenter_id: string
-  items:        AnnouncementItem[]
+  presenter_id:   string
+  presenter_id_2: string
+  items:          AnnouncementItem[]
 }
 
 // ─── Component ────────────────────────────────────────────────────────────
@@ -51,9 +52,10 @@ export default function AnnouncementsSection({ section }: Props) {
     )
   }
 
-  const content   = (section.content ?? {}) as Partial<Content>
-  const presenter = members.find((m) => m.id === content.presenter_id)
-  const items     = (content.items ?? []).filter((it) => it.text)
+  const content    = (section.content ?? {}) as Partial<Content>
+  const presenter  = members.find((m) => m.id === content.presenter_id)
+  const presenter2 = members.find((m) => m.id === content.presenter_id_2)
+  const items      = (content.items ?? []).filter((it) => it.text)
 
   return (
     <DarkPageLayout>
@@ -65,7 +67,7 @@ export default function AnnouncementsSection({ section }: Props) {
             <p className="type-eyebrow text-white mb-3">Team Announcements</p>
             <h2 className="type-h2 text-white">What&apos;s new</h2>
           </div>
-          {presenter && <PresenterBadge presenter={presenter} />}
+          {presenter && <PresenterBadge presenter={presenter} presenter2={presenter2} />}
         </div>
 
         {/* ── Announcement cards ─────────────────────────────────────── */}

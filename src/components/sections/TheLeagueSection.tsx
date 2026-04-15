@@ -14,10 +14,11 @@ type QuizItem = { question: string; answer: string }
 type LeaderboardRow = { name: string; score: number }
 
 type Content = {
-  presenter_id:    string
-  concept:         string
-  quiz:            QuizItem[]
-  images:          string[]
+  presenter_id:     string
+  presenter_id_2:   string
+  concept:          string
+  quiz:             QuizItem[]
+  images:           string[]
   leaderboard_data: LeaderboardRow[]
 }
 
@@ -69,10 +70,11 @@ export default function TheLeagueSection({ section }: Props) {
     )
   }
 
-  const content   = (section.content ?? {}) as Partial<Content>
-  const presenter = members.find((m) => m.id === content.presenter_id)
-  const quiz      = (content.quiz ?? []).filter((q) => q.question)
-  const images    = content.images ?? []
+  const content    = (section.content ?? {}) as Partial<Content>
+  const presenter  = members.find((m) => m.id === content.presenter_id)
+  const presenter2 = members.find((m) => m.id === content.presenter_id_2)
+  const quiz       = (content.quiz ?? []).filter((q) => q.question)
+  const images     = content.images ?? []
 
   // Build ranked list from uploaded CSV data, enriched with team member avatars
   const ranked: RankedEntry[] = (content.leaderboard_data ?? [])
@@ -92,7 +94,7 @@ export default function TheLeagueSection({ section }: Props) {
             <p className="type-eyebrow text-white mb-3">The League</p>
             <h2 className="type-h2 text-white">Insurance IQ</h2>
           </div>
-          {presenter && <PresenterBadge presenter={presenter} />}
+          {presenter && <PresenterBadge presenter={presenter} presenter2={presenter2} />}
         </div>
 
         <div className="grid gap-10 lg:grid-cols-[1fr_320px]">
