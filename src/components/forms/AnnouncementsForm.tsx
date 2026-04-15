@@ -3,8 +3,7 @@
 import { useState, useCallback } from 'react'
 import { getBrowserClient } from '@/lib/supabase'
 import type { SessionSection, TeamMember } from '@/lib/types'
-import ImageUploader from '@/components/ImageUploader'
-import TeamAvatar    from '@/components/TeamAvatar'
+import TeamAvatar from '@/components/TeamAvatar'
 
 // ─── Shared styles ────────────────────────────────────────────────────────
 
@@ -23,7 +22,6 @@ type AnnouncementItem = {
 type Content = {
   presenter_id: string
   items:        AnnouncementItem[]
-  images:       string[]
 }
 
 type Props = {
@@ -43,7 +41,6 @@ export default function AnnouncementsForm({ section, sessionId, teamMembers }: P
       ? (raw.items as AnnouncementItem[])
       : [{ text: '', url: '', image_url: '' }],
   )
-  const [images,     setImages]     = useState<string[]>(raw.images ?? [])
   const [uploading,  setUploading]  = useState<number | null>(null)
   const [saving,     setSaving]     = useState(false)
   const [saved,      setSaved]      = useState(false)
@@ -54,7 +51,6 @@ export default function AnnouncementsForm({ section, sessionId, teamMembers }: P
     const content: Content = {
       presenter_id: patch.presenter_id ?? presenter_id,
       items:        patch.items        ?? items,
-      images:       patch.images       ?? images,
     }
     const { error: err } = await getBrowserClient()
       .from('session_sections')
@@ -63,7 +59,7 @@ export default function AnnouncementsForm({ section, sessionId, teamMembers }: P
     if (err) { setSaving(false); setSaveError(true); setTimeout(() => setSaveError(false), 3000); return }
     setSaving(false); setSaved(true)
     setTimeout(() => setSaved(false), 2000)
-  }, [presenter_id, items, images, section.id])
+  }, [presenter_id, items, section.id])
 
   function updateItem(i: number, field: keyof AnnouncementItem, value: string) {
     const next = items.map((item, idx) => idx === i ? { ...item, [field]: value } : item)
@@ -181,15 +177,6 @@ export default function AnnouncementsForm({ section, sessionId, teamMembers }: P
         </div>
       </div>
 
-      {/* Section-level images */}
-      <div>
-        <label className={fieldLabel}>Section images</label>
-        <ImageUploader
-          images={images}
-          folder={`${sessionId}/${section.id}`}
-          onChange={(imgs) => { setImages(imgs); persist({ images: imgs }) }}
-        />
-      </div>
     </div>
   )
 }

@@ -167,22 +167,37 @@ export default function PresentationShell({ session, sections, initialSectionId 
         className="fixed inset-x-0 top-0 z-20 grid grid-cols-3 items-center px-8 py-6 pointer-events-none"
         aria-hidden="true"
       >
-        {/* Logo + History — top left */}
+        {/* Logo + History/Home — top left */}
         <div className="pointer-events-auto flex items-center gap-4">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/RootLogo-RGB-FullColWhtxt.svg" alt="Root" className="h-6 w-auto" />
-          <button
-            aria-hidden="false"
-            onClick={() => setSidebarOpen(true)}
-            className="flex items-center gap-2.5 rounded-full border border-white/20 bg-secondary/60 px-4 py-2.5 type-eyebrow text-white/60 backdrop-blur-sm transition-all hover:bg-white/10 hover:text-white"
-          >
-            <svg width="15" height="11" viewBox="0 0 15 11" fill="none" aria-hidden="true">
-              <rect width="15" height="1.5" rx="0.75" fill="currentColor" />
-              <rect x="0" y="4.75" width="11" height="1.5" rx="0.75" fill="currentColor" />
-              <rect x="0" y="9.5"  width="7"  height="1.5" rx="0.75" fill="currentColor" />
-            </svg>
-            History
-          </button>
+          {index === 0 ? (
+            /* On welcome slide: open history sidebar */
+            <button
+              aria-hidden="false"
+              onClick={() => setSidebarOpen(true)}
+              className="flex items-center gap-2.5 rounded-full border border-white/20 bg-secondary/60 px-4 py-2.5 type-eyebrow text-white/60 backdrop-blur-sm transition-all hover:bg-white/10 hover:text-white"
+            >
+              <svg width="15" height="11" viewBox="0 0 15 11" fill="none" aria-hidden="true">
+                <rect width="15" height="1.5" rx="0.75" fill="currentColor" />
+                <rect x="0" y="4.75" width="11" height="1.5" rx="0.75" fill="currentColor" />
+                <rect x="0" y="9.5"  width="7"  height="1.5" rx="0.75" fill="currentColor" />
+              </svg>
+              History
+            </button>
+          ) : (
+            /* On any other slide: go back to welcome */
+            <button
+              aria-hidden="false"
+              onClick={() => setIndex(0)}
+              className="flex items-center gap-2.5 rounded-full border border-white/20 bg-secondary/60 px-4 py-2.5 type-eyebrow text-white/60 backdrop-blur-sm transition-all hover:bg-white/10 hover:text-white"
+            >
+              <svg width="13" height="13" viewBox="0 0 13 13" fill="none" aria-hidden="true">
+                <path d="M6.5 1L1 6.5M1 6.5L6.5 12M1 6.5H12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+              Home
+            </button>
+          )}
         </div>
 
         {/* Session label — truly centred via grid middle column */}
