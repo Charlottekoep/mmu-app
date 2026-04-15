@@ -25,67 +25,100 @@ type Props = {
 export default function SessionDetailsForm({ session, teamMembers, welcomeSection, onDateChange }: Props) {
   const raw = (welcomeSection?.content ?? {}) as { host_id?: string }
 
-  const [date,    setDate]    = useState(session.date)
-  const [message, setMessage] = useState(session.welcome_message ?? '')
-  const [hostId,  setHostId]  = useState(raw.host_id ?? '')
-  const [saving,  setSaving]  = useState(false)
-  const [saved,   setSaved]   = useState(false)
-  const [error,   setError]   = useState(false)
+  const [date,       setDate]       = useState(session.date)
+  const [message,    setMessage]    = useState(session.welcome_message ?? '')
+  const [hostId,     setHostId]     = useState(raw.host_id ?? '')
+  const [saving,     setSaving]     = useState(false)
+  const [saved,      setSaved]      = useState(false)
+  const [errorMsg,   setErrorMsg]   = useState<string | null>(null)
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
+  // ── mmu_sessions saves ──────────────────────────────────────────────────
+
   async function saveSessionField(patch: { date?: string; welcome_message?: string | null }) {
-    setSaving(true); setSaved(false); setError(false)
+    setSaving(true); setSaved(false); setErrorMsg(null)
     const { error: err } = await getBrowserClient()
       .from('mmu_sessions')
       .update(patch)
       .eq('id', session.id)
     if (err) {
-      setSaving(false); setError(true)
-      setTimeout(() => setError(false), 3000)
+      console.error('[SessionDetailsForm] mmu_sessions update failed:', err)
+      setSaving(false)
+      setErrorMsg(err.message)
+      setTimeout(() => setErrorMsg(null), 5000)
       return
     }
     setSaving(false); setSaved(true)
     setTimeout(() => setSaved(false), 2000)
   }
+
+  // ── welcome section content save ────────────────────────────────────────
+  // Stores host_id (and any other welcome-specific data) in
+  // session_sections.content for section_type = 'welcome'.
+  //
+  // Requires the DB to have 'welcome' in the section_type CHECK constraint:
+  //   ALTER TABLE session_sections DROP CONSTRAINT session_sections_section_type_check;
+  //   ALTER TABLE session_sections ADD CONSTRAINT session_sections_section_type_check
+  //     CHECK (section_type IN (
+  //       'welcome','just_humans','north_star','deep_dive',
+  //       'show_and_tell','announcements','the_league'
+  //     ));
+  //   CREATE UNIQUE INDEX IF NOT EXISTS session_sections_session_type_idx
+  //     ON session_sections (session_id, section_type);
 
   async function saveWelcomeContent(patch: Record<string, unknown>) {
-    setSaving(true); setSaved(false); setError(false)
+    setSaving(true); setSaved(false); setErrorMsg(null)
 
-    let sectionId: string
-    let existingContent: Record<string, unknown>
+    const supabase = getBrowserClient()
 
-    if (welcomeSection) {
-      sectionId      = welcomeSection.id
-      existingContent = welcomeSection.content ?? {}
-    } else {
-      // Welcome section row doesn't exist yet — create it on the fly
-      const { data: created, error: createErr } = await getBrowserClient()
+    // Merge patch over whatever is already in the welcome section content
+    const existingContent = welcomeSection?.content ?? {}
+    const content = { ...existingContent, ...patch }
+
+    if (welcomeSection?.id) {
+      // Row exists — just update the content blob
+      const { error: err } = await supabase
         .from('session_sections')
-        .insert({ session_id: session.id, section_type: 'welcome', display_order: 0, is_active: true, content: {} })
-        .select()
-        .single()
-      if (createErr || !created) {
-        setSaving(false); setError(true)
-        setTimeout(() => setError(false), 3000)
+        .update({ content })
+        .eq('id', welcomeSection.id)
+
+      if (err) {
+        console.error('[SessionDetailsForm] welcome section UPDATE failed:', err)
+        setSaving(false)
+        setErrorMsg(err.message)
+        setTimeout(() => setErrorMsg(null), 5000)
         return
       }
-      sectionId      = created.id
-      existingContent = {}
+    } else {
+      // No welcome row yet — upsert so a concurrent save doesn't double-insert.
+      // This requires the unique index on (session_id, section_type) above.
+      const { error: err } = await supabase
+        .from('session_sections')
+        .upsert(
+          {
+            session_id:    session.id,
+            section_type:  'welcome' as const,
+            display_order: 0,
+            is_active:     true,
+            content,
+          },
+          { onConflict: 'session_id,section_type' },
+        )
+
+      if (err) {
+        console.error('[SessionDetailsForm] welcome section UPSERT failed:', err)
+        setSaving(false)
+        setErrorMsg(err.message)
+        setTimeout(() => setErrorMsg(null), 5000)
+        return
+      }
     }
 
-    const content = { ...existingContent, ...patch }
-    const { error: err } = await getBrowserClient()
-      .from('session_sections')
-      .update({ content })
-      .eq('id', sectionId)
-    if (err) {
-      setSaving(false); setError(true)
-      setTimeout(() => setError(false), 3000)
-      return
-    }
     setSaving(false); setSaved(true)
     setTimeout(() => setSaved(false), 2000)
   }
+
+  // ── Handlers ────────────────────────────────────────────────────────────
 
   function handleDateChange(e: React.ChangeEvent<HTMLInputElement>) {
     const val = e.target.value
@@ -109,7 +142,7 @@ export default function SessionDetailsForm({ session, teamMembers, welcomeSectio
 
   return (
     <div className="mx-auto max-w-2xl px-8 py-10 space-y-8">
-      <SaveIndicator saving={saving} saved={saved} error={error} />
+      <SaveIndicator saving={saving} saved={saved} errorMsg={errorMsg} />
 
       {/* Session date */}
       <div>
@@ -164,11 +197,23 @@ export default function SessionDetailsForm({ session, teamMembers, welcomeSectio
 
 // ─── Save indicator ───────────────────────────────────────────────────────
 
-function SaveIndicator({ saving, saved, error }: { saving: boolean; saved: boolean; error: boolean }) {
-  if (!saving && !saved && !error) return null
+function SaveIndicator({
+  saving,
+  saved,
+  errorMsg,
+}: {
+  saving:   boolean
+  saved:    boolean
+  errorMsg: string | null
+}) {
+  if (!saving && !saved && !errorMsg) return null
   return (
-    <div className={`fixed bottom-6 right-8 z-10 rounded-full px-4 py-2 text-[12px] shadow-md ${error ? 'bg-red text-white' : 'bg-[#262626] text-white'}`}>
-      {saving ? 'Saving…' : error ? 'Save failed' : 'Saved ✓'}
+    <div
+      className={`fixed bottom-6 right-8 z-10 max-w-sm rounded-xl px-4 py-2 text-[12px] shadow-md ${
+        errorMsg ? 'bg-red-600 text-white' : 'bg-[#262626] text-white'
+      }`}
+    >
+      {saving ? 'Saving…' : errorMsg ? `Save failed: ${errorMsg}` : 'Saved ✓'}
     </div>
   )
 }
