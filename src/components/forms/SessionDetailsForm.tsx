@@ -33,7 +33,7 @@ export default function SessionDetailsForm({ session, teamMembers, welcomeSectio
   const [error,   setError]   = useState(false)
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  async function saveSessionField(patch: Record<string, unknown>) {
+  async function saveSessionField(patch: { date?: string; welcome_message?: string | null }) {
     setSaving(true); setSaved(false); setError(false)
     const { error: err } = await getBrowserClient()
       .from('mmu_sessions')
