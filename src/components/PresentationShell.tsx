@@ -78,9 +78,12 @@ type Props = {
 }
 
 export default function PresentationShell({ session, sections, initialSectionId }: Props) {
+  const welcomeSection   = sections.find((s) => s.section_type === 'welcome')
+  const contentSections  = sections.filter((s) => s.section_type !== 'welcome')
+
   const [index, setIndex] = useState(() => {
     if (!initialSectionId) return 0
-    const idx = sections.findIndex((s) => s.id === initialSectionId)
+    const idx = contentSections.findIndex((s) => s.id === initialSectionId)
     return idx !== -1 ? idx + 1 : 0  // +1 because welcome occupies slot 0
   })
   const [sidebarOpen, setSidebarOpen] = useState(false)
@@ -89,9 +92,9 @@ export default function PresentationShell({ session, sections, initialSectionId 
   const slides = useMemo<Slide[]>(
     () => [
       { kind: 'welcome' },
-      ...sections.map((s) => ({ kind: 'section' as const, section: s })),
+      ...contentSections.map((s) => ({ kind: 'section' as const, section: s })),
     ],
-    [sections],
+    [contentSections],
   )
 
   const prev = useCallback(() => setIndex((i) => Math.max(0, i - 1)), [])
@@ -147,7 +150,8 @@ export default function PresentationShell({ session, sections, initialSectionId 
             {slide.kind === 'welcome' ? (
               <WelcomeSection
                 session={session}
-                sections={sections}
+                sections={contentSections}
+                welcomeSection={welcomeSection}
                 onNavigate={(sectionId) => {
                   const idx = slides.findIndex(
                     (s) => s.kind === 'section' && s.section.id === sectionId,

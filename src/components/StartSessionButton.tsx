@@ -6,6 +6,7 @@ import { getBrowserClient } from '@/lib/supabase'
 import type { SectionType } from '@/lib/types'
 
 const DEFAULT_SECTIONS: { section_type: SectionType; display_order: number }[] = [
+  { section_type: 'welcome',       display_order: 0 },
   { section_type: 'just_humans',   display_order: 1 },
   { section_type: 'north_star',    display_order: 2 },
   { section_type: 'deep_dive',     display_order: 3 },

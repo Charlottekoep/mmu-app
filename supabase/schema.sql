@@ -62,6 +62,7 @@ CREATE TABLE session_sections (
   id            uuid        PRIMARY KEY DEFAULT gen_random_uuid(),
   session_id    uuid        NOT NULL REFERENCES mmu_sessions (id) ON DELETE CASCADE,
   section_type  text        NOT NULL CHECK (section_type IN (
+                              'welcome',
                               'just_humans',
                               'north_star',
                               'deep_dive',

@@ -66,6 +66,9 @@ export default function EditShell({
   snapshots,
   initialSectionId,
 }: Props) {
+  const welcomeSection   = sections.find((s) => s.section_type === 'welcome')
+  const displaySections  = sections.filter((s) => s.section_type !== 'welcome')
+
   const [activeId,    setActiveId]    = useState<string>(() =>
     initialSectionId && sections.some((s) => s.id === initialSectionId)
       ? initialSectionId
@@ -73,7 +76,7 @@ export default function EditShell({
   )
   const [sessionDate, setSessionDate] = useState(session.date)
 
-  const activeSection = sections.find((s) => s.id === activeId)
+  const activeSection = displaySections.find((s) => s.id === activeId)
 
   function renderContent() {
     if (activeId === SESSION_DETAILS_ID) {
@@ -81,6 +84,7 @@ export default function EditShell({
         <SessionDetailsForm
           session={session}
           teamMembers={teamMembers}
+          welcomeSection={welcomeSection}
           onDateChange={setSessionDate}
         />
       )
@@ -179,7 +183,7 @@ export default function EditShell({
               <span className="text-[13px] font-medium">Welcome</span>
             </button>
 
-            {sections.map((s) => {
+            {displaySections.map((s) => {
               const meta     = SECTION_META[s.section_type]
               const isActive = s.id === activeId
               return (

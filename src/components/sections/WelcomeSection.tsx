@@ -19,29 +19,32 @@ const SECTION_LABELS: Record<string, string> = {
 // ─── Component ────────────────────────────────────────────────────────────
 
 type Props = {
-  session:     MmuSession
-  sections:    SessionSection[]
-  onNavigate?: (sectionId: string) => void
+  session:         MmuSession
+  sections:        SessionSection[]
+  welcomeSection?: SessionSection
+  onNavigate?:     (sectionId: string) => void
 }
 
-export default function WelcomeSection({ session, sections, onNavigate }: Props) {
+export default function WelcomeSection({ session, sections, welcomeSection, onNavigate }: Props) {
   const [hostMember, setHostMember] = useState<TeamMember | null>(null)
 
+  const hostId = (welcomeSection?.content as { host_id?: string } | undefined)?.host_id
+
   useEffect(() => {
-    if (!session.host_id) return
+    if (!hostId) { setHostMember(null); return }
     let cancelled = false
     getBrowserClient()
       .from('team_members')
       .select('*')
-      .eq('id', session.host_id)
+      .eq('id', hostId)
       .single()
       .then(({ data }) => {
         if (!cancelled && data) setHostMember(data)
       })
     return () => { cancelled = true }
-  }, [session.host_id])
+  }, [hostId])
 
-  const activeSections = sections.filter((s) => s.is_active)
+  const activeSections = sections.filter((s) => s.is_active && s.section_type !== 'welcome')
 
   // "20 April 2026" — parsed without timezone shift
   const dateStr = new Date(session.date + 'T00:00:00').toLocaleDateString('en-GB', {
