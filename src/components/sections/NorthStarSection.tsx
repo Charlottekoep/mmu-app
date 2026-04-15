@@ -253,12 +253,12 @@ function ExpandedModal({
 
       {/* ── Main content ─────────────────────────────────────────── */}
       <div
-        className={`flex-1 min-h-0 overflow-y-auto px-16 pb-8 grid gap-14 ${
-          hasImages ? 'grid-cols-[3fr_2fr]' : 'grid-cols-1'
+        className={`flex-1 min-h-0 px-16 pb-8 grid grid-rows-1 gap-10 ${
+          hasImages ? 'grid-cols-2' : 'grid-cols-1'
         }`}
       >
-        {/* Left: update text */}
-        <div className="space-y-7 py-2">
+        {/* Left: update text — scrolls independently if long */}
+        <div className="overflow-y-auto min-h-0 space-y-7 py-2">
           {hasDone && (
             <div>
               <p className="type-eyebrow text-white/45 mb-3">What we&apos;ve done</p>
@@ -279,11 +279,9 @@ function ExpandedModal({
           )}
         </div>
 
-        {/* Right: image grid — all images at natural aspect ratio */}
+        {/* Right: image grid — fills full column height */}
         {hasImages && (
-          <div className="py-2">
-            <ImageGrid images={update.images} />
-          </div>
+          <ImageGrid images={update.images} />
         )}
       </div>
 
@@ -342,37 +340,45 @@ function BulletList({ text }: { text: string | null | undefined }) {
 }
 
 // ─── Image grid ───────────────────────────────────────────────────────────
+// Fills the full height of its grid cell. The parent grid uses grid-rows-1
+// so both columns stretch to the available modal height.
+
+const IMG = 'w-full h-full object-contain rounded-xl border border-white/10'
 
 function ImageGrid({ images }: { images: string[] }) {
+  // 1 image — fills entire column
   if (images.length === 1) {
     return (
-      // eslint-disable-next-line @next/next/no-img-element
-      <img src={images[0]} alt="" className="w-full h-auto rounded-xl border border-white/10" />
+      <div className="h-full py-2">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={images[0]} alt="" className={IMG} />
+      </div>
     )
   }
 
+  // 2 images — equal vertical stack
   if (images.length === 2) {
     return (
-      <div className="grid gap-3">
-        {images.map((url, i) => (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img key={i} src={url} alt="" className="w-full h-auto rounded-xl border border-white/10" />
-        ))}
+      <div className="h-full py-2 grid grid-rows-2 gap-3">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={images[0]} alt="" className={IMG} />
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={images[1]} alt="" className={IMG} />
       </div>
     )
   }
 
-  // 3 images: 2 on top, 1 spanning full width below
+  // 3 images — top half: image[0] full width; bottom half: image[1] + image[2] side-by-side
   return (
-    <div className="grid gap-3">
-      <div className="grid grid-cols-2 gap-3">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={images[0]} alt="" className="w-full h-auto rounded-xl border border-white/10" />
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={images[1]} alt="" className="w-full h-auto rounded-xl border border-white/10" />
-      </div>
+    <div className="h-full py-2 grid grid-rows-2 gap-3">
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src={images[2]} alt="" className="w-full h-auto rounded-xl border border-white/10" />
+      <img src={images[0]} alt="" className={IMG} />
+      <div className="grid grid-cols-2 gap-3 min-h-0">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={images[1]} alt="" className={IMG} />
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={images[2]} alt="" className={IMG} />
+      </div>
     </div>
   )
 }
