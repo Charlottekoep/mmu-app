@@ -72,16 +72,20 @@ export default function NorthStarUpdateForm({ section, sessionId, levers, snapsh
     return out
   }
 
-  const [states,     setStates]     = useState<Record<string, LeverState>>(initState)
-  const [images,     setImages]     = useState<string[]>(
+  const [states,      setStates]     = useState<Record<string, LeverState>>(initState)
+  const [leverNames,  setLeverNames] = useState<Record<string, string>>(
+    Object.fromEntries(levers.map((l) => [l.id, l.name])),
+  )
+  const [images,      setImages]     = useState<string[]>(
     Array.isArray((section.content as { images?: string[] })?.images)
       ? (section.content as { images: string[] }).images
       : [],
   )
-  const [saving,     setSaving]     = useState<string | null>(null)
-  const [saved,      setSaved]      = useState<string | null>(null)
-  const [saveError,  setSaveError]  = useState<string | null>(null)
-  const debounceRefs = useRef<Record<string, ReturnType<typeof setTimeout>>>({})
+  const [saving,      setSaving]     = useState<string | null>(null)
+  const [saved,       setSaved]      = useState<string | null>(null)
+  const [saveError,   setSaveError]  = useState<string | null>(null)
+  const debounceRefs     = useRef<Record<string, ReturnType<typeof setTimeout>>>({})
+  const nameDebounceRefs = useRef<Record<string, ReturnType<typeof setTimeout>>>({})
 
   function update(leverId: string, patch: Partial<LeverState>) {
     setStates((prev) => ({ ...prev, [leverId]: { ...prev[leverId], ...patch } }))
@@ -91,6 +95,30 @@ export default function NorthStarUpdateForm({ section, sessionId, levers, snapsh
       saveOne(leverId, { ...states[leverId], ...patch })
     }, 800)
   }
+
+  function updateName(leverId: string, name: string) {
+    setLeverNames((prev) => ({ ...prev, [leverId]: name }))
+    clearTimeout(nameDebounceRefs.current[leverId])
+    nameDebounceRefs.current[leverId] = setTimeout(() => {
+      saveLeverName(leverId, name)
+    }, 800)
+  }
+
+  const saveLeverName = useCallback(async (leverId: string, name: string) => {
+    setSaving(leverId); setSaveError(null)
+    const { error: err } = await getBrowserClient()
+      .from('levers')
+      .update({ name })
+      .eq('id', leverId)
+    if (err) {
+      setSaving(null); setSaveError(leverId)
+      setTimeout(() => setSaveError((e) => e === leverId ? null : e), 3000)
+      return
+    }
+    setSaving(null)
+    setSaved(leverId)
+    setTimeout(() => setSaved((s) => s === leverId ? null : s), 2000)
+  }, [])
 
   const saveOne = useCallback(async (leverId: string, state: LeverState) => {
     setSaving(leverId); setSaveError(null)
@@ -165,11 +193,13 @@ export default function NorthStarUpdateForm({ section, sessionId, levers, snapsh
                 <LeverRow
                   key={lever.id}
                   lever={lever}
+                  leverName={leverNames[lever.id] ?? lever.name}
                   sessionId={sessionId}
                   state={state}
                   isSaving={saving === lever.id}
                   isSaved={saved  === lever.id}
                   onChange={(patch) => update(lever.id, patch)}
+                  onNameChange={(name) => updateName(lever.id, name)}
                 />
               )
             })}
@@ -193,15 +223,17 @@ export default function NorthStarUpdateForm({ section, sessionId, levers, snapsh
 // ─── Lever row ────────────────────────────────────────────────────────────
 
 type LeverRowProps = {
-  lever:     Lever
-  sessionId: string
-  state:     LeverState
-  isSaving:  boolean
-  isSaved:   boolean
-  onChange:  (patch: Partial<LeverState>) => void
+  lever:         Lever
+  leverName:     string
+  sessionId:     string
+  state:         LeverState
+  isSaving:      boolean
+  isSaved:       boolean
+  onChange:      (patch: Partial<LeverState>) => void
+  onNameChange:  (name: string) => void
 }
 
-function LeverRow({ lever, sessionId, state, isSaving, isSaved, onChange }: LeverRowProps) {
+function LeverRow({ lever, leverName, sessionId, state, isSaving, isSaved, onChange, onNameChange }: LeverRowProps) {
   const [expanded, setExpanded] = useState(false)
 
   const ragColor = { green: '#1FC881', amber: '#FFAB00', red: '#D50000' }[state.rag_status] ?? '#FFAB00'
@@ -215,7 +247,7 @@ function LeverRow({ lever, sessionId, state, isSaving, isSaved, onChange }: Leve
 
         {/* Name */}
         <div className="flex-1 min-w-0">
-          <p className="text-[13px] font-bold text-[#262626] truncate">{lever.name}</p>
+          <p className="text-[13px] font-bold text-[#262626] truncate">{leverName}</p>
           <p className="text-[11px] text-[#969696] truncate">{lever.owner}</p>
         </div>
 
@@ -297,6 +329,18 @@ function LeverRow({ lever, sessionId, state, isSaving, isSaved, onChange }: Leve
       {/* Update text areas */}
       {expanded && (
         <div className="border-t border-[#DEDEDE] divide-y divide-[#DEDEDE]">
+          <div className="px-4 py-3">
+            <label className="block text-[10px] font-bold uppercase tracking-widest text-[#2969FF] mb-1.5">
+              Lever name
+            </label>
+            <input
+              type="text"
+              value={leverName}
+              onChange={(e) => onNameChange(e.target.value)}
+              placeholder="Lever name…"
+              className="w-full rounded-lg border border-[#DEDEDE] bg-white px-3 py-2 text-[13px] text-[#262626] placeholder-[#969696] outline-none focus:border-[#2969FF] transition-colors"
+            />
+          </div>
           <div className="px-4 py-3">
             <label className="block text-[10px] font-bold uppercase tracking-widest text-[#2969FF] mb-1.5">
               What have we done to move the needle?
