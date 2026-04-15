@@ -126,14 +126,17 @@ export default function AnnouncementsSection({ section }: Props) {
 
 function AnnouncementCard({ item }: { item: AnnouncementItem }) {
   const inner = (
-    <div className="group flex flex-col overflow-hidden rounded-2xl border border-white/10 bg-white/[0.05] transition-all hover:bg-white/[0.08]">
-      {/* Text at top */}
-      <div className="flex flex-1 flex-col gap-3 p-5">
+    <div
+      className="group flex flex-col overflow-hidden rounded-xl transition-all hover:bg-white/[0.08]"
+      style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.10)' }}
+    >
+      {/* Text at top — 16px padding */}
+      <div className="p-4">
         <p className="text-[15px] font-medium leading-snug text-white">
           {item.text}
         </p>
         {item.url && (
-          <p className="mt-auto flex items-center gap-1.5 text-[12px] text-primary/70 group-hover:text-primary">
+          <p className="mt-3 flex items-center gap-1.5 text-[12px] text-primary/70 group-hover:text-primary">
             <svg width="10" height="10" viewBox="0 0 10 10" fill="none" aria-hidden="true">
               <path d="M1 9L9 1M9 1H3.5M9 1v5.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
@@ -141,19 +144,19 @@ function AnnouncementCard({ item }: { item: AnnouncementItem }) {
           </p>
         )}
       </div>
-      {/* Image below text */}
+      {/* Image below — fills card width, natural height */}
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src={item.image_url}
         alt=""
-        className="w-full h-auto object-contain"
+        className="w-full h-auto object-cover"
       />
     </div>
   )
 
   if (item.url) {
     return (
-      <a href={item.url} target="_blank" rel="noopener noreferrer">
+      <a href={item.url} target="_blank" rel="noopener noreferrer" className="block">
         {inner}
       </a>
     )

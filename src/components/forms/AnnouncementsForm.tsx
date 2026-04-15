@@ -84,6 +84,14 @@ export default function AnnouncementsForm({ section, sessionId, teamMembers }: P
     setUploading(null)
   }
 
+  async function removeItemImage(i: number, url: string) {
+    const storagePath = url.split('/session-images/')[1]
+    if (storagePath) {
+      await getBrowserClient().storage.from('session-images').remove([storagePath])
+    }
+    updateItem(i, 'image_url', '')
+  }
+
   function addItem()         { setItems((prev) => [...prev, { text: '', url: '', image_url: '' }]) }
   function removeItem(i: number) {
     const next = items.filter((_, idx) => idx !== i)
@@ -174,17 +182,30 @@ export default function AnnouncementsForm({ section, sessionId, teamMembers }: P
 
               {/* Per-item image */}
               <div>
-                {item.image_url && (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={item.image_url} alt="" className="mb-2 max-h-32 rounded-lg object-cover border border-[#DEDEDE]" />
+                {item.image_url ? (
+                  <div className="relative mb-2 inline-block">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={item.image_url} alt="" className="max-h-32 rounded-lg object-cover border border-[#DEDEDE]" />
+                    <button
+                      type="button"
+                      onClick={() => removeItemImage(i, item.image_url)}
+                      aria-label="Remove image"
+                      className="absolute right-1.5 top-1.5 flex h-6 w-6 items-center justify-center rounded-full bg-black/60 text-white hover:bg-black/80 transition-colors"
+                    >
+                      <svg width="8" height="8" viewBox="0 0 8 8" fill="none" aria-hidden="true">
+                        <path d="M1 1l6 6M7 1L1 7" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
+                      </svg>
+                    </button>
+                  </div>
+                ) : (
+                  <label className="flex cursor-pointer items-center gap-2 text-[12px] text-[#969696] hover:text-[#5A5A5A] transition-colors">
+                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+                      <path d="M7 2v10M2 7h10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                    </svg>
+                    {uploading === i ? 'Uploading…' : 'Add card image'}
+                    <input type="file" accept="image/*" className="sr-only" onChange={(e) => handleItemImage(i, e)} />
+                  </label>
                 )}
-                <label className="flex cursor-pointer items-center gap-2 text-[12px] text-[#969696] hover:text-[#5A5A5A] transition-colors">
-                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
-                    <path d="M7 2v10M2 7h10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-                  </svg>
-                  {uploading === i ? 'Uploading…' : 'Add card image'}
-                  <input type="file" accept="image/*" className="sr-only" onChange={(e) => handleItemImage(i, e)} />
-                </label>
               </div>
             </div>
           ))}

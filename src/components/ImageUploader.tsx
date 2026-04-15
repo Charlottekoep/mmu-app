@@ -53,7 +53,12 @@ export default function ImageUploader({ images, onChange, folder }: Props) {
     }
   }
 
-  function remove(url: string) {
+  async function remove(url: string) {
+    // Best-effort delete from storage — extract path after bucket name
+    const storagePath = url.split('/session-images/')[1]
+    if (storagePath) {
+      await getBrowserClient().storage.from('session-images').remove([storagePath])
+    }
     onChange(images.filter((u) => u !== url))
   }
 
@@ -77,7 +82,7 @@ export default function ImageUploader({ images, onChange, folder }: Props) {
                 type="button"
                 onClick={() => remove(url)}
                 aria-label="Remove image"
-                className="absolute right-1 top-1 hidden h-5 w-5 items-center justify-center rounded-full bg-black/60 text-white group-hover:flex"
+                className="absolute right-1.5 top-1.5 flex h-6 w-6 items-center justify-center rounded-full bg-black/60 text-white hover:bg-black/80 transition-colors"
               >
                 <svg width="8" height="8" viewBox="0 0 8 8" fill="none" aria-hidden="true">
                   <path d="M1 1l6 6M7 1L1 7" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
