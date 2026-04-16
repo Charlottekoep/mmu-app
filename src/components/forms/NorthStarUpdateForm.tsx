@@ -84,41 +84,14 @@ export default function NorthStarUpdateForm({ section, sessionId, levers, snapsh
   const [saving,      setSaving]     = useState<string | null>(null)
   const [saved,       setSaved]      = useState<string | null>(null)
   const [saveError,   setSaveError]  = useState<string | null>(null)
+
+  // Refs hold the latest merged state for each lever so debounced saves
+  // always send the most recent values, not a stale closure snapshot.
+  const pendingStates    = useRef<Record<string, LeverState>>({})
   const debounceRefs     = useRef<Record<string, ReturnType<typeof setTimeout>>>({})
   const nameDebounceRefs = useRef<Record<string, ReturnType<typeof setTimeout>>>({})
 
-  function update(leverId: string, patch: Partial<LeverState>) {
-    setStates((prev) => ({ ...prev, [leverId]: { ...prev[leverId], ...patch } }))
-
-    clearTimeout(debounceRefs.current[leverId])
-    debounceRefs.current[leverId] = setTimeout(() => {
-      saveOne(leverId, { ...states[leverId], ...patch })
-    }, 800)
-  }
-
-  function updateName(leverId: string, name: string) {
-    setLeverNames((prev) => ({ ...prev, [leverId]: name }))
-    clearTimeout(nameDebounceRefs.current[leverId])
-    nameDebounceRefs.current[leverId] = setTimeout(() => {
-      saveLeverName(leverId, name)
-    }, 800)
-  }
-
-  const saveLeverName = useCallback(async (leverId: string, name: string) => {
-    setSaving(leverId); setSaveError(null)
-    const { error: err } = await getBrowserClient()
-      .from('levers')
-      .update({ name })
-      .eq('id', leverId)
-    if (err) {
-      setSaving(null); setSaveError(leverId)
-      setTimeout(() => setSaveError((e) => e === leverId ? null : e), 3000)
-      return
-    }
-    setSaving(null)
-    setSaved(leverId)
-    setTimeout(() => setSaved((s) => s === leverId ? null : s), 2000)
-  }, [])
+  // ── Snapshot save ────────────────────────────────────────────────────────
 
   const saveOne = useCallback(async (leverId: string, state: LeverState) => {
     setSaving(leverId); setSaveError(null)
@@ -160,6 +133,53 @@ export default function NorthStarUpdateForm({ section, sessionId, levers, snapsh
     setTimeout(() => setSaved((s) => s === leverId ? null : s), 2000)
   }, [sessionId])
 
+  // ── Lever name save ──────────────────────────────────────────────────────
+
+  const saveLeverName = useCallback(async (leverId: string, name: string) => {
+    setSaving(leverId); setSaveError(null)
+    const { error: err } = await getBrowserClient()
+      .from('levers')
+      .update({ name })
+      .eq('id', leverId)
+    if (err) {
+      setSaving(null); setSaveError(leverId)
+      setTimeout(() => setSaveError((e) => e === leverId ? null : e), 3000)
+      return
+    }
+    setSaving(null)
+    setSaved(leverId)
+    setTimeout(() => setSaved((s) => s === leverId ? null : s), 2000)
+  }, [])
+
+  // ── State update — stores latest merged state in ref before debouncing ──
+
+  function update(leverId: string, patch: Partial<LeverState>) {
+    setStates((prev) => {
+      const merged = { ...prev[leverId], ...patch }
+      // Store in ref so the debounced save always gets the freshest values
+      pendingStates.current[leverId] = merged
+      return { ...prev, [leverId]: merged }
+    })
+
+    clearTimeout(debounceRefs.current[leverId])
+    debounceRefs.current[leverId] = setTimeout(() => {
+      const latest = pendingStates.current[leverId]
+      if (latest) saveOne(leverId, latest)
+    }, 800)
+  }
+
+  // ── Name update — fully independent of snapshot saves ───────────────────
+
+  function updateName(leverId: string, name: string) {
+    setLeverNames((prev) => ({ ...prev, [leverId]: name }))
+    clearTimeout(nameDebounceRefs.current[leverId])
+    nameDebounceRefs.current[leverId] = setTimeout(() => {
+      saveLeverName(leverId, name)
+    }, 800)
+  }
+
+  // ── Section images save ──────────────────────────────────────────────────
+
   async function saveImages(next: string[]) {
     await getBrowserClient()
       .from('session_sections')
@@ -194,7 +214,6 @@ export default function NorthStarUpdateForm({ section, sessionId, levers, snapsh
                   key={lever.id}
                   lever={lever}
                   leverName={leverNames[lever.id] ?? lever.name}
-                  sessionId={sessionId}
                   state={state}
                   isSaving={saving === lever.id}
                   isSaved={saved  === lever.id}
@@ -225,7 +244,6 @@ export default function NorthStarUpdateForm({ section, sessionId, levers, snapsh
 type LeverRowProps = {
   lever:         Lever
   leverName:     string
-  sessionId:     string
   state:         LeverState
   isSaving:      boolean
   isSaved:       boolean
@@ -233,7 +251,7 @@ type LeverRowProps = {
   onNameChange:  (name: string) => void
 }
 
-function LeverRow({ lever, leverName, sessionId, state, isSaving, isSaved, onChange, onNameChange }: LeverRowProps) {
+function LeverRow({ lever, leverName, state, isSaving, isSaved, onChange, onNameChange }: LeverRowProps) {
   const [expanded, setExpanded] = useState(false)
 
   const ragColor = { green: '#1FC881', amber: '#FFAB00', red: '#D50000' }[state.rag_status] ?? '#FFAB00'
@@ -245,7 +263,7 @@ function LeverRow({ lever, leverName, sessionId, state, isSaving, isSaved, onCha
         {/* RAG dot */}
         <div className="h-2.5 w-2.5 flex-shrink-0 rounded-full" style={{ background: ragColor }} />
 
-        {/* Name */}
+        {/* Name (reflects local state immediately) */}
         <div className="flex-1 min-w-0">
           <p className="text-[13px] font-bold text-[#262626] truncate">{leverName}</p>
           <p className="text-[11px] text-[#969696] truncate">{lever.owner}</p>
@@ -309,12 +327,12 @@ function LeverRow({ lever, leverName, sessionId, state, isSaving, isSaved, onCha
           {isSaving ? '…' : isSaved ? '✓' : ''}
         </span>
 
-        {/* Expand toggle (for notes) */}
+        {/* Expand toggle */}
         <button
           type="button"
           onClick={() => setExpanded((v) => !v)}
           className="text-[#969696] hover:text-[#262626] transition-colors"
-          aria-label={expanded ? 'Collapse notes' : 'Expand notes'}
+          aria-label={expanded ? 'Collapse' : 'Expand to edit details'}
         >
           <svg
             width="14" height="14" viewBox="0 0 14 14" fill="none"
@@ -326,11 +344,13 @@ function LeverRow({ lever, leverName, sessionId, state, isSaving, isSaved, onCha
         </button>
       </div>
 
-      {/* Update text areas */}
+      {/* Expanded edit block */}
       {expanded && (
         <div className="border-t border-[#DEDEDE] divide-y divide-[#DEDEDE]">
+
+          {/* ── Lever name — first field ─────────────────────────────── */}
           <div className="px-4 py-3">
-            <label className="block text-[10px] font-bold uppercase tracking-widest text-[#2969FF] mb-1.5">
+            <label className="block text-[11px] font-bold uppercase tracking-widest text-[#2969FF] mb-1.5">
               Lever name
             </label>
             <input
@@ -340,9 +360,12 @@ function LeverRow({ lever, leverName, sessionId, state, isSaving, isSaved, onCha
               placeholder="Lever name…"
               className="w-full rounded-lg border border-[#DEDEDE] bg-white px-3 py-2 text-[13px] text-[#262626] placeholder-[#969696] outline-none focus:border-[#2969FF] transition-colors"
             />
+            <p className="mt-1 text-[11px] text-[#969696]">Updates the name on the flip card. Saves automatically.</p>
           </div>
+
+          {/* ── What have we done ────────────────────────────────────── */}
           <div className="px-4 py-3">
-            <label className="block text-[10px] font-bold uppercase tracking-widest text-[#2969FF] mb-1.5">
+            <label className="block text-[11px] font-bold uppercase tracking-widest text-[#2969FF] mb-1.5">
               What have we done to move the needle?
             </label>
             <textarea
@@ -353,8 +376,10 @@ function LeverRow({ lever, leverName, sessionId, state, isSaving, isSaved, onCha
               className="w-full resize-none rounded-lg border border-[#DEDEDE] bg-white px-3 py-2 text-[13px] text-[#262626] placeholder-[#969696] outline-none focus:border-[#2969FF] transition-colors"
             />
           </div>
+
+          {/* ── What are we planning ─────────────────────────────────── */}
           <div className="px-4 py-3">
-            <label className="block text-[10px] font-bold uppercase tracking-widest text-[#2969FF] mb-1.5">
+            <label className="block text-[11px] font-bold uppercase tracking-widest text-[#2969FF] mb-1.5">
               What are we planning?
             </label>
             <textarea
@@ -365,16 +390,19 @@ function LeverRow({ lever, leverName, sessionId, state, isSaving, isSaved, onCha
               className="w-full resize-none rounded-lg border border-[#DEDEDE] bg-white px-3 py-2 text-[13px] text-[#262626] placeholder-[#969696] outline-none focus:border-[#2969FF] transition-colors"
             />
           </div>
+
+          {/* ── Lever images ─────────────────────────────────────────── */}
           <div className="px-4 py-3">
-            <label className="block text-[10px] font-bold uppercase tracking-widest text-[#2969FF] mb-1.5">
+            <label className="block text-[11px] font-bold uppercase tracking-widest text-[#2969FF] mb-1.5">
               Images (up to 3)
             </label>
             <ImageUploader
               images={state.images}
-              folder={`lever-images/${sessionId}/${lever.id}`}
+              folder={`lever-images/${lever.id}`}
               onChange={(imgs) => onChange({ images: imgs.slice(0, 3) })}
             />
           </div>
+
         </div>
       )}
     </div>
