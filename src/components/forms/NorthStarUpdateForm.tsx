@@ -2,8 +2,9 @@
 
 import { useState, useCallback, useRef } from 'react'
 import { getBrowserClient } from '@/lib/supabase'
-import type { SessionSection, Lever, LeverSnapshot, RagStatus } from '@/lib/types'
+import type { SessionSection, Lever, LeverSnapshot, RagStatus, TeamMember } from '@/lib/types'
 import ImageUploader from '@/components/ImageUploader'
+import TeamAvatar    from '@/components/TeamAvatar'
 
 // ─── Focus area groups ────────────────────────────────────────────────────
 
@@ -29,10 +30,11 @@ type LeverState = {
 }
 
 type Props = {
-  section:   SessionSection
-  sessionId: string
-  levers:    Lever[]
-  snapshots: LeverSnapshot[]
+  section:     SessionSection
+  sessionId:   string
+  levers:      Lever[]
+  snapshots:   LeverSnapshot[]
+  teamMembers: TeamMember[]
 }
 
 // ─── RAG / Trend constants ────────────────────────────────────────────────
@@ -51,7 +53,7 @@ const TREND_OPTIONS: { value: 'up' | 'flat' | 'down'; label: string }[] = [
 
 // ─── Component ────────────────────────────────────────────────────────────
 
-export default function NorthStarUpdateForm({ section, sessionId, levers, snapshots }: Props) {
+export default function NorthStarUpdateForm({ section, sessionId, levers, snapshots, teamMembers }: Props) {
   const snapshotMap = new Map(snapshots.map((s) => [s.lever_id, s]))
 
   const initState = (): Record<string, LeverState> => {
@@ -72,9 +74,10 @@ export default function NorthStarUpdateForm({ section, sessionId, levers, snapsh
     return out
   }
 
-  const [states,      setStates]     = useState<Record<string, LeverState>>(initState)
-  const [leverNames,  setLeverNames] = useState<Record<string, string>>(
-    Object.fromEntries(levers.map((l) => [l.id, l.name])),
+  const [states,       setStates]      = useState<Record<string, LeverState>>(initState)
+  // leverOwners tracks the owner name string per lever (matches levers.owner column)
+  const [leverOwners,  setLeverOwners] = useState<Record<string, string>>(
+    Object.fromEntries(levers.map((l) => [l.id, l.owner ?? ''])),
   )
   const [images,      setImages]     = useState<string[]>(
     Array.isArray((section.content as { images?: string[] })?.images)
@@ -87,9 +90,9 @@ export default function NorthStarUpdateForm({ section, sessionId, levers, snapsh
 
   // Refs hold the latest merged state for each lever so debounced saves
   // always send the most recent values, not a stale closure snapshot.
-  const pendingStates    = useRef<Record<string, LeverState>>({})
-  const debounceRefs     = useRef<Record<string, ReturnType<typeof setTimeout>>>({})
-  const nameDebounceRefs = useRef<Record<string, ReturnType<typeof setTimeout>>>({})
+  const pendingStates     = useRef<Record<string, LeverState>>({})
+  const debounceRefs      = useRef<Record<string, ReturnType<typeof setTimeout>>>({})
+  const ownerDebounceRefs = useRef<Record<string, ReturnType<typeof setTimeout>>>({})
 
   // ── Snapshot save ────────────────────────────────────────────────────────
 
@@ -133,13 +136,13 @@ export default function NorthStarUpdateForm({ section, sessionId, levers, snapsh
     setTimeout(() => setSaved((s) => s === leverId ? null : s), 2000)
   }, [sessionId])
 
-  // ── Lever name save ──────────────────────────────────────────────────────
+  // ── Owner save — updates levers.owner (independent of snapshot saves) ───
 
-  const saveLeverName = useCallback(async (leverId: string, name: string) => {
+  const saveLeverOwner = useCallback(async (leverId: string, owner: string) => {
     setSaving(leverId); setSaveError(null)
     const { error: err } = await getBrowserClient()
       .from('levers')
-      .update({ name })
+      .update({ owner })
       .eq('id', leverId)
     if (err) {
       setSaving(null); setSaveError(leverId)
@@ -156,11 +159,9 @@ export default function NorthStarUpdateForm({ section, sessionId, levers, snapsh
   function update(leverId: string, patch: Partial<LeverState>) {
     setStates((prev) => {
       const merged = { ...prev[leverId], ...patch }
-      // Store in ref so the debounced save always gets the freshest values
       pendingStates.current[leverId] = merged
       return { ...prev, [leverId]: merged }
     })
-
     clearTimeout(debounceRefs.current[leverId])
     debounceRefs.current[leverId] = setTimeout(() => {
       const latest = pendingStates.current[leverId]
@@ -168,13 +169,13 @@ export default function NorthStarUpdateForm({ section, sessionId, levers, snapsh
     }, 800)
   }
 
-  // ── Name update — fully independent of snapshot saves ───────────────────
+  // ── Owner update — fully independent of snapshot saves ──────────────────
 
-  function updateName(leverId: string, name: string) {
-    setLeverNames((prev) => ({ ...prev, [leverId]: name }))
-    clearTimeout(nameDebounceRefs.current[leverId])
-    nameDebounceRefs.current[leverId] = setTimeout(() => {
-      saveLeverName(leverId, name)
+  function updateOwner(leverId: string, owner: string) {
+    setLeverOwners((prev) => ({ ...prev, [leverId]: owner }))
+    clearTimeout(ownerDebounceRefs.current[leverId])
+    ownerDebounceRefs.current[leverId] = setTimeout(() => {
+      saveLeverOwner(leverId, owner)
     }, 800)
   }
 
@@ -213,12 +214,13 @@ export default function NorthStarUpdateForm({ section, sessionId, levers, snapsh
                 <LeverRow
                   key={lever.id}
                   lever={lever}
-                  leverName={leverNames[lever.id] ?? lever.name}
+                  leverOwner={leverOwners[lever.id] ?? lever.owner ?? ''}
+                  teamMembers={teamMembers}
                   state={state}
                   isSaving={saving === lever.id}
                   isSaved={saved  === lever.id}
                   onChange={(patch) => update(lever.id, patch)}
-                  onNameChange={(name) => updateName(lever.id, name)}
+                  onOwnerChange={(owner) => updateOwner(lever.id, owner)}
                 />
               )
             })}
@@ -242,19 +244,21 @@ export default function NorthStarUpdateForm({ section, sessionId, levers, snapsh
 // ─── Lever row ────────────────────────────────────────────────────────────
 
 type LeverRowProps = {
-  lever:         Lever
-  leverName:     string
-  state:         LeverState
-  isSaving:      boolean
-  isSaved:       boolean
-  onChange:      (patch: Partial<LeverState>) => void
-  onNameChange:  (name: string) => void
+  lever:          Lever
+  leverOwner:     string
+  teamMembers:    TeamMember[]
+  state:          LeverState
+  isSaving:       boolean
+  isSaved:        boolean
+  onChange:       (patch: Partial<LeverState>) => void
+  onOwnerChange:  (owner: string) => void
 }
 
-function LeverRow({ lever, leverName, state, isSaving, isSaved, onChange, onNameChange }: LeverRowProps) {
+function LeverRow({ lever, leverOwner, teamMembers, state, isSaving, isSaved, onChange, onOwnerChange }: LeverRowProps) {
   const [expanded, setExpanded] = useState(false)
 
-  const ragColor = { green: '#1FC881', amber: '#FFAB00', red: '#D50000' }[state.rag_status] ?? '#FFAB00'
+  const ragColor  = { green: '#1FC881', amber: '#FFAB00', red: '#D50000' }[state.rag_status] ?? '#FFAB00'
+  const ownerMember = teamMembers.find((m) => m.name === leverOwner)
 
   return (
     <div className="rounded-xl border border-[#DEDEDE] bg-white overflow-hidden">
@@ -263,10 +267,10 @@ function LeverRow({ lever, leverName, state, isSaving, isSaved, onChange, onName
         {/* RAG dot */}
         <div className="h-2.5 w-2.5 flex-shrink-0 rounded-full" style={{ background: ragColor }} />
 
-        {/* Name (reflects local state immediately) */}
+        {/* Lever name + owner (owner reflects local state immediately) */}
         <div className="flex-1 min-w-0">
-          <p className="text-[13px] font-bold text-[#262626] truncate">{leverName}</p>
-          <p className="text-[11px] text-[#969696] truncate">{lever.owner}</p>
+          <p className="text-[13px] font-bold text-[#262626] truncate">{lever.name}</p>
+          <p className="text-[11px] text-[#969696] truncate">{leverOwner || lever.owner}</p>
         </div>
 
         {/* Current state input */}
@@ -348,19 +352,24 @@ function LeverRow({ lever, leverName, state, isSaving, isSaved, onChange, onName
       {expanded && (
         <div className="border-t border-[#DEDEDE] divide-y divide-[#DEDEDE]">
 
-          {/* ── Lever name — first field ─────────────────────────────── */}
+          {/* ── Owner — first field ──────────────────────────────────── */}
           <div className="px-4 py-3">
             <label className="block text-[11px] font-bold uppercase tracking-widest text-[#2969FF] mb-1.5">
-              Lever name
+              Owner
             </label>
-            <input
-              type="text"
-              value={leverName}
-              onChange={(e) => onNameChange(e.target.value)}
-              placeholder="Lever name…"
-              className="w-full rounded-lg border border-[#DEDEDE] bg-white px-3 py-2 text-[13px] text-[#262626] placeholder-[#969696] outline-none focus:border-[#2969FF] transition-colors"
-            />
-            <p className="mt-1 text-[11px] text-[#969696]">Updates the name on the flip card. Saves automatically.</p>
+            <div className="flex items-center gap-3">
+              <TeamAvatar member={ownerMember} size={36} className="border border-[#DEDEDE]" />
+              <select
+                value={leverOwner}
+                onChange={(e) => onOwnerChange(e.target.value)}
+                className="w-full rounded-lg border border-[#DEDEDE] bg-white px-3 py-2 text-[13px] text-[#262626] outline-none focus:border-[#2969FF] transition-colors appearance-none"
+              >
+                <option value="">— select owner —</option>
+                {teamMembers.map((m) => (
+                  <option key={m.id} value={m.name}>{m.name}</option>
+                ))}
+              </select>
+            </div>
           </div>
 
           {/* ── What have we done ────────────────────────────────────── */}

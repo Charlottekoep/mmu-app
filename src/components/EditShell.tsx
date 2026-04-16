@@ -101,7 +101,7 @@ export default function EditShell({
       case 'just_humans':
         return <JustHumansForm    {...common} teamMembers={teamMembers} />
       case 'north_star':
-        return <NorthStarUpdateForm {...common} levers={levers} snapshots={snapshots} />
+        return <NorthStarUpdateForm {...common} levers={levers} snapshots={snapshots} teamMembers={teamMembers} />
       case 'deep_dive':
         return <DeepDiveForm      {...common} teamMembers={teamMembers} levers={levers} />
       case 'show_and_tell':
