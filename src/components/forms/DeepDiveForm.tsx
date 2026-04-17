@@ -3,9 +3,9 @@
 import { useState, useCallback } from 'react'
 import { getBrowserClient } from '@/lib/supabase'
 import type { SessionSection, TeamMember, Lever } from '@/lib/types'
-import RichTextEditor from '@/components/RichTextEditor'
-import ImageUploader  from '@/components/ImageUploader'
-import TeamAvatar     from '@/components/TeamAvatar'
+import TeamAvatar   from '@/components/TeamAvatar'
+import BlockEditor  from '@/components/blocks/BlockEditor'
+import type { Block } from '@/components/blocks/BlockTypes'
 
 // ─── Shared styles ────────────────────────────────────────────────────────
 
@@ -15,16 +15,12 @@ const selectCls  = 'w-full rounded-lg border border-[#DEDEDE] bg-white px-3 py-2
 
 // ─── Types ────────────────────────────────────────────────────────────────
 
-type LinkItem = { url: string; label: string }
-
 type Content = {
   title:          string
   presenter_id:   string
   presenter_id_2: string
   lever_id:       string
-  body:           string
-  links:          LinkItem[]
-  images:         string[]
+  blocks:         Block[]
 }
 
 type Props = {
@@ -54,11 +50,7 @@ export default function DeepDiveForm({ section, sessionId, teamMembers, levers }
   const [presenter_id,   setPresenter]  = useState(raw.presenter_id   ?? '')
   const [presenter_id_2, setPresenter2] = useState(raw.presenter_id_2 ?? '')
   const [lever_id,       setLever]      = useState(raw.lever_id       ?? '')
-  const [body,           setBody]       = useState(raw.body           ?? '')
-  const [links,          setLinks]      = useState<LinkItem[]>(
-    (raw.links ?? []).length > 0 ? (raw.links as LinkItem[]) : [{ url: '', label: '' }],
-  )
-  const [images,         setImages]     = useState<string[]>(raw.images ?? [])
+  const [blocks,         setBlocks]     = useState<Block[]>(raw.blocks ?? [])
   const [saving,         setSaving]     = useState(false)
   const [saved,          setSaved]      = useState(false)
   const [saveError,      setSaveError]  = useState(false)
@@ -70,9 +62,7 @@ export default function DeepDiveForm({ section, sessionId, teamMembers, levers }
       presenter_id:   patch.presenter_id   ?? presenter_id,
       presenter_id_2: patch.presenter_id_2 ?? presenter_id_2,
       lever_id:       patch.lever_id       ?? lever_id,
-      body:           patch.body           ?? body,
-      links:          patch.links          ?? links,
-      images:         patch.images         ?? images,
+      blocks:         patch.blocks         ?? blocks,
     }
     const active = patch.is_active !== undefined ? patch.is_active : is_active
     const { error: err } = await getBrowserClient()
@@ -82,7 +72,7 @@ export default function DeepDiveForm({ section, sessionId, teamMembers, levers }
     if (err) { setSaving(false); setSaveError(true); setTimeout(() => setSaveError(false), 3000); return }
     setSaving(false); setSaved(true)
     setTimeout(() => setSaved(false), 2000)
-  }, [title, presenter_id, presenter_id_2, lever_id, body, links, images, is_active, section.id])
+  }, [title, presenter_id, presenter_id_2, lever_id, blocks, is_active, section.id])
 
   function toggleActive() {
     const next = !is_active
@@ -90,181 +80,122 @@ export default function DeepDiveForm({ section, sessionId, teamMembers, levers }
     persist({ is_active: next })
   }
 
-  // Links
-  function updateLink(i: number, field: keyof LinkItem, value: string) {
-    const next = links.map((l, idx) => idx === i ? { ...l, [field]: value } : l)
-    setLinks(next)
-    persist({ links: next })
-  }
-  function addLink()             { setLinks((l) => [...l, { url: '', label: '' }]) }
-  function removeLink(i: number) {
-    const next = links.filter((_, idx) => idx !== i)
-    setLinks(next); persist({ links: next })
-  }
-
-  // Group levers
+  // Group levers by focus area
   const leverGroups = Object.entries(FOCUS_LABELS).map(([key, label]) => ({
     key, label,
     levers: levers.filter((l) => l.focus_area === key),
   })).filter((g) => g.levers.length > 0)
 
   return (
-    <div className="mx-auto max-w-2xl px-8 py-10 space-y-8">
+    <div className="flex h-full flex-col">
       <SaveIndicator saving={saving} saved={saved} error={saveError} />
 
-      {/* Active toggle */}
-      <div className="flex items-center justify-between rounded-xl border border-[#DEDEDE] bg-white px-5 py-4">
-        <div>
-          <p className="text-[14px] font-medium text-[#262626]">Include in this session</p>
-          <p className="text-[12px] text-[#5A5A5A]">Toggle off to skip Deep Dive this week</p>
-        </div>
-        <button
-          type="button"
-          onClick={toggleActive}
-          className={`relative h-6 w-11 flex-shrink-0 rounded-full transition-colors ${is_active ? 'bg-primary' : 'bg-[#DEDEDE]'}`}
-          role="switch"
-          aria-checked={is_active}
-        >
-          <span className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform ${is_active ? 'translate-x-5' : 'translate-x-0.5'}`} />
-        </button>
-      </div>
+      {/* ── Top metadata fields ───────────────────────────────────── */}
+      <div className="mx-auto w-full max-w-2xl space-y-8 px-8 py-8">
 
-      {!is_active && (
-        <p className="text-[13px] text-[#969696] italic">This section is currently hidden from the presentation.</p>
-      )}
-
-      {/* Title */}
-      <div>
-        <label className={fieldLabel}>Title</label>
-        <input
-          type="text"
-          value={title}
-          onChange={(e) => { setTitle(e.target.value); persist({ title: e.target.value }) }}
-          placeholder="Deep dive topic…"
-          className={inputCls}
-        />
-      </div>
-
-      {/* Presenters */}
-      <div>
-        <label className={fieldLabel}>Presenters</label>
-        <div className="space-y-3">
+        {/* Active toggle */}
+        <div className="flex items-center justify-between rounded-xl border border-[#DEDEDE] bg-white px-5 py-4">
           <div>
-            <p className="text-[11px] text-[#969696] mb-1.5">Presenter 1</p>
-            <div className="flex items-center gap-3">
-              <TeamAvatar member={teamMembers.find((m) => m.id === presenter_id)} size={36} className="border border-[#DEDEDE]" />
-              <select
-                value={presenter_id}
-                onChange={(e) => { setPresenter(e.target.value); persist({ presenter_id: e.target.value }) }}
-                className={selectCls}
-              >
-                <option value="">— select —</option>
-                {teamMembers.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
-              </select>
-            </div>
+            <p className="text-[14px] font-medium text-[#262626]">Include in this session</p>
+            <p className="text-[12px] text-[#5A5A5A]">Toggle off to skip Deep Dive this week</p>
           </div>
-          <div>
-            <p className="text-[11px] text-[#969696] mb-1.5">Presenter 2 (optional)</p>
-            <div className="flex items-center gap-3">
-              <TeamAvatar member={teamMembers.find((m) => m.id === presenter_id_2)} size={36} className="border border-[#DEDEDE]" />
-              <select
-                value={presenter_id_2}
-                onChange={(e) => { setPresenter2(e.target.value); persist({ presenter_id_2: e.target.value }) }}
-                className={selectCls}
-              >
-                <option value="">— none —</option>
-                {teamMembers.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
-              </select>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Linked lever */}
-      <div>
-        <label className={fieldLabel}>Linked lever (optional)</label>
-        <select
-          value={lever_id}
-          onChange={(e) => { setLever(e.target.value); persist({ lever_id: e.target.value }) }}
-          className={selectCls}
-        >
-          <option value="">— none —</option>
-          {leverGroups.map((g) => (
-            <optgroup key={g.key} label={g.label}>
-              {g.levers.map((l) => <option key={l.id} value={l.id}>{l.name}</option>)}
-            </optgroup>
-          ))}
-        </select>
-      </div>
-
-      {/* Body */}
-      <div>
-        <label className={fieldLabel}>Content</label>
-        <RichTextEditor
-          value={body}
-          onChange={(html) => { setBody(html); persist({ body: html }) }}
-          placeholder="Context, findings, analysis…"
-          minHeight={200}
-          showTable
-        />
-      </div>
-
-      {/* Images */}
-      <div>
-        <label className={fieldLabel}>Additional images</label>
-        <ImageUploader
-          images={images}
-          folder={`${sessionId}/${section.id}`}
-          onChange={(imgs) => { setImages(imgs); persist({ images: imgs }) }}
-        />
-      </div>
-
-      {/* Links */}
-      <div>
-        <label className={fieldLabel}>Links</label>
-        <div className="space-y-2">
-          {links.map((link, i) => (
-            <div key={i} className="flex items-center gap-2">
-              <input
-                type="url"
-                value={link.url}
-                onChange={(e) => updateLink(i, 'url', e.target.value)}
-                onBlur={() => persist({})}
-                placeholder="https://…"
-                className={inputCls}
-              />
-              <input
-                type="text"
-                value={link.label}
-                onChange={(e) => updateLink(i, 'label', e.target.value)}
-                onBlur={() => persist({})}
-                placeholder="Label"
-                className={`${inputCls} w-40`}
-              />
-              <button
-                type="button"
-                onClick={() => removeLink(i)}
-                className="flex-shrink-0 text-[#969696] hover:text-red transition-colors"
-                aria-label="Remove link"
-              >
-                <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
-                  <path d="M2 2l10 10M12 2L2 12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-                </svg>
-              </button>
-            </div>
-          ))}
           <button
             type="button"
-            onClick={addLink}
-            className="text-[12px] text-primary/60 hover:text-primary transition-colors"
+            onClick={toggleActive}
+            className={`relative h-6 w-11 flex-shrink-0 rounded-full transition-colors ${is_active ? 'bg-primary' : 'bg-[#DEDEDE]'}`}
+            role="switch"
+            aria-checked={is_active}
           >
-            + Add link
+            <span className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform ${is_active ? 'translate-x-5' : 'translate-x-0.5'}`} />
           </button>
         </div>
+
+        {!is_active && (
+          <p className="text-[13px] italic text-[#969696]">This section is currently hidden from the presentation.</p>
+        )}
+
+        {/* Title */}
+        <div>
+          <label className={fieldLabel}>Title</label>
+          <input
+            type="text"
+            value={title}
+            onChange={(e) => { setTitle(e.target.value); persist({ title: e.target.value }) }}
+            placeholder="Deep dive topic…"
+            className={inputCls}
+          />
+        </div>
+
+        {/* Presenters */}
+        <div>
+          <label className={fieldLabel}>Presenters</label>
+          <div className="space-y-3">
+            <div>
+              <p className="mb-1.5 text-[11px] text-[#969696]">Presenter 1</p>
+              <div className="flex items-center gap-3">
+                <TeamAvatar member={teamMembers.find((m) => m.id === presenter_id)} size={36} className="border border-[#DEDEDE]" />
+                <select
+                  value={presenter_id}
+                  onChange={(e) => { setPresenter(e.target.value); persist({ presenter_id: e.target.value }) }}
+                  className={selectCls}
+                >
+                  <option value="">— select —</option>
+                  {teamMembers.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
+                </select>
+              </div>
+            </div>
+            <div>
+              <p className="mb-1.5 text-[11px] text-[#969696]">Presenter 2 (optional)</p>
+              <div className="flex items-center gap-3">
+                <TeamAvatar member={teamMembers.find((m) => m.id === presenter_id_2)} size={36} className="border border-[#DEDEDE]" />
+                <select
+                  value={presenter_id_2}
+                  onChange={(e) => { setPresenter2(e.target.value); persist({ presenter_id_2: e.target.value }) }}
+                  className={selectCls}
+                >
+                  <option value="">— none —</option>
+                  {teamMembers.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Linked lever */}
+        <div>
+          <label className={fieldLabel}>Linked lever (optional)</label>
+          <select
+            value={lever_id}
+            onChange={(e) => { setLever(e.target.value); persist({ lever_id: e.target.value }) }}
+            className={selectCls}
+          >
+            <option value="">— none —</option>
+            {leverGroups.map((g) => (
+              <optgroup key={g.key} label={g.label}>
+                {g.levers.map((l) => <option key={l.id} value={l.id}>{l.name}</option>)}
+              </optgroup>
+            ))}
+          </select>
+        </div>
+      </div>
+
+      {/* ── Block editor ──────────────────────────────────────────── */}
+      <div className="mx-8 border-t border-[#E2E2E2]" />
+      <div className="min-h-0 flex-1">
+        <BlockEditor
+          content={{ title, blocks, enabled: is_active }}
+          onChange={(c) => {
+            setBlocks(c.blocks)
+            persist({ blocks: c.blocks })
+          }}
+          folder={`${sessionId}/${section.id}`}
+        />
       </div>
     </div>
   )
 }
+
+// ─── Save indicator ───────────────────────────────────────────────────────
 
 function SaveIndicator({ saving, saved, error }: { saving: boolean; saved: boolean; error: boolean }) {
   if (!saving && !saved && !error) return null
