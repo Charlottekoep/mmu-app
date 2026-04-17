@@ -25,6 +25,71 @@ function uid() { return `${Date.now().toString(36)}-${Math.random().toString(36)
 function scx(s: DiagramShape) { return s.x + s.width  / 2 }
 function scy(s: DiagramShape) { return s.y + s.height / 2 }
 
+// ─── Connector geometry ──────────────────────────────────────────────────────
+
+/**
+ * Returns the point where the line from the shape centre toward (toX, toY)
+ * exits the shape's boundary, plus the outward unit direction at that point.
+ */
+function shapeEdge(shape: DiagramShape, toX: number, toY: number) {
+  const cx = scx(shape), cy = scy(shape)
+  const vx = toX - cx,   vy = toY - cy
+  if (vx === 0 && vy === 0) return { x: cx, y: cy, dx: 1, dy: 0 }
+
+  if (shape.type === 'circle') {
+    // Ellipse parametric: find t where (rx·cos t, ry·sin t) ∥ (vx, vy)
+    const rx = shape.width  / 2
+    const ry = shape.height / 2
+    const t  = Math.atan2(vy * rx, vx * ry)
+    const ex = cx + rx * Math.cos(t)
+    const ey = cy + ry * Math.sin(t)
+    // Outward gradient of x²/rx² + y²/ry² at exit point, normalised
+    const nx = Math.cos(t) / rx
+    const ny = Math.sin(t) / ry
+    const len = Math.hypot(nx, ny) || 1
+    return { x: ex, y: ey, dx: nx / len, dy: ny / len }
+  }
+
+  // rect / rounded_rect — box intersection
+  const hw = shape.width  / 2
+  const hh = shape.height / 2
+  const sx = vx !== 0 ? hw / Math.abs(vx) : Infinity
+  const sy = vy !== 0 ? hh / Math.abs(vy) : Infinity
+  const s  = Math.min(sx, sy)
+  return {
+    x:  cx + vx * s,
+    y:  cy + vy * s,
+    dx: sx <= sy ? Math.sign(vx) : 0,
+    dy: sx  < sy ? 0             : Math.sign(vy),
+  }
+}
+
+/**
+ * Computes a smooth cubic-bezier SVG path between two shapes using their
+ * boundary exit points, plus the midpoint of the curve at t = 0.5.
+ */
+function connPath(src: DiagramShape, tgt: DiagramShape) {
+  const s = shapeEdge(src, scx(tgt), scy(tgt))
+  const t = shapeEdge(tgt, scx(src), scy(src))
+
+  const dist = Math.hypot(t.x - s.x, t.y - s.y)
+  const bend = Math.min(Math.max(dist * 0.45, 30), 130)
+
+  const cp1x = s.x + s.dx * bend
+  const cp1y = s.y + s.dy * bend
+  const cp2x = t.x + t.dx * bend   // t.dx/dy point FROM target TOWARD source
+  const cp2y = t.y + t.dy * bend
+
+  // De Casteljau midpoint at t = 0.5
+  const mx = 0.125 * s.x + 0.375 * cp1x + 0.375 * cp2x + 0.125 * t.x
+  const my = 0.125 * s.y + 0.375 * cp1y + 0.375 * cp2y + 0.125 * t.y
+
+  return {
+    d: `M ${s.x} ${s.y} C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${t.x} ${t.y}`,
+    mx, my,
+  }
+}
+
 // ─── Props ───────────────────────────────────────────────────────────────────
 
 type Props = {
@@ -341,39 +406,69 @@ export default function DiagramBuilder({ shapes, arrows, onChange }: Props) {
             aria-hidden
           >
             <defs>
-              <marker id="diag-arrow-end" markerWidth="8" markerHeight="8" refX="7" refY="3.5" orient="auto">
-                <path d="M0,0 L0,7 L8,3.5 z" fill="rgba(60,80,120,0.7)" />
+              {/* Normal arrowheads — dark, visible on light canvas */}
+              <marker id="diag-arrow-end" markerWidth="10" markerHeight="8"
+                      refX="10" refY="4" orient="auto" markerUnits="userSpaceOnUse">
+                <path d="M 0 0 L 10 4 L 0 8 z" fill="#555555" />
               </marker>
-              <marker id="diag-arrow-start" markerWidth="8" markerHeight="8" refX="1" refY="3.5" orient="auto-start-reverse">
-                <path d="M0,0 L0,7 L8,3.5 z" fill="rgba(60,80,120,0.7)" />
+              <marker id="diag-arrow-start" markerWidth="10" markerHeight="8"
+                      refX="0" refY="4" orient="auto-start-reverse" markerUnits="userSpaceOnUse">
+                <path d="M 0 0 L 10 4 L 0 8 z" fill="#555555" />
               </marker>
-              <marker id="diag-arrow-end-sel" markerWidth="8" markerHeight="8" refX="7" refY="3.5" orient="auto">
-                <path d="M0,0 L0,7 L8,3.5 z" fill="#2969FF" />
+              {/* Selected arrowheads — blue */}
+              <marker id="diag-arrow-end-sel" markerWidth="10" markerHeight="8"
+                      refX="10" refY="4" orient="auto" markerUnits="userSpaceOnUse">
+                <path d="M 0 0 L 10 4 L 0 8 z" fill="#2969FF" />
               </marker>
-              <marker id="diag-arrow-start-sel" markerWidth="8" markerHeight="8" refX="1" refY="3.5" orient="auto-start-reverse">
-                <path d="M0,0 L0,7 L8,3.5 z" fill="#2969FF" />
+              <marker id="diag-arrow-start-sel" markerWidth="10" markerHeight="8"
+                      refX="0" refY="4" orient="auto-start-reverse" markerUnits="userSpaceOnUse">
+                <path d="M 0 0 L 10 4 L 0 8 z" fill="#2969FF" />
               </marker>
             </defs>
             {arrows.map(arrow => {
               const from = shapes.find(s => s.id === arrow.fromId)
               const to   = shapes.find(s => s.id === arrow.toId)
               if (!from || !to) return null
-              const x1 = scx(from); const y1 = scy(from)
-              const x2 = scx(to);   const y2 = scy(to)
+
+              const { d, mx, my } = connPath(from, to)
               const isSel = selectedId === arrow.id
+
               return (
-                <line
-                  key={arrow.id}
-                  x1={x1} y1={y1} x2={x2} y2={y2}
-                  stroke={isSel ? '#2969FF' : 'rgba(60,80,120,0.55)'}
-                  strokeWidth={isSel ? 2.5 : 1.8}
-                  markerEnd={isSel ? 'url(#diag-arrow-end-sel)' : 'url(#diag-arrow-end)'}
-                  markerStart={arrow.direction === 'two_way'
-                    ? (isSel ? 'url(#diag-arrow-start-sel)' : 'url(#diag-arrow-start)')
-                    : undefined}
-                  style={{ pointerEvents: 'stroke', cursor: 'pointer' }}
-                  onClick={(e) => { e.stopPropagation(); setSelectedId(arrow.id) }}
-                />
+                <g key={arrow.id}>
+                  {/* Wide invisible hit area for easy clicking */}
+                  <path
+                    d={d}
+                    stroke="transparent"
+                    strokeWidth={14}
+                    fill="none"
+                    style={{ pointerEvents: 'stroke', cursor: 'pointer' }}
+                    onClick={(e) => { e.stopPropagation(); setSelectedId(arrow.id) }}
+                  />
+                  {/* Visible bezier path */}
+                  <path
+                    d={d}
+                    stroke={isSel ? '#2969FF' : '#555555'}
+                    strokeWidth={isSel ? 2.5 : 1.8}
+                    fill="none"
+                    markerEnd={isSel ? 'url(#diag-arrow-end-sel)' : 'url(#diag-arrow-end)'}
+                    markerStart={arrow.direction === 'two_way'
+                      ? (isSel ? 'url(#diag-arrow-start-sel)' : 'url(#diag-arrow-start)')
+                      : undefined}
+                    style={{ pointerEvents: 'none' }}
+                  />
+                  {/* Midpoint delete button when selected */}
+                  {isSel && (
+                    <g
+                      transform={`translate(${mx}, ${my})`}
+                      style={{ cursor: 'pointer' }}
+                      onClick={(e) => { e.stopPropagation(); deleteSelected() }}
+                    >
+                      <circle r="9" fill="white" stroke="#2969FF" strokeWidth="1.5" />
+                      <line x1="-3.5" y1="-3.5" x2="3.5"  y2="3.5"  stroke="#D50000" strokeWidth="1.6" strokeLinecap="round" style={{ pointerEvents: 'none' }} />
+                      <line x1="3.5"  y1="-3.5" x2="-3.5" y2="3.5"  stroke="#D50000" strokeWidth="1.6" strokeLinecap="round" style={{ pointerEvents: 'none' }} />
+                    </g>
+                  )}
+                </g>
               )
             })}
           </svg>

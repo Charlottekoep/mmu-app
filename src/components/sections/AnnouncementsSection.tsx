@@ -2,16 +2,17 @@
 
 import { useEffect, useState } from 'react'
 import { getBrowserClient } from '@/lib/supabase'
-import type { SessionSection, TeamMember } from '@/lib/types'
+import type { SessionSection, TeamMember, ImageAlign } from '@/lib/types'
 import DarkPageLayout    from '@/components/DarkPageLayout'
 import PresenterBadge   from '@/components/PresenterBadge'
 
 // ─── Content types ────────────────────────────────────────────────────────
 
 type AnnouncementItem = {
-  text:      string
-  url:       string
-  image_url: string
+  text:         string
+  url:          string
+  image_url:    string
+  image_align?: ImageAlign
 }
 
 type Content = {
@@ -144,13 +145,23 @@ function AnnouncementCard({ item }: { item: AnnouncementItem }) {
           </p>
         )}
       </div>
-      {/* Image below — fills card width, natural height */}
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        src={item.image_url}
-        alt=""
-        className="w-full h-auto object-cover"
-      />
+      {/* Image below — alignment-aware */}
+      {(() => {
+        const align = item.image_align ?? 'center'
+        const wrapStyle: React.CSSProperties = align === 'full'
+          ? { width: '100%' }
+          : align === 'left'
+          ? { maxWidth: '50%', marginRight: 'auto' }
+          : align === 'right'
+          ? { maxWidth: '50%', marginLeft: 'auto' }
+          : { maxWidth: '70%', margin: '0 auto' }
+        return (
+          <div style={wrapStyle}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={item.image_url} alt="" className="w-full h-auto object-cover" />
+          </div>
+        )
+      })()}
     </div>
   )
 

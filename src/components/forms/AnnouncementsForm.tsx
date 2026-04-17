@@ -14,9 +14,10 @@ const selectCls  = 'w-full rounded-lg border border-[#DEDEDE] bg-white px-3 py-2
 // ─── Types ────────────────────────────────────────────────────────────────
 
 type AnnouncementItem = {
-  text:      string
-  url:       string
-  image_url: string
+  text:        string
+  url:         string
+  image_url:   string
+  image_align: ImageAlign
 }
 
 type Content = {
@@ -38,11 +39,16 @@ export default function AnnouncementsForm({ section, sessionId, teamMembers }: P
 
   const [presenter_id,   setPresenter]  = useState(raw.presenter_id   ?? '')
   const [presenter_id_2, setPresenter2] = useState(raw.presenter_id_2 ?? '')
-  const [items, setItems]               = useState<AnnouncementItem[]>(
-    (raw.items ?? []).length > 0
-      ? (raw.items as AnnouncementItem[])
-      : [{ text: '', url: '', image_url: '' }],
-  )
+  const [items, setItems]               = useState<AnnouncementItem[]>(() => {
+    const raw_items = (raw.items ?? []) as Partial<AnnouncementItem>[]
+    if (raw_items.length === 0) return [{ text: '', url: '', image_url: '', image_align: 'center' }]
+    return raw_items.map((it) => ({
+      text:        it.text        ?? '',
+      url:         it.url         ?? '',
+      image_url:   it.image_url   ?? '',
+      image_align: it.image_align ?? 'center',
+    }))
+  })
   const [uploading,  setUploading]  = useState<number | null>(null)
   const [saving,     setSaving]     = useState(false)
   const [saved,      setSaved]      = useState(false)
@@ -92,7 +98,13 @@ export default function AnnouncementsForm({ section, sessionId, teamMembers }: P
     updateItem(i, 'image_url', '')
   }
 
-  function addItem()         { setItems((prev) => [...prev, { text: '', url: '', image_url: '' }]) }
+  function setItemAlign(i: number, align: ImageAlign) {
+    const next = items.map((item, idx) => idx === i ? { ...item, image_align: align } : item)
+    setItems(next)
+    persist({ items: next })
+  }
+
+  function addItem() { setItems((prev) => [...prev, { text: '', url: '', image_url: '', image_align: 'center' }]) }
   function removeItem(i: number) {
     const next = items.filter((_, idx) => idx !== i)
     setItems(next); persist({ items: next })
@@ -183,19 +195,46 @@ export default function AnnouncementsForm({ section, sessionId, teamMembers }: P
               {/* Per-item image */}
               <div>
                 {item.image_url ? (
-                  <div className="relative mb-2 inline-block">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={item.image_url} alt="" className="max-h-32 rounded-lg object-cover border border-[#DEDEDE]" />
-                    <button
-                      type="button"
-                      onClick={() => removeItemImage(i, item.image_url)}
-                      aria-label="Remove image"
-                      className="absolute right-1.5 top-1.5 flex h-6 w-6 items-center justify-center rounded-full bg-black/60 text-white hover:bg-black/80 transition-colors"
-                    >
-                      <svg width="8" height="8" viewBox="0 0 8 8" fill="none" aria-hidden="true">
-                        <path d="M1 1l6 6M7 1L1 7" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
-                      </svg>
-                    </button>
+                  <div className="space-y-1.5">
+                    <div className="relative inline-block">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={item.image_url} alt="" className="max-h-32 rounded-lg object-cover border border-[#DEDEDE]" />
+                      <button
+                        type="button"
+                        onClick={() => removeItemImage(i, item.image_url)}
+                        aria-label="Remove image"
+                        className="absolute right-1.5 top-1.5 flex h-6 w-6 items-center justify-center rounded-full bg-black/60 text-white hover:bg-black/80 transition-colors"
+                      >
+                        <svg width="8" height="8" viewBox="0 0 8 8" fill="none" aria-hidden="true">
+                          <path d="M1 1l6 6M7 1L1 7" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
+                        </svg>
+                      </button>
+                    </div>
+                    {/* Alignment buttons */}
+                    <div className="flex items-center rounded-lg border border-[#DEDEDE] bg-white overflow-hidden divide-x divide-[#DEDEDE] w-fit">
+                      {([
+                        { value: 'left'   as ImageAlign, title: 'Left',       icon: <><rect x="0" y="0" width="13" height="2" rx="1"/><rect x="0" y="4.5" width="9" height="2" rx="1"/><rect x="0" y="9" width="11" height="2" rx="1"/></> },
+                        { value: 'center' as ImageAlign, title: 'Centre',     icon: <><rect x="0" y="0" width="13" height="2" rx="1"/><rect x="2" y="4.5" width="9" height="2" rx="1"/><rect x="1" y="9" width="11" height="2" rx="1"/></> },
+                        { value: 'right'  as ImageAlign, title: 'Right',      icon: <><rect x="0" y="0" width="13" height="2" rx="1"/><rect x="4" y="4.5" width="9" height="2" rx="1"/><rect x="2" y="9" width="11" height="2" rx="1"/></> },
+                        { value: 'full'   as ImageAlign, title: 'Full width', icon: <><rect x="0" y="0" width="13" height="2" rx="1"/><rect x="0" y="4.5" width="13" height="2" rx="1"/><rect x="0" y="9" width="13" height="2" rx="1"/></> },
+                      ] as const).map((opt) => (
+                        <button
+                          key={opt.value}
+                          type="button"
+                          title={opt.title}
+                          onClick={() => setItemAlign(i, opt.value)}
+                          className={`flex items-center justify-center px-2.5 py-1.5 transition-colors ${
+                            item.image_align === opt.value
+                              ? 'bg-[#2969FF] text-white'
+                              : 'text-[#969696] hover:bg-[#F7F7F7] hover:text-[#262626]'
+                          }`}
+                        >
+                          <svg width="13" height="11" viewBox="0 0 13 11" fill="currentColor" aria-hidden>
+                            {opt.icon}
+                          </svg>
+                        </button>
+                      ))}
+                    </div>
                   </div>
                 ) : (
                   <label className="flex cursor-pointer items-center gap-2 text-[12px] text-[#969696] hover:text-[#5A5A5A] transition-colors">
