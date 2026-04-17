@@ -70,8 +70,16 @@ function RenderText({ block }: { block: TextBlock }) {
 
 function RenderImage({ block }: { block: ImageBlock }) {
   if (!block.url) return null
+  const wrapStyle: React.CSSProperties = (() => {
+    switch (block.align) {
+      case 'left':   return { maxWidth: IMG_MAX[block.size], marginRight: 'auto' }
+      case 'right':  return { maxWidth: IMG_MAX[block.size], marginLeft:  'auto' }
+      case 'full':   return { width: '100%' }
+      default:       return { maxWidth: IMG_MAX[block.size], margin: '0 auto' }
+    }
+  })()
   return (
-    <figure className="mx-auto" style={{ maxWidth: IMG_MAX[block.size] }}>
+    <figure style={wrapStyle}>
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src={block.url}

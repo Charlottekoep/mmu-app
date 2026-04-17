@@ -2,7 +2,7 @@
 
 import { useState, useCallback } from 'react'
 import { getBrowserClient } from '@/lib/supabase'
-import type { SessionSection, TeamMember } from '@/lib/types'
+import type { SessionSection, TeamMember, ImageAlign } from '@/lib/types'
 import TeamAvatar from '@/components/TeamAvatar'
 
 // ─── Shared styles ────────────────────────────────────────────────────────

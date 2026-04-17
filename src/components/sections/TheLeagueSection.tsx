@@ -2,10 +2,12 @@
 
 import { useEffect, useState } from 'react'
 import { getBrowserClient } from '@/lib/supabase'
-import type { SessionSection, TeamMember } from '@/lib/types'
+import type { SessionSection, TeamMember, ImageItem } from '@/lib/types'
+import { normaliseImages } from '@/lib/types'
 import DarkPageLayout  from '@/components/DarkPageLayout'
 import TeamAvatar      from '@/components/TeamAvatar'
 import PresenterBadge  from '@/components/PresenterBadge'
+import AlignedImages   from '@/components/AlignedImages'
 
 // ─── Types ────────────────────────────────────────────────────────────────
 
@@ -18,7 +20,7 @@ type Content = {
   presenter_id_2:   string
   concept:          string
   quiz:             QuizItem[]
-  images:           string[]
+  images:           (string | ImageItem)[]
   leaderboard_data: LeaderboardRow[]
 }
 
@@ -160,7 +162,7 @@ export default function TheLeagueSection({ section }: Props) {
             )}
 
             {/* ── Images ───────────────────────────────────────────── */}
-            <ImageGrid images={images} />
+            <AlignedImages images={normaliseImages(images)} />
 
           </div>
 
@@ -223,21 +225,3 @@ export default function TheLeagueSection({ section }: Props) {
   )
 }
 
-// ─── Helpers ──────────────────────────────────────────────────────────────
-
-function ImageGrid({ images }: { images: string[] }) {
-  if (!images.length) return null
-  return (
-    <div className={`grid gap-3 ${images.length === 1 ? 'grid-cols-1 max-w-2xl' : images.length === 2 ? 'grid-cols-2' : 'grid-cols-3'}`}>
-      {images.map((url, i) => (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
-          key={i}
-          src={url}
-          alt=""
-          className="w-full h-auto rounded-xl border border-white/10"
-        />
-      ))}
-    </div>
-  )
-}

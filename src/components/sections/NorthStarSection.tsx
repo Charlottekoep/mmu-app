@@ -4,7 +4,9 @@ import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { getBrowserClient } from '@/lib/supabase'
 import type { Lever, SessionSection } from '@/lib/types'
+import { normaliseImages } from '@/lib/types'
 import DarkPageLayout from '@/components/DarkPageLayout'
+import AlignedImages  from '@/components/AlignedImages'
 import FlipCard, { calcProgress, RAG_COLOR, type LeverUpdate } from '@/components/FlipCard'
 
 // ─── Focus area config ────────────────────────────────────────────────────
@@ -31,9 +33,11 @@ export default function NorthStarSection({ section, sessionId }: Props) {
   const [expanded, setExpanded] = useState<{ lever: Lever; update: LeverUpdate } | null>(null)
   const [mounted,  setMounted]  = useState(false)
 
-  const sectionImages = Array.isArray((section.content as { images?: string[] })?.images)
-    ? (section.content as { images: string[] }).images
-    : []
+  const sectionImages = normaliseImages(
+    Array.isArray((section.content as { images?: unknown[] })?.images)
+      ? (section.content as { images: unknown[] }).images as (string | { url: string; align: 'left' | 'center' | 'right' | 'full' })[]
+      : [],
+  )
 
   useEffect(() => { setMounted(true) }, [])
 
@@ -153,12 +157,7 @@ export default function NorthStarSection({ section, sessionId }: Props) {
 
         {/* ── Section images ────────────────────────────────────────── */}
         {sectionImages.length > 0 && (
-          <div className={`mt-12 grid gap-3 ${sectionImages.length === 1 ? 'grid-cols-1 max-w-2xl' : sectionImages.length === 2 ? 'grid-cols-2' : 'grid-cols-3'}`}>
-            {sectionImages.map((url, i) => (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img key={i} src={url} alt="" className="w-full h-auto rounded-xl border border-white/10" />
-            ))}
-          </div>
+          <AlignedImages images={sectionImages} className="mt-12" />
         )}
 
       </div>

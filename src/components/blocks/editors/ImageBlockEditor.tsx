@@ -3,6 +3,7 @@
 import { useRef, useState } from 'react'
 import { getBrowserClient } from '@/lib/supabase'
 import type { ImageBlock } from '@/components/blocks/BlockTypes'
+import type { ImageAlign } from '@/lib/types'
 
 const label   = 'block text-[11px] font-bold uppercase tracking-widest text-[#2969FF] mb-1.5'
 const inputCls = 'w-full rounded-lg border border-[#DEDEDE] bg-white px-3 py-2.5 text-[14px] text-[#262626] placeholder-[#969696] outline-none transition-colors focus:border-[#2969FF]'
@@ -20,6 +21,20 @@ const SIZE_OPTIONS: SizeOption[] = [
   { value: 'medium', label: 'Medium'     },
   { value: 'large',  label: 'Large'      },
   { value: 'full',   label: 'Full width' },
+]
+
+type AlignOption = { value: ImageAlign; label: string; icon: React.ReactNode }
+
+function AlignLeftIcon()   { return <svg width="13" height="11" viewBox="0 0 13 11" fill="currentColor" aria-hidden><rect x="0" y="0"   width="13" height="2" rx="1"/><rect x="0" y="4.5" width="9"  height="2" rx="1"/><rect x="0" y="9"   width="11" height="2" rx="1"/></svg> }
+function AlignCenterIcon() { return <svg width="13" height="11" viewBox="0 0 13 11" fill="currentColor" aria-hidden><rect x="0"   y="0"   width="13" height="2" rx="1"/><rect x="2"   y="4.5" width="9"  height="2" rx="1"/><rect x="1"   y="9"   width="11" height="2" rx="1"/></svg> }
+function AlignRightIcon()  { return <svg width="13" height="11" viewBox="0 0 13 11" fill="currentColor" aria-hidden><rect x="0" y="0"   width="13" height="2" rx="1"/><rect x="4" y="4.5" width="9"  height="2" rx="1"/><rect x="2" y="9"   width="11" height="2" rx="1"/></svg> }
+function AlignFullIcon()   { return <svg width="13" height="11" viewBox="0 0 13 11" fill="currentColor" aria-hidden><rect x="0" y="0"   width="13" height="2" rx="1"/><rect x="0" y="4.5" width="13" height="2" rx="1"/><rect x="0" y="9"   width="13" height="2" rx="1"/></svg> }
+
+const ALIGN_OPTIONS: AlignOption[] = [
+  { value: 'left',   label: 'Left',       icon: <AlignLeftIcon />   },
+  { value: 'center', label: 'Centre',     icon: <AlignCenterIcon /> },
+  { value: 'right',  label: 'Right',      icon: <AlignRightIcon />  },
+  { value: 'full',   label: 'Full width', icon: <AlignFullIcon />   },
 ]
 
 export default function ImageBlockEditor({ block, onChange, folder }: Props) {
@@ -124,6 +139,28 @@ export default function ImageBlockEditor({ block, onChange, folder }: Props) {
               }`}
             >
               {opt.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Alignment */}
+      <div>
+        <p className={label}>Alignment</p>
+        <div className="flex items-center rounded-lg border border-[#DEDEDE] bg-white overflow-hidden divide-x divide-[#DEDEDE]">
+          {ALIGN_OPTIONS.map((opt) => (
+            <button
+              key={opt.value}
+              type="button"
+              title={opt.label}
+              onClick={() => onChange({ ...block, align: opt.value })}
+              className={`flex flex-1 items-center justify-center py-2 transition-colors ${
+                block.align === opt.value
+                  ? 'bg-[#2969FF] text-white'
+                  : 'text-[#969696] hover:bg-[#F7F7F7] hover:text-[#262626]'
+              }`}
+            >
+              {opt.icon}
             </button>
           ))}
         </div>

@@ -2,7 +2,8 @@
 
 import { useState, useCallback, useRef } from 'react'
 import { getBrowserClient } from '@/lib/supabase'
-import type { SessionSection, Lever, LeverSnapshot, RagStatus, TeamMember } from '@/lib/types'
+import type { SessionSection, Lever, LeverSnapshot, RagStatus, TeamMember, ImageItem } from '@/lib/types'
+import { normaliseImages } from '@/lib/types'
 import ImageUploader from '@/components/ImageUploader'
 import TeamAvatar    from '@/components/TeamAvatar'
 
@@ -79,10 +80,12 @@ export default function NorthStarUpdateForm({ section, sessionId, levers, snapsh
   const [leverOwners,  setLeverOwners] = useState<Record<string, string>>(
     Object.fromEntries(levers.map((l) => [l.id, l.owner ?? ''])),
   )
-  const [images,      setImages]     = useState<string[]>(
-    Array.isArray((section.content as { images?: string[] })?.images)
-      ? (section.content as { images: string[] }).images
-      : [],
+  const [images,      setImages]     = useState<ImageItem[]>(
+    normaliseImages(
+      Array.isArray((section.content as { images?: unknown[] })?.images)
+        ? (section.content as { images: (string | ImageItem)[] }).images
+        : [],
+    ),
   )
   const [saving,      setSaving]     = useState<string | null>(null)
   const [saved,       setSaved]      = useState<string | null>(null)
@@ -181,7 +184,7 @@ export default function NorthStarUpdateForm({ section, sessionId, levers, snapsh
 
   // ── Section images save ──────────────────────────────────────────────────
 
-  async function saveImages(next: string[]) {
+  async function saveImages(next: ImageItem[]) {
     await getBrowserClient()
       .from('session_sections')
       .update({ content: { images: next } })
@@ -406,9 +409,9 @@ function LeverRow({ lever, leverOwner, teamMembers, state, isSaving, isSaved, on
               Images (up to 3)
             </label>
             <ImageUploader
-              images={state.images}
+              images={normaliseImages(state.images)}
               folder={`lever-images/${lever.id}`}
-              onChange={(imgs) => onChange({ images: imgs.slice(0, 3) })}
+              onChange={(imgs) => onChange({ images: imgs.slice(0, 3).map((i) => i.url) })}
             />
           </div>
 

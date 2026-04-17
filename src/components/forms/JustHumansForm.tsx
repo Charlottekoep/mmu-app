@@ -2,7 +2,8 @@
 
 import { useState, useCallback } from 'react'
 import { getBrowserClient } from '@/lib/supabase'
-import type { SessionSection, TeamMember } from '@/lib/types'
+import type { SessionSection, TeamMember, ImageItem } from '@/lib/types'
+import { normaliseImages } from '@/lib/types'
 import RichTextEditor from '@/components/RichTextEditor'
 import ImageUploader  from '@/components/ImageUploader'
 import TeamAvatar     from '@/components/TeamAvatar'
@@ -19,7 +20,7 @@ type Content = {
   presenter_id_2: string
   subject_id:     string
   spotlight:      string
-  images:         string[]
+  images:         ImageItem[]
 }
 
 type Props = {
@@ -36,11 +37,13 @@ export default function JustHumansForm({ section, sessionId, teamMembers }: Prop
   const [presenter_id,   setPresenter]  = useState(raw.presenter_id   ?? '')
   const [presenter_id_2, setPresenter2] = useState(raw.presenter_id_2 ?? '')
   const [subject_id,     setSubject]    = useState(raw.subject_id     ?? '')
-  const [spotlight,    setSpotlight] = useState(raw.spotlight    ?? '')
-  const [images,       setImages]    = useState<string[]>(raw.images ?? [])
-  const [saving,     setSaving]     = useState(false)
-  const [saved,      setSaved]      = useState(false)
-  const [saveError,  setSaveError]  = useState(false)
+  const [spotlight,      setSpotlight]  = useState(raw.spotlight      ?? '')
+  const [images,         setImages]     = useState<ImageItem[]>(
+    normaliseImages((raw.images ?? []) as (string | ImageItem)[]),
+  )
+  const [saving,    setSaving]    = useState(false)
+  const [saved,     setSaved]     = useState(false)
+  const [saveError, setSaveError] = useState(false)
 
   const save = useCallback(async (patch: Partial<Content>) => {
     setSaving(true); setSaved(false); setSaveError(false)

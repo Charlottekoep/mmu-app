@@ -6,6 +6,8 @@ import type { SessionSection, TeamMember } from '@/lib/types'
 import RichTextEditor from '@/components/RichTextEditor'
 import ImageUploader  from '@/components/ImageUploader'
 import TeamAvatar     from '@/components/TeamAvatar'
+import type { ImageItem } from '@/lib/types'
+import { normaliseImages } from '@/lib/types'
 
 // ─── Shared styles ────────────────────────────────────────────────────────
 
@@ -24,7 +26,7 @@ type Content = {
   presenter_id_2:  string
   concept:         string
   quiz:            QuizItem[]
-  images:          string[]
+  images:          ImageItem[]
   leaderboard_data: LeaderboardRow[]
 }
 
@@ -46,7 +48,9 @@ export default function TheLeagueForm({ section, sessionId, teamMembers }: Props
   const [quiz,             setQuiz]             = useState<QuizItem[]>(
     (raw.quiz ?? []).length > 0 ? (raw.quiz as QuizItem[]) : [{ question: '', answer: '' }],
   )
-  const [images,           setImages]           = useState<string[]>(raw.images ?? [])
+  const [images,           setImages]           = useState<ImageItem[]>(
+    normaliseImages((raw.images ?? []) as (string | ImageItem)[]),
+  )
   const [leaderboard_data, setLeaderboardData]  = useState<LeaderboardRow[]>(raw.leaderboard_data ?? [])
   const [csvPreview,       setCsvPreview]       = useState<LeaderboardRow[] | null>(null)
   const [csvError,         setCsvError]         = useState<string | null>(null)

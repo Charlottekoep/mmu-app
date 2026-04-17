@@ -2,10 +2,12 @@
 
 import { useEffect, useState } from 'react'
 import { getBrowserClient } from '@/lib/supabase'
-import type { SessionSection, TeamMember } from '@/lib/types'
+import type { SessionSection, TeamMember, ImageItem } from '@/lib/types'
+import { normaliseImages } from '@/lib/types'
 import DarkPageLayout  from '@/components/DarkPageLayout'
 import TeamAvatar      from '@/components/TeamAvatar'
 import PresenterBadge  from '@/components/PresenterBadge'
+import AlignedImages   from '@/components/AlignedImages'
 
 // ─── Content type ─────────────────────────────────────────────────────────
 
@@ -14,7 +16,7 @@ type Content = {
   presenter_id_2: string
   subject_id:     string
   spotlight:      string
-  images:         string[]
+  images:         (string | ImageItem)[]
 }
 
 // ─── Component ────────────────────────────────────────────────────────────
@@ -94,23 +96,10 @@ export default function JustHumansSection({ section }: Props) {
           )}
 
           {images.length > 0 && (
-            <div
-              className={`mt-10 grid gap-3 ${
-                images.length === 1 ? 'grid-cols-1 max-w-2xl'
-                : images.length === 2 ? 'grid-cols-2'
-                : 'grid-cols-3'
-              }`}
-            >
-              {images.map((url, i) => (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  key={i}
-                  src={url}
-                  alt=""
-                  className="w-full h-auto rounded-xl border border-white/10"
-                />
-              ))}
-            </div>
+            <AlignedImages
+              images={normaliseImages(images)}
+              className="mt-10"
+            />
           )}
 
         </div>

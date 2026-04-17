@@ -1,3 +1,22 @@
+// ─── Image alignment ──────────────────────────────────────────────────────
+
+export type ImageAlign = 'left' | 'center' | 'right' | 'full'
+
+/** An image URL together with its display alignment. */
+export type ImageItem = {
+  url:   string
+  align: ImageAlign
+}
+
+/** Normalise a legacy `string[]` or a modern `ImageItem[]` into `ImageItem[]`. */
+export function normaliseImages(raw: (string | ImageItem)[]): ImageItem[] {
+  return raw.map((img) =>
+    typeof img === 'string' ? { url: img, align: 'center' } : img,
+  )
+}
+
+// ─── Section types ────────────────────────────────────────────────────────
+
 export type SectionType =
   | 'welcome'
   | 'just_humans'

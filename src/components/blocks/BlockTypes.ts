@@ -1,3 +1,5 @@
+import type { ImageAlign } from '@/lib/types'
+
 // ─── Block type union ─────────────────────────────────────────────────────
 
 export type BlockType =
@@ -39,6 +41,7 @@ export interface ImageBlock extends BaseBlock {
   caption: string
   alt:     string
   size:    'small' | 'medium' | 'large' | 'full'
+  align:   ImageAlign
 }
 
 export interface ImageTextBlock extends BaseBlock {
@@ -157,7 +160,7 @@ export function createBlock(type: BlockType): Block {
       return { id, type, content: '' }
 
     case 'image':
-      return { id, type, url: '', caption: '', alt: '', size: 'full' }
+      return { id, type, url: '', caption: '', alt: '', size: 'full', align: 'center' }
 
     case 'image_text':
       return { id, type, imageUrl: '', imageAlt: '', imagePosition: 'left', content: '', caption: '' }
