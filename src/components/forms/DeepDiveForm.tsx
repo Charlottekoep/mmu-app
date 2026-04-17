@@ -115,7 +115,7 @@ export default function DeepDiveForm({ section, sessionId, teamMembers, levers }
         )}
 
         {/* Title */}
-        <div>
+        <div className="flex flex-col">
           <label className={fieldLabel}>Title</label>
           <input
             type="text"
@@ -127,10 +127,10 @@ export default function DeepDiveForm({ section, sessionId, teamMembers, levers }
         </div>
 
         {/* Presenters */}
-        <div>
+        <div className="flex flex-col">
           <label className={fieldLabel}>Presenters</label>
           <div className="space-y-3">
-            <div>
+            <div className="flex flex-col">
               <p className="mb-1.5 text-[11px] text-[#969696]">Presenter 1</p>
               <div className="flex items-center gap-3">
                 <TeamAvatar member={teamMembers.find((m) => m.id === presenter_id)} size={36} className="border border-[#DEDEDE]" />
@@ -144,7 +144,7 @@ export default function DeepDiveForm({ section, sessionId, teamMembers, levers }
                 </select>
               </div>
             </div>
-            <div>
+            <div className="flex flex-col">
               <p className="mb-1.5 text-[11px] text-[#969696]">Presenter 2 (optional)</p>
               <div className="flex items-center gap-3">
                 <TeamAvatar member={teamMembers.find((m) => m.id === presenter_id_2)} size={36} className="border border-[#DEDEDE]" />
@@ -162,7 +162,7 @@ export default function DeepDiveForm({ section, sessionId, teamMembers, levers }
         </div>
 
         {/* Linked lever */}
-        <div>
+        <div className="flex flex-col">
           <label className={fieldLabel}>Linked lever (optional)</label>
           <select
             value={lever_id}
