@@ -87,7 +87,7 @@ export default function DeepDiveForm({ section, sessionId, teamMembers, levers }
   })).filter((g) => g.levers.length > 0)
 
   return (
-    <div className="flex h-full flex-col">
+    <div>
       <SaveIndicator saving={saving} saved={saved} error={saveError} />
 
       {/* ── Top metadata fields ───────────────────────────────────── */}
@@ -181,16 +181,14 @@ export default function DeepDiveForm({ section, sessionId, teamMembers, levers }
 
       {/* ── Block editor ──────────────────────────────────────────── */}
       <div className="mx-8 border-t border-[#E2E2E2]" />
-      <div className="min-h-0 flex-1">
-        <BlockEditor
-          content={{ title, blocks, enabled: is_active }}
-          onChange={(c) => {
-            setBlocks(c.blocks)
-            persist({ blocks: c.blocks })
-          }}
-          folder={`${sessionId}/${section.id}`}
-        />
-      </div>
+      <BlockEditor
+        content={{ title, blocks, enabled: is_active }}
+        onChange={(c) => {
+          setBlocks(c.blocks)
+          persist({ blocks: c.blocks })
+        }}
+        folder={`${sessionId}/${section.id}`}
+      />
     </div>
   )
 }

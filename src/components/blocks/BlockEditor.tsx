@@ -108,11 +108,11 @@ export default function BlockEditor({ content, onChange, folder }: Props) {
   // ── Render ────────────────────────────────────────────────────────────
 
   return (
-    <div className="flex h-full min-h-0 overflow-hidden">
+    <div className="flex items-start">
 
       {/* ── Sidebar ──────────────────────────────────────────────────── */}
       <aside
-        className="flex flex-shrink-0 flex-col border-r border-[#E2E2E2] bg-[#FAFAFA] transition-[width] duration-200"
+        className="sticky top-4 self-start flex-shrink-0 flex flex-col border-r border-[#E2E2E2] bg-[#FAFAFA] transition-[width] duration-200"
         style={{ width: sidebarOpen ? 208 : 48 }}
       >
         {/* Header */}
@@ -141,7 +141,7 @@ export default function BlockEditor({ content, onChange, folder }: Props) {
         </div>
 
         {/* Library items */}
-        <div className="flex-1 overflow-y-auto py-1.5">
+        <div className="py-1.5">
           {BLOCK_LIBRARY.map((entry) => (
             <div
               key={entry.type}
@@ -180,7 +180,7 @@ export default function BlockEditor({ content, onChange, folder }: Props) {
 
       {/* ── Canvas ───────────────────────────────────────────────────── */}
       <div
-        className="flex-1 overflow-y-auto"
+        className="flex-1"
         onDragOver={handleCanvasDragOver}
         onDrop={handleCanvasDrop}
       >
@@ -244,7 +244,7 @@ export default function BlockEditor({ content, onChange, folder }: Props) {
 
 function EmptyCanvas() {
   return (
-    <div className="flex h-full min-h-[360px] flex-col items-center justify-center gap-4 p-10 text-center">
+    <div className="flex min-h-[360px] flex-col items-center justify-center gap-4 p-10 text-center">
       <div className="flex h-16 w-16 items-center justify-center rounded-2xl border-2 border-dashed border-[#DEDEDE]">
         <svg width="22" height="22" viewBox="0 0 22 22" fill="none" aria-hidden="true">
           <path d="M11 4v14M4 11h14" stroke="#CBCBCB" strokeWidth="2" strokeLinecap="round"/>
