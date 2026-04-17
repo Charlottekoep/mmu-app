@@ -150,7 +150,7 @@ export default function BlockEditorItem({
 
   return (
     <div
-      className="relative"
+      className="relative pt-3"
       style={{ opacity: isDragging ? 0.4 : 1 }}
       draggable
       onDragStart={(e) => {
@@ -179,19 +179,23 @@ export default function BlockEditorItem({
 
       {/* Item card */}
       <div
-        className={`group rounded-xl border bg-white transition-shadow ${
+        className={`relative group rounded-xl border bg-white transition-shadow ${
           isDragOver
             ? 'border-[#2969FF]/40 shadow-[0_0_0_2px_rgba(41,105,255,0.12)]'
             : 'border-[#E2E2E2] hover:border-[#CBCBCB] hover:shadow-sm'
         }`}
       >
+        {/* Type pill — tab overlapping top border */}
+        <span className="pointer-events-none absolute left-3 -top-[10px] z-10 flex items-center gap-1 rounded-md border border-[#E2E2E2] bg-white px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest text-[#5A5A5A]">
+          <span className="text-[11px]">{typeIcon}</span>
+          {typeLabel}
+        </span>
+
         {/* ── Header bar ───────────────────────────────────────── */}
         <div className="flex h-9 items-center justify-between border-b border-[#F0F0F0] px-2">
 
-          {/* Left: drag handle + type pill */}
-          <div className="flex items-center gap-1.5">
-            {/* Drag handle */}
-            <div
+          {/* Left: drag handle */}
+          <div
               className="flex h-6 w-5 cursor-grab items-center justify-center rounded text-[#C8C8C8] opacity-0 transition-opacity group-hover:opacity-100 hover:text-[#969696] active:cursor-grabbing"
               title="Drag to reorder"
             >
@@ -201,13 +205,6 @@ export default function BlockEditorItem({
                 <circle cx="2.5" cy="11.5" r="1.2"/><circle cx="7.5" cy="11.5" r="1.2"/>
               </svg>
             </div>
-
-            {/* Type pill */}
-            <span className="flex items-center gap-1 rounded-md bg-[#F5F5F5] px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest text-[#5A5A5A]">
-              <span className="text-[11px]">{typeIcon}</span>
-              {typeLabel}
-            </span>
-          </div>
 
           {/* Right: action buttons */}
           <div className="flex items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100">
