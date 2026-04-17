@@ -20,7 +20,7 @@ import TwoColumnBlockEditor from '@/components/blocks/editors/TwoColumnBlockEdit
 
 // ─── Editor dispatch ──────────────────────────────────────────────────────
 
-function BlockEditorSwitch({
+export function BlockEditorSwitch({
   block,
   onChange,
   folder,
@@ -100,6 +100,7 @@ export type BlockEditorItemProps = {
   onDelete:    () => void
   onDragStart: () => void
   onDragEnd:   () => void
+  onDragLeave: () => void
   onDragOver:  (pos: 'before' | 'after') => void
   onDrop:      (pos: 'before' | 'after') => void
 }
@@ -121,6 +122,7 @@ export default function BlockEditorItem({
   onDelete,
   onDragStart,
   onDragEnd,
+  onDragLeave,
   onDragOver,
   onDrop,
 }: BlockEditorItemProps) {
@@ -152,12 +154,22 @@ export default function BlockEditorItem({
       style={{ opacity: isDragging ? 0.4 : 1 }}
       draggable
       onDragStart={(e) => {
+        // Don't start a drag when the user clicked a button or input inside the card
+        if ((e.target as HTMLElement).closest('button, input, textarea, select, a, [contenteditable]')) {
+          e.preventDefault()
+          return
+        }
         e.dataTransfer.effectAllowed = 'move'
         onDragStart()
       }}
       onDragEnd={onDragEnd}
       onDragOver={handleDragOver}
-      onDragLeave={() => onDragOver('after')}
+      onDragLeave={(e) => {
+        // Only fire when the pointer truly leaves this item, not when it moves to a child
+        if (!(e.currentTarget as HTMLElement).contains(e.relatedTarget as Node | null)) {
+          onDragLeave()
+        }
+      }}
       onDrop={handleDrop}
     >
       {/* Drop indicator — before */}
@@ -172,9 +184,6 @@ export default function BlockEditorItem({
             ? 'border-[#2969FF]/40 shadow-[0_0_0_2px_rgba(41,105,255,0.12)]'
             : 'border-[#E2E2E2] hover:border-[#CBCBCB] hover:shadow-sm'
         }`}
-        // prevent drag events on the inner card from reaching the outer wrapper
-        onDragOver={(e) => e.stopPropagation()}
-        onDrop={(e) => e.stopPropagation()}
       >
         {/* ── Header bar ───────────────────────────────────────── */}
         <div className="flex h-9 items-center justify-between border-b border-[#F0F0F0] px-2">

@@ -11,6 +11,7 @@ import type {
   DividerBlock,
   QuoteBlock,
   TwoColumnBlock,
+  RowBlock,
 } from '@/components/blocks/BlockTypes'
 
 // ─── Shared prose styles (injected once per page via <style>) ─────────────
@@ -248,6 +249,21 @@ function RenderTwoColumn({ block }: { block: TwoColumnBlock }) {
   )
 }
 
+function RenderRow({ block }: { block: RowBlock }) {
+  const cols = block.columns.length
+  return (
+    <div className={`grid gap-8 ${cols === 3 ? 'grid-cols-3' : 'grid-cols-2'}`}>
+      {block.columns.map((col, ci) => (
+        <div key={ci} className="flex flex-col gap-8 min-w-0">
+          {col.map((b) => (
+            <BlockRenderer key={b.id} block={b} />
+          ))}
+        </div>
+      ))}
+    </div>
+  )
+}
+
 // ─── Main renderer ────────────────────────────────────────────────────────
 
 type Props = { block: Block }
@@ -267,6 +283,7 @@ export default function BlockRenderer({ block }: Props) {
           case 'divider':    return <RenderDivider    block={block} />
           case 'quote':      return <RenderQuote      block={block} />
           case 'two_column': return <RenderTwoColumn  block={block} />
+          case 'row':        return <RenderRow        block={block} />
         }
       })()}
     </>

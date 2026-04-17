@@ -10,6 +10,7 @@ export type BlockType =
   | 'divider'
   | 'quote'
   | 'two_column'
+  | 'row'
 
 // ─── Base ─────────────────────────────────────────────────────────────────
 
@@ -79,6 +80,11 @@ export interface TwoColumnBlock extends BaseBlock {
   rightContent: string   // HTML from TipTap
 }
 
+export interface RowBlock extends BaseBlock {
+  type:    'row'
+  columns: Block[][]   // 2–3 columns, each containing an ordered list of blocks
+}
+
 // ─── Block union ──────────────────────────────────────────────────────────
 
 export type Block =
@@ -91,6 +97,7 @@ export type Block =
   | DividerBlock
   | QuoteBlock
   | TwoColumnBlock
+  | RowBlock
 
 // ─── Deep Dive content shape ──────────────────────────────────────────────
 
@@ -137,6 +144,9 @@ export function createBlock(type: BlockType): Block {
 
     case 'two_column':
       return { id, type, leftContent: '', rightContent: '' }
+
+    case 'row':
+      return { id, type, columns: [[], []] }
   }
 }
 
@@ -203,5 +213,11 @@ export const BLOCK_LIBRARY: BlockLibraryEntry[] = [
     label:       'Divider',
     icon:        '—',
     description: 'Visual separator: line, dots, or blank space',
+  },
+  {
+    type:        'row',
+    label:       'Row Layout',
+    icon:        '▥',
+    description: 'Place blocks side by side in 2 or 3 columns',
   },
 ]
