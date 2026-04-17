@@ -27,67 +27,99 @@ function scy(s: DiagramShape) { return s.y + s.height / 2 }
 
 // ─── Connector geometry ──────────────────────────────────────────────────────
 
+type Side = 'top' | 'bottom' | 'left' | 'right'
+
 /**
- * Returns the point where the line from the shape centre toward (toX, toY)
- * exits the shape's boundary, plus the outward unit direction at that point.
+ * Picks the side of `from` that faces `to` most directly, then
+ * returns the midpoint of that side plus its outward unit direction.
  */
-function shapeEdge(shape: DiagramShape, toX: number, toY: number) {
-  const cx = scx(shape), cy = scy(shape)
-  const vx = toX - cx,   vy = toY - cy
-  if (vx === 0 && vy === 0) return { x: cx, y: cy, dx: 1, dy: 0 }
+function nearestSidePoint(from: DiagramShape, to: DiagramShape): { x: number; y: number; dx: number; dy: number } {
+  const tx = scx(to), ty = scy(to)
+  const { x, y, width: w, height: h } = from
 
-  if (shape.type === 'circle') {
-    // Ellipse parametric: find t where (rx·cos t, ry·sin t) ∥ (vx, vy)
-    const rx = shape.width  / 2
-    const ry = shape.height / 2
-    const t  = Math.atan2(vy * rx, vx * ry)
-    const ex = cx + rx * Math.cos(t)
-    const ey = cy + ry * Math.sin(t)
-    // Outward gradient of x²/rx² + y²/ry² at exit point, normalised
-    const nx = Math.cos(t) / rx
-    const ny = Math.sin(t) / ry
-    const len = Math.hypot(nx, ny) || 1
-    return { x: ex, y: ey, dx: nx / len, dy: ny / len }
+  const sides: Record<Side, { x: number; y: number; dx: number; dy: number }> = {
+    top:    { x: x + w / 2, y,         dx: 0,  dy: -1 },
+    bottom: { x: x + w / 2, y: y + h,  dx: 0,  dy:  1 },
+    left:   { x,            y: y + h/2, dx: -1, dy:  0 },
+    right:  { x: x + w,     y: y + h/2, dx:  1, dy:  0 },
   }
 
-  // rect / rounded_rect — box intersection
-  const hw = shape.width  / 2
-  const hh = shape.height / 2
-  const sx = vx !== 0 ? hw / Math.abs(vx) : Infinity
-  const sy = vy !== 0 ? hh / Math.abs(vy) : Infinity
-  const s  = Math.min(sx, sy)
-  return {
-    x:  cx + vx * s,
-    y:  cy + vy * s,
-    dx: sx <= sy ? Math.sign(vx) : 0,
-    dy: sx  < sy ? 0             : Math.sign(vy),
+  // For circles use angle-based edge point instead
+  if (from.type === 'circle') {
+    const cx = scx(from), cy = scy(from)
+    const vx = tx - cx, vy = ty - cy
+    const angle = Math.atan2(vy, vx)
+    const rx = from.width / 2, ry = from.height / 2
+    const ex = cx + rx * Math.cos(angle)
+    const ey = cy + ry * Math.sin(angle)
+    const len = Math.hypot(vx, vy) || 1
+    return { x: ex, y: ey, dx: vx / len, dy: vy / len }
   }
+
+  let best: Side = 'right'
+  let bestDist = Infinity
+  for (const side of Object.keys(sides) as Side[]) {
+    const { x: px, y: py } = sides[side]
+    const d = Math.hypot(tx - px, ty - py)
+    if (d < bestDist) { bestDist = d; best = side }
+  }
+  return sides[best]
 }
 
 /**
- * Computes a smooth cubic-bezier SVG path between two shapes using their
- * boundary exit points, plus the midpoint of the curve at t = 0.5.
+ * Computes a smooth cubic-bezier SVG path from `src` to `tgt` connecting
+ * the nearest facing sides of each shape.
+ * Returns the path string, the curve's midpoint, and endpoint tangent directions
+ * so arrowheads can be drawn as plain polygons (no SVG marker API).
  */
 function connPath(src: DiagramShape, tgt: DiagramShape) {
-  const s = shapeEdge(src, scx(tgt), scy(tgt))
-  const t = shapeEdge(tgt, scx(src), scy(src))
+  const s = nearestSidePoint(src, tgt)
+  const t = nearestSidePoint(tgt, src)
 
   const dist = Math.hypot(t.x - s.x, t.y - s.y)
-  const bend = Math.min(Math.max(dist * 0.45, 30), 130)
+  const bend = Math.min(Math.max(dist * 0.45, 40), 150)
 
   const cp1x = s.x + s.dx * bend
   const cp1y = s.y + s.dy * bend
-  const cp2x = t.x + t.dx * bend   // t.dx/dy point FROM target TOWARD source
+  const cp2x = t.x + t.dx * bend
   const cp2y = t.y + t.dy * bend
 
-  // De Casteljau midpoint at t = 0.5
+  // Bezier midpoint at t = 0.5 (De Casteljau)
   const mx = 0.125 * s.x + 0.375 * cp1x + 0.375 * cp2x + 0.125 * t.x
   const my = 0.125 * s.y + 0.375 * cp1y + 0.375 * cp2y + 0.125 * t.y
+
+  // Tangent at path end (t=1) = endpoint - last control point
+  const endTx = t.x - cp2x, endTy = t.y - cp2y
+  const endLen = Math.hypot(endTx, endTy) || 1
+
+  // Tangent at path start (t=0) reversed → points away from curve
+  const startTx = s.x - cp1x, startTy = s.y - cp1y
+  const startLen = Math.hypot(startTx, startTy) || 1
 
   return {
     d: `M ${s.x} ${s.y} C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${t.x} ${t.y}`,
     mx, my,
+    // For manually-drawn arrowhead at path end (points INTO target)
+    endX: t.x,      endY: t.y,
+    endDx: endTx / endLen,  endDy: endTy / endLen,
+    // For bidirectional arrowhead at path start (points INTO source)
+    startX: s.x,    startY: s.y,
+    startDx: startTx / startLen, startDy: startTy / startLen,
   }
+}
+
+/** Build SVG polygon `points` string for a filled arrowhead triangle. */
+function arrowPoints(tipX: number, tipY: number, dx: number, dy: number, size = 12): string {
+  // Perpendicular direction
+  const px = -dy, py = dx
+  const hw = size * 0.42            // half-width of base
+  const bx = tipX - dx * size      // base centre
+  const by = tipY - dy * size
+  return [
+    `${tipX},${tipY}`,
+    `${bx + px * hw},${by + py * hw}`,
+    `${bx - px * hw},${by - py * hw}`,
+  ].join(' ')
 }
 
 // ─── Props ───────────────────────────────────────────────────────────────────
@@ -106,8 +138,10 @@ export default function DiagramBuilder({ shapes, arrows, onChange }: Props) {
   const [editText,    setEditText]    = useState('')
   const [connectMode, setConnectMode] = useState(false)
   const [connectFrom, setConnectFrom] = useState<string | null>(null)
+  // Context menu for selected connector: canvas-relative position
+  const [ctxMenu, setCtxMenu] = useState<{ x: number; y: number } | null>(null)
 
-  // Stable refs for window listeners (avoid stale closures)
+  const canvasRef     = useRef<HTMLDivElement>(null)
   const shapesRef     = useRef(shapes)
   const arrowsRef     = useRef(arrows)
   const onChangeRef   = useRef(onChange)
@@ -123,7 +157,7 @@ export default function DiagramBuilder({ shapes, arrows, onChange }: Props) {
   useEffect(() => { selectedIdRef.current = selectedId }, [selectedId])
   useEffect(() => { editingIdRef.current  = editingId  }, [editingId])
 
-  // ── Drag (window listeners, mount-only) ────────────────────────────────────
+  // ── Drag ──────────────────────────────────────────────────────────────────
 
   useEffect(() => {
     function onMouseMove(e: MouseEvent) {
@@ -150,24 +184,22 @@ export default function DiagramBuilder({ shapes, arrows, onChange }: Props) {
     }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // ── Keyboard (mount-only) ──────────────────────────────────────────────────
+  // ── Keyboard ──────────────────────────────────────────────────────────────
 
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
-      // Don't intercept when typing in inputs
       const target = e.target as HTMLElement
       if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.contentEditable === 'true') return
 
       if (e.key === 'Escape') {
-        setConnectMode(false)
-        setConnectFrom(null)
-        setSelectedId(null)
-        setEditingId(null)
+        setConnectMode(false); setConnectFrom(null)
+        setSelectedId(null); setEditingId(null); setCtxMenu(null)
         return
       }
       if (e.key === 'Delete' || e.key === 'Backspace') {
         const selId = selectedIdRef.current
         if (!selId) return
+        setCtxMenu(null)
         const s = shapesRef.current
         const a = arrowsRef.current
         if (s.some(sh => sh.id === selId)) {
@@ -195,13 +227,11 @@ export default function DiagramBuilder({ shapes, arrows, onChange }: Props) {
       x: (DIAGRAM_CANVAS_W - w) / 2,
       y: (DIAGRAM_CANVAS_H - h) / 2,
       width: w, height: h,
-      text: '',
-      fill: '#2969FF',
+      text: '', fill: '#2969FF',
     }
     onChange([...shapes, shape], arrows)
     setSelectedId(shape.id)
-    setConnectMode(false)
-    setConnectFrom(null)
+    setConnectMode(false); setConnectFrom(null)
   }
 
   function updateShape(id: string, patch: Partial<DiagramShape>) {
@@ -210,6 +240,7 @@ export default function DiagramBuilder({ shapes, arrows, onChange }: Props) {
 
   function deleteSelected() {
     if (!selectedId) return
+    setCtxMenu(null)
     if (shapes.some(s => s.id === selectedId)) {
       onChange(
         shapes.filter(s => s.id !== selectedId),
@@ -228,25 +259,22 @@ export default function DiagramBuilder({ shapes, arrows, onChange }: Props) {
     onChange(shapes, arrows.map(a => a.id === selectedId ? { ...a, direction: next } : a))
   }
 
+  function flipArrowDir() {
+    const arrow = arrows.find(a => a.id === selectedId)
+    if (!arrow) return
+    onChange(shapes, arrows.map(a => a.id === selectedId ? { ...a, fromId: a.toId, toId: a.fromId } : a))
+    setCtxMenu(null)
+  }
+
   function commitEdit() {
-    if (editingId) {
-      updateShape(editingId, { text: editText })
-      setEditingId(null)
-    }
+    if (editingId) { updateShape(editingId, { text: editText }); setEditingId(null) }
   }
 
   // ── Connect mode ──────────────────────────────────────────────────────────
 
   function handleShapeClickInConnect(shapeId: string) {
-    if (!connectFrom) {
-      setConnectFrom(shapeId)
-      return
-    }
-    if (connectFrom === shapeId) {
-      setConnectFrom(null)
-      return
-    }
-    // Avoid duplicates
+    if (!connectFrom) { setConnectFrom(shapeId); return }
+    if (connectFrom === shapeId) { setConnectFrom(null); return }
     const exists = arrows.some(
       a => (a.fromId === connectFrom && a.toId === shapeId) ||
            (a.fromId === shapeId     && a.toId === connectFrom),
@@ -259,9 +287,6 @@ export default function DiagramBuilder({ shapes, arrows, onChange }: Props) {
     setConnectFrom(null)
     setConnectMode(false)
   }
-
-  // ── Arrow hit-test polygon (click on lines) ────────────────────────────────
-  // Handled via SVG pointer-events on <line> elements
 
   // ── Render ────────────────────────────────────────────────────────────────
 
@@ -303,7 +328,6 @@ export default function DiagramBuilder({ shapes, arrows, onChange }: Props) {
               : 'border-[#DEDEDE] bg-white text-[#262626] hover:bg-[#F0F0F0]'
           }`}
         >
-          {/* Arrow icon */}
           <svg width="14" height="10" viewBox="0 0 14 10" fill="none" aria-hidden>
             <circle cx="1.5" cy="5" r="1.5" fill="currentColor"/>
             <circle cx="12.5" cy="5" r="1.5" fill="currentColor"/>
@@ -328,8 +352,8 @@ export default function DiagramBuilder({ shapes, arrows, onChange }: Props) {
                   onClick={() => updateShape(selectedShape.id, { fill: color })}
                   className="h-5 w-5 rounded-full border-2 transition-transform hover:scale-110 active:scale-95"
                   style={{
-                    background:   color,
-                    borderColor:  selectedShape.fill === color ? '#262626' : 'rgba(0,0,0,0.10)',
+                    background:  color,
+                    borderColor: selectedShape.fill === color ? '#262626' : 'rgba(0,0,0,0.10)',
                   }}
                 />
               ))}
@@ -337,10 +361,15 @@ export default function DiagramBuilder({ shapes, arrows, onChange }: Props) {
           </>
         )}
 
-        {/* Selected arrow — direction toggle */}
+        {/* Selected connector — direction controls */}
         {selectedArrow && (
           <>
             <div className="h-4 w-px bg-[#DEDEDE]" />
+            <button type="button" onClick={flipArrowDir}
+              className="flex h-7 items-center gap-1 rounded-lg border border-[#DEDEDE] bg-white px-2.5 text-[11px] font-semibold text-[#262626] hover:bg-[#F0F0F0] transition-colors"
+              title="Flip direction">
+              ⇄ Flip
+            </button>
             <button type="button" onClick={toggleArrowDir}
               className="flex h-7 items-center gap-1 rounded-lg border border-[#DEDEDE] bg-white px-2.5 text-[11px] font-semibold text-[#262626] hover:bg-[#F0F0F0] transition-colors">
               {selectedArrow.direction === 'one_way' ? '→ One-way' : '↔ Two-way'}
@@ -371,6 +400,7 @@ export default function DiagramBuilder({ shapes, arrows, onChange }: Props) {
       {/* ── Canvas ──────────────────────────────────────────────────────────── */}
       <div style={{ overflowX: 'auto' }}>
         <div
+          ref={canvasRef}
           style={{
             position: 'relative',
             width:    DIAGRAM_CANVAS_W,
@@ -380,6 +410,7 @@ export default function DiagramBuilder({ shapes, arrows, onChange }: Props) {
           }}
           onClick={() => {
             if (!connectMode) setSelectedId(null)
+            setCtxMenu(null)
             if (editingId) commitEdit()
           }}
         >
@@ -388,7 +419,7 @@ export default function DiagramBuilder({ shapes, arrows, onChange }: Props) {
             style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}
             width={DIAGRAM_CANVAS_W}
             height={DIAGRAM_CANVAS_H}
-            aria-hidden
+            aria-hidden="true"
           >
             <defs>
               <pattern id="diag-grid" width="24" height="24" patternUnits="userSpaceOnUse">
@@ -398,74 +429,74 @@ export default function DiagramBuilder({ shapes, arrows, onChange }: Props) {
             <rect width="100%" height="100%" fill="url(#diag-grid)" />
           </svg>
 
-          {/* Arrows SVG overlay */}
+          {/* ── Connector SVG overlay ────────────────────────────────────── */}
+          {/* No <defs>/<marker> — arrowheads are plain <polygon> elements   */}
           <svg
-            style={{ position: 'absolute', inset: 0, overflow: 'visible' }}
+            style={{ position: 'absolute', inset: 0, overflow: 'visible', pointerEvents: 'none' }}
             width={DIAGRAM_CANVAS_W}
             height={DIAGRAM_CANVAS_H}
-            aria-hidden
+            aria-hidden="true"
           >
-            <defs>
-              {/* Normal arrowheads — dark, visible on light canvas */}
-              <marker id="diag-arrow-end" markerWidth="10" markerHeight="8"
-                      refX="10" refY="4" orient="auto" markerUnits="userSpaceOnUse">
-                <path d="M 0 0 L 10 4 L 0 8 z" fill="#555555" />
-              </marker>
-              <marker id="diag-arrow-start" markerWidth="10" markerHeight="8"
-                      refX="0" refY="4" orient="auto-start-reverse" markerUnits="userSpaceOnUse">
-                <path d="M 0 0 L 10 4 L 0 8 z" fill="#555555" />
-              </marker>
-              {/* Selected arrowheads — blue */}
-              <marker id="diag-arrow-end-sel" markerWidth="10" markerHeight="8"
-                      refX="10" refY="4" orient="auto" markerUnits="userSpaceOnUse">
-                <path d="M 0 0 L 10 4 L 0 8 z" fill="#2969FF" />
-              </marker>
-              <marker id="diag-arrow-start-sel" markerWidth="10" markerHeight="8"
-                      refX="0" refY="4" orient="auto-start-reverse" markerUnits="userSpaceOnUse">
-                <path d="M 0 0 L 10 4 L 0 8 z" fill="#2969FF" />
-              </marker>
-            </defs>
             {arrows.map(arrow => {
               const from = shapes.find(s => s.id === arrow.fromId)
               const to   = shapes.find(s => s.id === arrow.toId)
               if (!from || !to) return null
 
-              const { d, mx, my } = connPath(from, to)
+              const info  = connPath(from, to)
               const isSel = selectedId === arrow.id
+              const color = isSel ? '#2969FF' : '#555555'
 
               return (
                 <g key={arrow.id}>
-                  {/* Wide invisible hit area for easy clicking */}
+                  {/* Wide invisible hit-area (re-enables pointer events just for this element) */}
                   <path
-                    d={d}
+                    d={info.d}
                     stroke="transparent"
-                    strokeWidth={14}
+                    strokeWidth={16}
                     fill="none"
                     style={{ pointerEvents: 'stroke', cursor: 'pointer' }}
-                    onClick={(e) => { e.stopPropagation(); setSelectedId(arrow.id) }}
+                    onClick={(e) => { e.stopPropagation(); setSelectedId(arrow.id); setCtxMenu(null) }}
+                    onContextMenu={(e) => {
+                      e.preventDefault()
+                      e.stopPropagation()
+                      setSelectedId(arrow.id)
+                      const rect = canvasRef.current?.getBoundingClientRect()
+                      if (rect) setCtxMenu({ x: e.clientX - rect.left, y: e.clientY - rect.top })
+                    }}
                   />
+
                   {/* Visible bezier path */}
                   <path
-                    d={d}
-                    stroke={isSel ? '#2969FF' : '#555555'}
-                    strokeWidth={isSel ? 2.5 : 1.8}
+                    d={info.d}
+                    stroke={color}
+                    strokeWidth={isSel ? 2.5 : 2}
                     fill="none"
-                    markerEnd={isSel ? 'url(#diag-arrow-end-sel)' : 'url(#diag-arrow-end)'}
-                    markerStart={arrow.direction === 'two_way'
-                      ? (isSel ? 'url(#diag-arrow-start-sel)' : 'url(#diag-arrow-start)')
-                      : undefined}
-                    style={{ pointerEvents: 'none' }}
                   />
-                  {/* Midpoint delete button when selected */}
+
+                  {/* ── Arrowhead at path END (solid filled triangle) ── */}
+                  <polygon
+                    points={arrowPoints(info.endX, info.endY, info.endDx, info.endDy)}
+                    fill={color}
+                  />
+
+                  {/* ── Arrowhead at path START for two-way connectors ── */}
+                  {arrow.direction === 'two_way' && (
+                    <polygon
+                      points={arrowPoints(info.startX, info.startY, info.startDx, info.startDy)}
+                      fill={color}
+                    />
+                  )}
+
+                  {/* ── Midpoint delete button when selected ── */}
                   {isSel && (
                     <g
-                      transform={`translate(${mx}, ${my})`}
-                      style={{ cursor: 'pointer' }}
+                      transform={`translate(${info.mx}, ${info.my})`}
+                      style={{ pointerEvents: 'all', cursor: 'pointer' }}
                       onClick={(e) => { e.stopPropagation(); deleteSelected() }}
                     >
                       <circle r="9" fill="white" stroke="#2969FF" strokeWidth="1.5" />
-                      <line x1="-3.5" y1="-3.5" x2="3.5"  y2="3.5"  stroke="#D50000" strokeWidth="1.6" strokeLinecap="round" style={{ pointerEvents: 'none' }} />
-                      <line x1="3.5"  y1="-3.5" x2="-3.5" y2="3.5"  stroke="#D50000" strokeWidth="1.6" strokeLinecap="round" style={{ pointerEvents: 'none' }} />
+                      <line x1="-3.5" y1="-3.5" x2="3.5"  y2="3.5"  stroke="#D50000" strokeWidth="1.6" strokeLinecap="round" />
+                      <line x1="3.5"  y1="-3.5" x2="-3.5" y2="3.5"  stroke="#D50000" strokeWidth="1.6" strokeLinecap="round" />
                     </g>
                   )}
                 </g>
@@ -473,7 +504,7 @@ export default function DiagramBuilder({ shapes, arrows, onChange }: Props) {
             })}
           </svg>
 
-          {/* Shapes */}
+          {/* ── Shapes ──────────────────────────────────────────────────── */}
           {shapes.map(shape => {
             const isSel     = selectedId  === shape.id
             const isConnSrc = connectFrom === shape.id
@@ -500,6 +531,7 @@ export default function DiagramBuilder({ shapes, arrows, onChange }: Props) {
               userSelect:     'none',
               boxSizing:      'border-box',
               transition:     'box-shadow 0.12s',
+              zIndex:         1,
               ...(shape.type === 'rounded_rect' ? { borderRadius: '12px' } : {}),
               ...(shape.type === 'circle'       ? { borderRadius: '50%'  } : {}),
             }
@@ -518,11 +550,13 @@ export default function DiagramBuilder({ shapes, arrows, onChange }: Props) {
                     origX: shape.x,     origY: shape.y,
                   }
                   setSelectedId(shape.id)
+                  setCtxMenu(null)
                 }}
                 onClick={(e) => {
                   e.stopPropagation()
                   if (connectMode) { handleShapeClickInConnect(shape.id); return }
                   setSelectedId(shape.id)
+                  setCtxMenu(null)
                 }}
                 onDoubleClick={(e) => {
                   e.stopPropagation()
@@ -543,40 +577,71 @@ export default function DiagramBuilder({ shapes, arrows, onChange }: Props) {
                     }}
                     onClick={(e) => e.stopPropagation()}
                     style={{
-                      background:  'transparent',
-                      border:      'none',
-                      outline:     'none',
-                      color:       '#fff',
-                      fontWeight:  700,
-                      fontSize:    '13px',
-                      textAlign:   'center',
-                      width:       '88%',
-                      caretColor:  '#fff',
+                      background: 'transparent', border: 'none', outline: 'none',
+                      color: '#fff', fontWeight: 700, fontSize: '13px',
+                      textAlign: 'center', width: '88%', caretColor: '#fff',
                     }}
                   />
                 ) : (
                   <span
                     style={{
-                      color:      '#fff',
-                      fontWeight: 700,
-                      fontSize:   '13px',
-                      textAlign:  'center',
-                      padding:    '4px 8px',
-                      wordBreak:  'break-word',
-                      pointerEvents: 'none',
-                      lineHeight: 1.35,
+                      color: '#fff', fontWeight: 700, fontSize: '13px',
+                      textAlign: 'center', padding: '4px 8px',
+                      wordBreak: 'break-word', pointerEvents: 'none', lineHeight: 1.35,
                     }}
                   >
-                    {shape.text || (
-                      <span style={{ opacity: 0.4 }}>double-click</span>
-                    )}
+                    {shape.text || <span style={{ opacity: 0.4 }}>double-click</span>}
                   </span>
                 )}
               </div>
             )
           })}
 
-          {/* Connect-mode hint banner */}
+          {/* ── Connector right-click context menu ──────────────────────── */}
+          {ctxMenu && selectedArrow && (
+            <div
+              style={{
+                position:  'absolute',
+                left:      ctxMenu.x,
+                top:       ctxMenu.y,
+                zIndex:    30,
+                minWidth:  140,
+              }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="rounded-lg border border-[#DEDEDE] bg-white shadow-lg overflow-hidden text-[12px]">
+                <button
+                  type="button"
+                  className="flex w-full items-center gap-2 px-3 py-2 text-left text-[#262626] hover:bg-[#F7F7F7] transition-colors"
+                  onClick={flipArrowDir}
+                >
+                  <span className="text-[14px]">⇄</span> Flip direction
+                </button>
+                <div className="border-t border-[#EFEFEF]" />
+                <button
+                  type="button"
+                  className="flex w-full items-center gap-2 px-3 py-2 text-left text-[#262626] hover:bg-[#F7F7F7] transition-colors"
+                  onClick={() => { toggleArrowDir(); setCtxMenu(null) }}
+                >
+                  <span className="text-[14px]">{selectedArrow.direction === 'one_way' ? '↔' : '→'}</span>
+                  {selectedArrow.direction === 'one_way' ? 'Make bidirectional' : 'Make one-way'}
+                </button>
+                <div className="border-t border-[#EFEFEF]" />
+                <button
+                  type="button"
+                  className="flex w-full items-center gap-2 px-3 py-2 text-left text-[#D50000] hover:bg-[#FFF0F0] transition-colors"
+                  onClick={deleteSelected}
+                >
+                  <svg width="10" height="11" viewBox="0 0 11 12" fill="none" aria-hidden>
+                    <path d="M1 3h9M4 3V2h3v1M2 3l.7 7.3a.5.5 0 00.5.7h4.6a.5.5 0 00.5-.7L9 3" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
+                  </svg>
+                  Delete connector
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* ── Connect-mode hint banner ─────────────────────────────────── */}
           {connectMode && (
             <div style={{ position: 'absolute', bottom: 12, left: '50%', transform: 'translateX(-50%)', zIndex: 20 }}>
               <div className="rounded-full bg-[#262626]/85 px-4 py-1.5 text-[11px] text-white whitespace-nowrap">
@@ -586,7 +651,7 @@ export default function DiagramBuilder({ shapes, arrows, onChange }: Props) {
             </div>
           )}
 
-          {/* Empty state */}
+          {/* ── Empty state ───────────────────────────────────────────────── */}
           {shapes.length === 0 && !connectMode && (
             <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <p className="text-[13px] text-[#969696]">Use the toolbar to add shapes</p>
