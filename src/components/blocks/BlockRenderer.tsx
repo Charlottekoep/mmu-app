@@ -12,21 +12,23 @@ import type {
   QuoteBlock,
   TwoColumnBlock,
   RowBlock,
+  DiagramBlock,
 } from '@/components/blocks/BlockTypes'
+import { DIAGRAM_CANVAS_W, DIAGRAM_CANVAS_H } from '@/components/DiagramBuilder'
 
 // ─── Shared prose styles (injected once per page via <style>) ─────────────
 
 const PROSE_CSS = `
-  .block-prose p   { margin: 0.5em 0; line-height: 1.65; color: rgba(255,255,255,0.82); font-size: 17px; }
+  .block-prose p   { margin: 0.5em 0; line-height: 1.65; color: rgba(255,255,255,0.65); font-size: 17px; }
   .block-prose strong { color: #fff; font-weight: 700; }
   .block-prose em     { font-style: italic; }
   .block-prose a      { color: #2969FF; text-decoration: underline; }
   .block-prose ul  { list-style: disc;    padding-left: 1.35em; margin: 0.6em 0; }
   .block-prose ol  { list-style: decimal; padding-left: 1.35em; margin: 0.6em 0; }
-  .block-prose li  { margin: 0.25em 0; color: rgba(255,255,255,0.82); font-size: 17px; line-height: 1.6; }
-  .block-prose h1  { font-size: 2em;    font-weight: 900; color: #fff; margin: 0.6em 0 0.3em; }
-  .block-prose h2  { font-size: 1.4em;  font-weight: 700; color: #fff; margin: 0.6em 0 0.3em; }
-  .block-prose h3  { font-size: 1.15em; font-weight: 700; color: #fff; margin: 0.5em 0 0.25em; }
+  .block-prose li  { margin: 0.25em 0; color: rgba(255,255,255,0.65); font-size: 17px; line-height: 1.6; }
+  .block-prose h1  { font-size: 2em;    font-weight: 900; color: #ffffff;              margin: 0.6em 0 0.3em; letter-spacing: -0.02em; }
+  .block-prose h2  { font-size: 1.4em;  font-weight: 700; color: rgba(255,255,255,0.85); margin: 0.6em 0 0.3em; }
+  .block-prose h3  { font-size: 1.15em; font-weight: 700; color: rgba(255,255,255,0.65); margin: 0.5em 0 0.25em; }
 `
 
 // ─── Image size map ───────────────────────────────────────────────────────
@@ -41,14 +43,16 @@ const IMG_MAX: Record<ImageBlock['size'], string> = {
 // ─── Block renderers ──────────────────────────────────────────────────────
 
 function RenderHeading({ block }: { block: HeadingBlock }) {
-  const sizes: Record<1 | 2 | 3, string> = {
-    1: 'text-[42px] leading-[1.1]',
-    2: 'text-[30px] leading-[1.2]',
-    3: 'text-[22px] leading-[1.3]',
-  }
   const Tag = `h${block.level}` as 'h1' | 'h2' | 'h3'
+
+  const styles: Record<1 | 2 | 3, React.CSSProperties> = {
+    1: { fontSize: '42px', fontWeight: 900, lineHeight: 1.1,  letterSpacing: '-0.02em', color: '#ffffff' },
+    2: { fontSize: '30px', fontWeight: 700, lineHeight: 1.2,  color: 'rgba(255,255,255,0.85)' },
+    3: { fontSize: '22px', fontWeight: 700, lineHeight: 1.3,  color: 'rgba(255,255,255,0.65)' },
+  }
+
   return (
-    <Tag className={`font-black text-white tracking-tight ${sizes[block.level]}`}>
+    <Tag style={styles[block.level]}>
       {block.text}
     </Tag>
   )
@@ -264,6 +268,106 @@ function RenderRow({ block }: { block: RowBlock }) {
   )
 }
 
+function RenderDiagram({ block }: { block: DiagramBlock }) {
+  if (block.shapes.length === 0) return null
+
+  const W = DIAGRAM_CANVAS_W
+  const H = DIAGRAM_CANVAS_H
+
+  function scx(s: DiagramBlock['shapes'][number]) { return s.x + s.width  / 2 }
+  function scy(s: DiagramBlock['shapes'][number]) { return s.y + s.height / 2 }
+
+  // Unique marker IDs per block to avoid collisions when multiple diagrams render
+  const markerId = `dm-${block.id}`
+
+  return (
+    <figure>
+      <svg
+        viewBox={`0 0 ${W} ${H}`}
+        className="w-full rounded-xl border border-white/10 overflow-hidden"
+        style={{ maxHeight: H, background: 'rgba(255,255,255,0.04)' }}
+        aria-label="Diagram"
+      >
+        <defs>
+          <marker id={`${markerId}-end`} markerWidth="8" markerHeight="8" refX="7" refY="3.5" orient="auto">
+            <path d="M0,0 L0,7 L8,3.5 z" fill="rgba(255,255,255,0.7)" />
+          </marker>
+          <marker id={`${markerId}-start`} markerWidth="8" markerHeight="8" refX="1" refY="3.5" orient="auto-start-reverse">
+            <path d="M0,0 L0,7 L8,3.5 z" fill="rgba(255,255,255,0.7)" />
+          </marker>
+        </defs>
+
+        {/* Arrows */}
+        {block.arrows.map(arrow => {
+          const from = block.shapes.find(s => s.id === arrow.fromId)
+          const to   = block.shapes.find(s => s.id === arrow.toId)
+          if (!from || !to) return null
+          return (
+            <line
+              key={arrow.id}
+              x1={scx(from)} y1={scy(from)}
+              x2={scx(to)}   y2={scy(to)}
+              stroke="rgba(255,255,255,0.55)"
+              strokeWidth="1.8"
+              markerEnd={`url(#${markerId}-end)`}
+              markerStart={arrow.direction === 'two_way' ? `url(#${markerId}-start)` : undefined}
+            />
+          )
+        })}
+
+        {/* Shapes */}
+        {block.shapes.map(shape => {
+          const cx = scx(shape)
+          const cy = scy(shape)
+          const isCircle = shape.type === 'circle'
+          const rx = shape.type === 'rounded_rect' ? 12 : 0
+
+          return (
+            <g key={shape.id}>
+              {isCircle ? (
+                <ellipse
+                  cx={cx} cy={cy}
+                  rx={shape.width / 2} ry={shape.height / 2}
+                  fill={shape.fill}
+                  stroke="rgba(255,255,255,0.30)"
+                  strokeWidth="1.5"
+                />
+              ) : (
+                <rect
+                  x={shape.x} y={shape.y}
+                  width={shape.width} height={shape.height}
+                  rx={rx} ry={rx}
+                  fill={shape.fill}
+                  stroke="rgba(255,255,255,0.30)"
+                  strokeWidth="1.5"
+                />
+              )}
+              {shape.text && (
+                <text
+                  x={cx} y={cy}
+                  textAnchor="middle"
+                  dominantBaseline="middle"
+                  fill="white"
+                  fontWeight="700"
+                  fontSize="13"
+                  fontFamily="system-ui, -apple-system, sans-serif"
+                >
+                  {shape.text.length > 22 ? shape.text.slice(0, 20) + '…' : shape.text}
+                </text>
+              )}
+            </g>
+          )
+        })}
+      </svg>
+      {block.caption && (
+        <figcaption className="mt-2.5 text-center text-[13px] text-white/45 leading-snug">
+          {block.caption}
+        </figcaption>
+      )}
+    </figure>
+  )
+}
+
 // ─── Main renderer ────────────────────────────────────────────────────────
 
 type Props = { block: Block }
@@ -284,6 +388,7 @@ export default function BlockRenderer({ block }: Props) {
           case 'quote':      return <RenderQuote      block={block} />
           case 'two_column': return <RenderTwoColumn  block={block} />
           case 'row':        return <RenderRow        block={block} />
+          case 'diagram':    return <RenderDiagram    block={block as DiagramBlock} />
         }
       })()}
     </>

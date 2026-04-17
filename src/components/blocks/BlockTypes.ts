@@ -11,6 +11,7 @@ export type BlockType =
   | 'quote'
   | 'two_column'
   | 'row'
+  | 'diagram'
 
 // ─── Base ─────────────────────────────────────────────────────────────────
 
@@ -85,6 +86,36 @@ export interface RowBlock extends BaseBlock {
   columns: Block[][]   // 2–3 columns, each containing an ordered list of blocks
 }
 
+// ─── Diagram block ────────────────────────────────────────────────────────
+
+export type ShapeType = 'rect' | 'rounded_rect' | 'circle'
+export type ArrowDir  = 'one_way' | 'two_way'
+
+export interface DiagramShape {
+  id:     string
+  type:   ShapeType
+  x:      number
+  y:      number
+  width:  number
+  height: number
+  text:   string
+  fill:   string
+}
+
+export interface DiagramArrow {
+  id:        string
+  fromId:    string
+  toId:      string
+  direction: ArrowDir
+}
+
+export interface DiagramBlock extends BaseBlock {
+  type:    'diagram'
+  shapes:  DiagramShape[]
+  arrows:  DiagramArrow[]
+  caption: string
+}
+
 // ─── Block union ──────────────────────────────────────────────────────────
 
 export type Block =
@@ -98,6 +129,7 @@ export type Block =
   | QuoteBlock
   | TwoColumnBlock
   | RowBlock
+  | DiagramBlock
 
 // ─── Deep Dive content shape ──────────────────────────────────────────────
 
@@ -147,6 +179,9 @@ export function createBlock(type: BlockType): Block {
 
     case 'row':
       return { id, type, columns: [[], []] }
+
+    case 'diagram':
+      return { id, type, shapes: [], arrows: [], caption: '' }
   }
 }
 
@@ -219,5 +254,11 @@ export const BLOCK_LIBRARY: BlockLibraryEntry[] = [
     label:       'Row Layout',
     icon:        '▥',
     description: 'Place blocks side by side in 2 or 3 columns',
+  },
+  {
+    type:        'diagram',
+    label:       'Diagram',
+    icon:        '◈',
+    description: 'Drag-and-drop shapes and arrows diagram',
   },
 ]

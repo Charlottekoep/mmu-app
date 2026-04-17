@@ -5,7 +5,7 @@ import type { Block } from '@/components/blocks/BlockTypes'
 import { BLOCK_LIBRARY } from '@/components/blocks/BlockTypes'
 import type {
   HeadingBlock, TextBlock, ImageBlock, ImageTextBlock,
-  LinkCardBlock, TableBlock, DividerBlock, QuoteBlock, TwoColumnBlock,
+  LinkCardBlock, TableBlock, DividerBlock, QuoteBlock, TwoColumnBlock, DiagramBlock,
 } from '@/components/blocks/BlockTypes'
 
 import HeadingBlockEditor   from '@/components/blocks/editors/HeadingBlockEditor'
@@ -17,6 +17,7 @@ import TableBlockEditor     from '@/components/blocks/editors/TableBlockEditor'
 import DividerBlockEditor   from '@/components/blocks/editors/DividerBlockEditor'
 import QuoteBlockEditor     from '@/components/blocks/editors/QuoteBlockEditor'
 import TwoColumnBlockEditor from '@/components/blocks/editors/TwoColumnBlockEditor'
+import DiagramBlockEditor   from '@/components/blocks/editors/DiagramBlockEditor'
 
 // ─── Editor dispatch ──────────────────────────────────────────────────────
 
@@ -48,6 +49,8 @@ export function BlockEditorSwitch({
       return <QuoteBlockEditor     block={block as QuoteBlock}     onChange={onChange as (b: QuoteBlock)     => void} />
     case 'two_column':
       return <TwoColumnBlockEditor block={block as TwoColumnBlock} onChange={onChange as (b: TwoColumnBlock) => void} />
+    case 'diagram':
+      return <DiagramBlockEditor   block={block as DiagramBlock}   onChange={onChange as (b: DiagramBlock)   => void} />
   }
 }
 
