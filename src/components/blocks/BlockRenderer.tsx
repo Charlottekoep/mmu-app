@@ -81,7 +81,7 @@ function RenderImage({ block }: { block: ImageBlock }) {
   return (
     <figure style={wrapStyle}>
       {block.caption && (
-        <figcaption className="mb-2 text-center text-[11px] font-light italic text-white/65 leading-snug tracking-wide">
+        <figcaption className="mb-2 text-center text-[15px] font-semibold text-white/85 leading-snug">
           {block.caption}
         </figcaption>
       )}
