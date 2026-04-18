@@ -80,17 +80,17 @@ function RenderImage({ block }: { block: ImageBlock }) {
   })()
   return (
     <figure style={wrapStyle}>
+      {block.caption && (
+        <figcaption className="mb-2 text-center text-[11px] font-light italic text-white/65 leading-snug tracking-wide">
+          {block.caption}
+        </figcaption>
+      )}
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src={block.url}
         alt={block.alt}
         className="w-full h-auto rounded-xl border border-white/10 object-contain"
       />
-      {block.caption && (
-        <figcaption className="mt-2.5 text-center text-[13px] text-white/45 leading-snug">
-          {block.caption}
-        </figcaption>
-      )}
     </figure>
   )
 }
