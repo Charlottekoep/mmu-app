@@ -13,7 +13,7 @@ type Props = {
 export default function LinkCardBlockEditor({ block, onChange }: Props) {
   return (
     <div className="space-y-4">
-      <div>
+      <div className="flex flex-col">
         <label className={label}>URL</label>
         <input
           type="url"
@@ -24,7 +24,7 @@ export default function LinkCardBlockEditor({ block, onChange }: Props) {
         />
       </div>
 
-      <div>
+      <div className="flex flex-col">
         <label className={label}>Title</label>
         <input
           type="text"
@@ -35,7 +35,7 @@ export default function LinkCardBlockEditor({ block, onChange }: Props) {
         />
       </div>
 
-      <div>
+      <div className="flex flex-col">
         <label className={label}>Description</label>
         <input
           type="text"
@@ -48,7 +48,7 @@ export default function LinkCardBlockEditor({ block, onChange }: Props) {
 
       {/* Live preview */}
       {(block.title || block.url) && (
-        <div>
+        <div className="flex flex-col">
           <p className={label}>Preview</p>
           <div className="flex items-start gap-3 rounded-xl border border-[#DEDEDE] bg-white p-4">
             <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg bg-[#2969FF]/10 text-[#2969FF]">

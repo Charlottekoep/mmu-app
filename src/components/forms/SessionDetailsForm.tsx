@@ -145,7 +145,7 @@ export default function SessionDetailsForm({ session, teamMembers, welcomeSectio
       <SaveIndicator saving={saving} saved={saved} errorMsg={errorMsg} />
 
       {/* Session date */}
-      <div>
+      <div className="flex flex-col">
         <label className={fieldLabel}>Session date</label>
         <input
           type="date"
@@ -159,7 +159,7 @@ export default function SessionDetailsForm({ session, teamMembers, welcomeSectio
       </div>
 
       {/* Welcome message */}
-      <div>
+      <div className="flex flex-col">
         <label className={fieldLabel}>Welcome message</label>
         <textarea
           value={message}
@@ -174,7 +174,7 @@ export default function SessionDetailsForm({ session, teamMembers, welcomeSectio
       </div>
 
       {/* Host */}
-      <div>
+      <div className="flex flex-col">
         <label className={fieldLabel}>Your host</label>
         <div className="flex items-center gap-3">
           <TeamAvatar member={teamMembers.find((m) => m.id === hostId)} size={36} className="border border-[#DEDEDE]" />

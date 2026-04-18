@@ -95,7 +95,7 @@ export default function ImageTextBlockEditor({ block, onChange, folder }: Props)
 
       <div className="space-y-4">
         {/* Image position toggle */}
-        <div>
+        <div className="flex flex-col">
           <p className={label}>Image position</p>
           <div className="flex gap-2">
             {(['left', 'right'] as const).map((pos) => (
@@ -121,7 +121,7 @@ export default function ImageTextBlockEditor({ block, onChange, folder }: Props)
         </div>
 
         {/* Image upload */}
-        <div>
+        <div className="flex flex-col">
           <label className={label}>Image</label>
           <div className="flex gap-2">
             <input
@@ -158,7 +158,7 @@ export default function ImageTextBlockEditor({ block, onChange, folder }: Props)
         </div>
 
         {/* Alt text */}
-        <div>
+        <div className="flex flex-col">
           <label className={label}>Image alt text</label>
           <input
             type="text"
@@ -170,7 +170,7 @@ export default function ImageTextBlockEditor({ block, onChange, folder }: Props)
         </div>
 
         {/* Caption */}
-        <div>
+        <div className="flex flex-col">
           <label className={label}>Caption (optional)</label>
           <input
             type="text"
@@ -182,7 +182,7 @@ export default function ImageTextBlockEditor({ block, onChange, folder }: Props)
         </div>
 
         {/* Text content */}
-        <div>
+        <div className="flex flex-col">
           <label className={label}>Text content</label>
           <div className="image-text-editor overflow-hidden rounded-lg border border-[#DEDEDE] bg-white focus-within:border-[#2969FF] transition-colors">
             <Toolbar editor={editor} />

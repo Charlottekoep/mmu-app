@@ -27,7 +27,7 @@ export default function HeadingBlockEditor({ block, onChange }: Props) {
   return (
     <div className="space-y-4">
       {/* Level selector */}
-      <div>
+      <div className="flex flex-col">
         <p className={label}>Level</p>
         <div className="flex gap-2">
           {levels.map((l) => (
@@ -48,7 +48,7 @@ export default function HeadingBlockEditor({ block, onChange }: Props) {
       </div>
 
       {/* Text */}
-      <div>
+      <div className="flex flex-col">
         <label className={label}>Text</label>
         <input
           type="text"

@@ -59,7 +59,7 @@ export default function TableBlockEditor({ block, onChange }: Props) {
   return (
     <div className="space-y-4">
       {/* Table */}
-      <div>
+      <div className="flex flex-col">
         <p className={label}>Table content</p>
         <div className="overflow-x-auto rounded-xl border border-[#DEDEDE] bg-white">
           <table className="w-full border-collapse">
@@ -163,7 +163,7 @@ export default function TableBlockEditor({ block, onChange }: Props) {
       </button>
 
       {/* Caption */}
-      <div>
+      <div className="flex flex-col">
         <label className={label}>Caption (optional)</label>
         <input
           type="text"

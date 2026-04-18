@@ -41,7 +41,7 @@ type Props = {
 
 export default function DividerBlockEditor({ block, onChange }: Props) {
   return (
-    <div>
+    <div className="flex flex-col">
       <p className={label}>Style</p>
       <div className="grid grid-cols-3 gap-3">
         {STYLE_OPTIONS.map((opt) => (

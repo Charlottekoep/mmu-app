@@ -356,7 +356,7 @@ function LeverRow({ lever, leverOwner, teamMembers, state, isSaving, isSaved, on
         <div className="border-t border-[#DEDEDE] divide-y divide-[#DEDEDE]">
 
           {/* ── Owner — first field ──────────────────────────────────── */}
-          <div className="px-4 py-3">
+          <div className="flex flex-col px-4 py-3">
             <label className="block text-[11px] font-bold uppercase tracking-widest text-[#2969FF] mb-1.5">
               Owner
             </label>
@@ -376,7 +376,7 @@ function LeverRow({ lever, leverOwner, teamMembers, state, isSaving, isSaved, on
           </div>
 
           {/* ── What have we done ────────────────────────────────────── */}
-          <div className="px-4 py-3">
+          <div className="flex flex-col px-4 py-3">
             <label className="block text-[11px] font-bold uppercase tracking-widest text-[#2969FF] mb-1.5">
               What have we done to move the needle?
             </label>
@@ -390,7 +390,7 @@ function LeverRow({ lever, leverOwner, teamMembers, state, isSaving, isSaved, on
           </div>
 
           {/* ── What are we planning ─────────────────────────────────── */}
-          <div className="px-4 py-3">
+          <div className="flex flex-col px-4 py-3">
             <label className="block text-[11px] font-bold uppercase tracking-widest text-[#2969FF] mb-1.5">
               What are we planning?
             </label>
@@ -404,7 +404,7 @@ function LeverRow({ lever, leverOwner, teamMembers, state, isSaving, isSaved, on
           </div>
 
           {/* ── Lever images ─────────────────────────────────────────── */}
-          <div className="px-4 py-3">
+          <div className="flex flex-col px-4 py-3">
             <label className="block text-[11px] font-bold uppercase tracking-widest text-[#2969FF] mb-1.5">
               Images (up to 3)
             </label>

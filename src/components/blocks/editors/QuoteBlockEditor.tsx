@@ -14,7 +14,7 @@ type Props = {
 export default function QuoteBlockEditor({ block, onChange }: Props) {
   return (
     <div className="space-y-4">
-      <div>
+      <div className="flex flex-col">
         <label className={label}>Quote text</label>
         <textarea
           value={block.text}
@@ -26,7 +26,7 @@ export default function QuoteBlockEditor({ block, onChange }: Props) {
         />
       </div>
 
-      <div>
+      <div className="flex flex-col">
         <label className={label}>Attribution (optional)</label>
         <input
           type="text"
@@ -39,7 +39,7 @@ export default function QuoteBlockEditor({ block, onChange }: Props) {
 
       {/* Live preview */}
       {block.text && (
-        <div>
+        <div className="flex flex-col">
           <p className={label}>Preview</p>
           <div className="rounded-xl border-l-4 border-[#2969FF] bg-[#F7F7F7] py-4 pl-5 pr-4">
             <p className="text-[17px] italic leading-relaxed text-[#262626]">&ldquo;{block.text}&rdquo;</p>

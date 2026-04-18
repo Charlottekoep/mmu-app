@@ -61,7 +61,7 @@ export default function ImageBlockEditor({ block, onChange, folder }: Props) {
   return (
     <div className="space-y-4">
       {/* Image URL / upload */}
-      <div>
+      <div className="flex flex-col">
         <label className={label}>Image</label>
         <div className="flex gap-2">
           <input
@@ -100,7 +100,7 @@ export default function ImageBlockEditor({ block, onChange, folder }: Props) {
       )}
 
       {/* Alt text */}
-      <div>
+      <div className="flex flex-col">
         <label className={label}>Alt text</label>
         <input
           type="text"
@@ -112,7 +112,7 @@ export default function ImageBlockEditor({ block, onChange, folder }: Props) {
       </div>
 
       {/* Caption */}
-      <div>
+      <div className="flex flex-col">
         <label className={label}>Caption (optional)</label>
         <input
           type="text"
@@ -124,7 +124,7 @@ export default function ImageBlockEditor({ block, onChange, folder }: Props) {
       </div>
 
       {/* Size */}
-      <div>
+      <div className="flex flex-col">
         <p className={label}>Size</p>
         <div className="flex gap-2">
           {SIZE_OPTIONS.map((opt) => (
@@ -145,7 +145,7 @@ export default function ImageBlockEditor({ block, onChange, folder }: Props) {
       </div>
 
       {/* Alignment */}
-      <div>
+      <div className="flex flex-col">
         <p className={label}>Alignment</p>
         <div className="flex items-center rounded-lg border border-[#DEDEDE] bg-white overflow-hidden divide-x divide-[#DEDEDE]">
           {ALIGN_OPTIONS.map((opt) => (
