@@ -225,18 +225,6 @@ function ExpandedModal({
         transition: 'opacity 0.28s ease, transform 0.28s ease',
       }}
     >
-      {/* ── Close button ─────────────────────────────────────────── */}
-      <button
-        type="button"
-        onClick={close}
-        aria-label="Close"
-        className="absolute right-6 top-6 z-10 flex h-9 w-9 items-center justify-center rounded-full border border-white/20 text-white/50 transition-all hover:bg-white/10 hover:text-white"
-      >
-        <svg width="11" height="11" viewBox="0 0 11 11" fill="none" aria-hidden="true">
-          <path d="M1 1l9 9M10 1L1 10" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
-        </svg>
-      </button>
-
       {/* ── Header ───────────────────────────────────────────────── */}
       <div className="flex-shrink-0 px-16 pt-14 pb-8">
         <div className="flex items-center gap-2.5 mb-2">
@@ -318,6 +306,18 @@ function ExpandedModal({
           </div>
         </div>
       </div>
+
+      {/* ── Close button — last in DOM so it always paints on top ─── */}
+      <button
+        type="button"
+        onClick={(e) => { e.stopPropagation(); close() }}
+        aria-label="Close"
+        className="absolute right-6 top-6 flex h-10 w-10 items-center justify-center rounded-full border border-white/25 text-white/60 transition-all hover:border-white/60 hover:bg-white/15 hover:text-white"
+      >
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+          <path d="M1 1l10 10M11 1L1 11" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
+        </svg>
+      </button>
     </div>
   )
 }
