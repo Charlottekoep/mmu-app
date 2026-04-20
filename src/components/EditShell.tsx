@@ -1,7 +1,8 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import { getBrowserClient } from '@/lib/supabase'
 import type {
   MmuSession,
   SessionSection,
@@ -75,6 +76,18 @@ export default function EditShell({
       : SESSION_DETAILS_ID,
   )
   const [sessionDate, setSessionDate] = useState(session.date)
+  const [userEmail,   setUserEmail]   = useState<string | null>(null)
+
+  useEffect(() => {
+    getBrowserClient().auth.getSession().then(({ data }) => {
+      setUserEmail(data.session?.user.email ?? null)
+    })
+  }, [])
+
+  async function handleSignOut() {
+    await getBrowserClient().auth.signOut()
+    window.location.href = '/login'
+  }
 
   const activeSection = displaySections.find((s) => s.id === activeId)
 
@@ -153,6 +166,22 @@ export default function EditShell({
             <path d="M1.5 6.5h10M6.5 1.5l5 5-5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
         </Link>
+
+        {/* User + sign out */}
+        <div className="flex items-center gap-3">
+          {userEmail && (
+            <span className="hidden text-[12px] text-[#969696] sm:block truncate max-w-[180px]">
+              {userEmail}
+            </span>
+          )}
+          <button
+            type="button"
+            onClick={handleSignOut}
+            className="flex items-center gap-1.5 rounded-full border border-[#DEDEDE] px-3.5 py-2 text-[12px] text-[#969696] transition-colors hover:border-[#D50000]/40 hover:text-[#D50000]"
+          >
+            Sign out
+          </button>
+        </div>
       </nav>
 
       {/* ── Sidebar + main ──────────────────────────────────────────────── */}

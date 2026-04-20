@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import Link from 'next/link'
+import { getBrowserClient } from '@/lib/supabase'
 import DarkPageLayout    from '@/components/DarkPageLayout'
 import HistorySidebar    from '@/components/HistorySidebar'
 import WelcomeSection    from '@/components/sections/WelcomeSection'
@@ -80,6 +81,19 @@ type Props = {
 export default function PresentationShell({ session, sections, initialSectionId }: Props) {
   const welcomeSection   = sections.find((s) => s.section_type === 'welcome')
   const contentSections  = sections.filter((s) => s.section_type !== 'welcome')
+
+  const [userEmail, setUserEmail] = useState<string | null>(null)
+
+  useEffect(() => {
+    getBrowserClient().auth.getSession().then(({ data }) => {
+      setUserEmail(data.session?.user.email ?? null)
+    })
+  }, [])
+
+  async function handleSignOut() {
+    await getBrowserClient().auth.signOut()
+    window.location.href = '/login'
+  }
 
   const [index, setIndex] = useState(() => {
     if (!initialSectionId) return 0
@@ -211,8 +225,8 @@ export default function PresentationShell({ session, sections, initialSectionId 
           </span>
         </div>
 
-        {/* Edit — top right */}
-        <div className="flex justify-end">
+        {/* Edit + sign out — top right */}
+        <div className="flex items-center justify-end gap-2">
           <Link
             aria-hidden="false"
             href={
@@ -224,6 +238,21 @@ export default function PresentationShell({ session, sections, initialSectionId 
           >
             Edit
           </Link>
+          <div className="pointer-events-auto flex items-center gap-2">
+            {userEmail && (
+              <span className="hidden text-[11px] text-white/35 xl:block truncate max-w-[160px]">
+                {userEmail}
+              </span>
+            )}
+            <button
+              type="button"
+              aria-hidden="false"
+              onClick={handleSignOut}
+              className="rounded-full border border-white/20 bg-secondary/60 px-4 py-2.5 type-eyebrow text-white/60 backdrop-blur-sm transition-all hover:bg-white/10 hover:text-white"
+            >
+              Sign out
+            </button>
+          </div>
         </div>
       </div>
 
