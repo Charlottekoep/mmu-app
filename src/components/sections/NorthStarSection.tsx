@@ -146,6 +146,7 @@ export default function NorthStarSection({ section, sessionId }: Props) {
                       lever={lever}
                       update={update}
                       compact={key === 'north_star'}
+                      alwaysHighlighted={key === 'north_star'}
                       onExpand={() => setExpanded({ lever, update })}
                     />
                   )

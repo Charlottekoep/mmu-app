@@ -57,20 +57,22 @@ export type LeverUpdate = {
 }
 
 type Props = {
-  lever:     Lever
-  update?:   LeverUpdate
-  compact?:  boolean
-  onExpand?: () => void
+  lever:              Lever
+  update?:            LeverUpdate
+  compact?:           boolean
+  alwaysHighlighted?: boolean
+  onExpand?:          () => void
 }
 
 // ─── Component ────────────────────────────────────────────────────────────
 
-export default function FlipCard({ lever, update, compact = false, onExpand }: Props) {
+export default function FlipCard({ lever, update, compact = false, alwaysHighlighted = false, onExpand }: Props) {
   const progress = calcProgress(lever.current_state, lever.target, lever.rag_status)
   const ragColor = RAG_COLOR[lever.rag_status] ?? RAG_COLOR.amber
   const cardH    = compact ? 210 : 268
 
-  const hasUpdate = !!update?.done?.trim() || !!update?.planning?.trim()
+  const hasUpdate   = !!update?.done?.trim() || !!update?.planning?.trim()
+  const highlighted = alwaysHighlighted || hasUpdate
 
   return (
     <div
@@ -81,8 +83,8 @@ export default function FlipCard({ lever, update, compact = false, onExpand }: P
       className="relative flex flex-col cursor-pointer select-none outline-none rounded-xl border bg-white/[0.06] p-5"
       style={{
         height:      `${cardH}px`,
-        opacity:     hasUpdate ? 1 : 0.55,
-        borderColor: hasUpdate ? '#2969FF' : 'rgba(255,255,255,0.10)',
+        opacity:     highlighted ? 1 : 0.55,
+        borderColor: highlighted ? '#2969FF' : 'rgba(255,255,255,0.10)',
         transition:  'opacity 0.3s ease, border-color 0.3s ease',
       }}
     >
