@@ -65,7 +65,7 @@ export default function JustHumansSection({ section }: Props) {
       <div className="flex h-screen overflow-hidden">
 
         {/* ── Left column — subject only ──────────────────────────────── */}
-        <div className="relative flex w-[35%] flex-shrink-0 flex-col items-center justify-center border-r border-white/10 px-10 py-16">
+        <div className="relative flex w-[35%] flex-shrink-0 flex-col items-center justify-center border-r border-white/10 px-10 pt-24 pb-16">
 
           {/* Subject card */}
           <PersonCard member={subject} label="In the spotlight" variant="spotlight" />
@@ -73,11 +73,11 @@ export default function JustHumansSection({ section }: Props) {
         </div>
 
         {/* ── Right column — spotlight content ───────────────────────── */}
-        <div className="relative flex flex-1 flex-col justify-center overflow-y-auto px-14 py-16">
+        <div className="relative flex flex-1 flex-col justify-center overflow-y-auto px-14 pt-24 pb-16">
 
-          {/* Presenter badge — top right of content area */}
+          {/* Presenter badge — top right of content area, below nav bar */}
           {presenter && (
-            <div className="absolute top-8 right-12 z-10">
+            <div className="absolute top-24 right-12 z-10">
               <PresenterBadge presenter={presenter} presenter2={presenter2} />
             </div>
           )}
