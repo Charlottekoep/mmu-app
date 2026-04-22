@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation'
-import { getServerClient } from '@/lib/supabase'
+import { getServerClient } from '@/lib/supabase-server'
 import EditShell from '@/components/EditShell'
 
 export default async function EditPage({
@@ -11,7 +11,7 @@ export default async function EditPage({
 }) {
   const { sessionId }                    = await params
   const { section: initialSectionId }   = await searchParams
-  const supabase = getServerClient()
+  const supabase = await getServerClient()
 
   const [
     { data: session },

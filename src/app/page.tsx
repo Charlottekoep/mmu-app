@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { getServerClient } from '@/lib/supabase'
+import { getServerClient } from '@/lib/supabase-server'
 import DarkPageLayout from '@/components/DarkPageLayout'
 import StartSessionButton from '@/components/StartSessionButton'
 import type { MmuSession } from '@/lib/types'
@@ -14,7 +14,7 @@ function formatSessionTitle(isoDate: string) {
 }
 
 export default async function HomePage() {
-  const supabase = getServerClient()
+  const supabase = await getServerClient()
   const { data } = await supabase
     .from('mmu_sessions')
     .select('*')

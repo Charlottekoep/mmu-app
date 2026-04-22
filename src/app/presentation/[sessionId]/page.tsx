@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation'
-import { getServerClient } from '@/lib/supabase'
+import { getServerClient } from '@/lib/supabase-server'
 import PresentationShell from '@/components/PresentationShell'
 
 export default async function PresentationPage({
@@ -11,7 +11,7 @@ export default async function PresentationPage({
 }) {
   const { sessionId }          = await params
   const { section: initialSectionId } = await searchParams
-  const supabase = getServerClient()
+  const supabase = await getServerClient()
 
   const [{ data: session }, { data: sections }] = await Promise.all([
     supabase
