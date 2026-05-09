@@ -69,7 +69,7 @@ export default function NorthStarUpdateForm({ section, sessionId, levers, snapsh
         current_state:        snap?.current_state        ?? lever.current_state,
         second_current_state: snap?.second_current_state ?? lever.second_current_state ?? '',
         rag_status:           snap?.rag_status           ?? lever.rag_status,
-        second_rag_status:    snap?.second_rag_status    ?? lever.rag_status,
+        second_rag_status:    (snap?.second_rag_status    ?? 'amber') as RagStatus,
         trend:                snap?.trend                ?? lever.trend,
         second_trend:         snap?.second_trend         ?? lever.trend,
         notes:                snap?.notes                ?? lever.notes ?? '',

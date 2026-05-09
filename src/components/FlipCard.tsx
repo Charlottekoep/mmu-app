@@ -133,8 +133,9 @@ export default function FlipCard({ lever, update, compact = false, alwaysHighlig
     const c = parseNumeric(rawC)
     const t = parseNumeric(rawT)
     if (c === null || t === null) return null
-    const secondRag = lever.second_rag_status ?? lever.rag_status
-    if (secondRag === 'green' || c === 0) return 100
+    const secondRag = lever.second_rag_status ?? 'amber'
+    if (c === 0) return 100
+    if (secondRag === 'green') return 100
     if (t === 0) return Math.round((1 / (1 + c)) * 100)
     if (c > t)   return Math.min(100, Math.round((t / c) * 100))
     return Math.min(100, Math.round((c / t) * 100))
