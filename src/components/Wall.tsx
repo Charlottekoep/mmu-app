@@ -7,16 +7,6 @@ import { getBrowserClient } from '@/lib/supabase'
 
 const ADMIN_EMAILS = ['charlotte@root.co.za', 'jonny@rootplatform.com']
 
-const SECTION_NAMES: Record<string, string> = {
-  welcome:       'Welcome',
-  just_humans:   'Just Humans',
-  north_star:    'North Star',
-  deep_dive:     'Deep Dive',
-  show_and_tell: 'Show & Tell',
-  announcements: 'Announcements',
-  the_league:    'The League',
-}
-
 // ─── Types ────────────────────────────────────────────────────────────────
 
 type WallComment = {
@@ -270,19 +260,16 @@ export default function Wall({ sessionId }: Props) {
                 )}
 
                 {/* Footer */}
-                <div className="mt-3 flex items-center justify-between gap-2">
-                  <p className="text-[11px] text-white/30">
-                    posted during {SECTION_NAMES[c.section_type] ?? c.section_type}
-                  </p>
-                  {!c.is_addressed && (
+                {!c.is_addressed && (
+                  <div className="mt-3 flex justify-end">
                     <button
                       onClick={() => handleMarkAddressed(c.id)}
                       className="text-[11px] text-white/30 transition-colors hover:text-white/60"
                     >
                       Mark addressed
                     </button>
-                  )}
-                </div>
+                  </div>
+                )}
               </div>
             ))
           )}
