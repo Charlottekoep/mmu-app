@@ -35,9 +35,16 @@ export function calcProgress(
   const t = parseNumeric(target)
   if (c === null || t === null || t === 0) return null
 
-  const ratio = c / t
-  if (ratio > 1 && rag !== 'green') return null
-  return Math.min(100, Math.max(0, ratio * 100))
+  // Presenter has confirmed the metric is met — fill bar completely
+  if (rag === 'green') return 100
+
+  // Burn-down: current is above target (lower is better, e.g. 139 days → 100 days)
+  // Fill = how close current is to target from above: target / current
+  if (c > t) return Math.min(100, (t / c) * 100)
+
+  // Burn-up: current is at or below target (higher is better, e.g. 42% → 75%)
+  // Fill = current / target; reaches 100 exactly when c === t
+  return Math.min(100, (c / t) * 100)
 }
 
 // ─── Constants ────────────────────────────────────────────────────────────
@@ -72,8 +79,12 @@ export default function FlipCard({ lever, update, compact = false, alwaysHighlig
   // Card height is always the same regardless of how many metrics are shown
   const cardH     = compact ? 210 : 268
 
-  const hasUpdate   = !!update?.done?.trim() || !!update?.planning?.trim()
-  const highlighted = alwaysHighlighted || hasUpdate
+  const hasUpdate      = !!update?.done?.trim() || !!update?.planning?.trim()
+  const highlighted    = alwaysHighlighted || hasUpdate
+  // Computed once here to avoid the double-call in the single-metric branch
+  const singleProgress = hasSecond
+    ? null
+    : calcProgress(lever.current_state, lever.target, lever.rag_status)
 
   return (
     <div
@@ -168,12 +179,12 @@ export default function FlipCard({ lever, update, compact = false, alwaysHighlig
           </div>
 
           <div className="mt-3 h-1 overflow-hidden rounded-full bg-white/10">
-            {calcProgress(lever.current_state, lever.target, lever.rag_status) !== null && (
+            {singleProgress !== null && (
               <div
                 className="h-full rounded-full"
                 style={{
-                  width:      `${calcProgress(lever.current_state, lever.target, lever.rag_status)}%`,
-                  background: ragColor,
+                  width:      `${singleProgress}%`,
+                  background: singleProgress === 100 ? '#1FC881' : ragColor,
                 }}
               />
             )}
@@ -249,7 +260,7 @@ function MetricBlock({
         {progress !== null && (
           <div
             className="h-full rounded-full"
-            style={{ width: `${progress}%`, background: ragColor }}
+            style={{ width: `${progress}%`, background: progress === 100 ? '#1FC881' : ragColor }}
           />
         )}
       </div>
