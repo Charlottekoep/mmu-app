@@ -145,7 +145,7 @@ export default function HistorySidebar({ open, onClose, currentSessionId }: Prop
             visibleSessions.map((s) => {
               const isCurrent  = s.id === currentSessionId
               const isArchived = s.is_archived
-              const showArchiveBtn = isAdmin && isPast(s.date) && !isArchived
+              const showArchiveBtn = isAdmin && !isArchived
 
               if (confirmArchiveId === s.id) {
                 return (

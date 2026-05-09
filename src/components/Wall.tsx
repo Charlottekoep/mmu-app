@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { getBrowserClient } from '@/lib/supabase'
-import type { TeamMember } from '@/lib/types'
 
 // ─── Constants ────────────────────────────────────────────────────────────
 
@@ -33,23 +32,16 @@ type WallComment = {
 }
 
 type Props = {
-  sessionId:          string
-  currentSectionType: string
-  teamMembers:        TeamMember[]
+  sessionId: string
 }
 
 // ─── Component ────────────────────────────────────────────────────────────
 
-export default function Wall({ sessionId, currentSectionType, teamMembers }: Props) {
-  const [open,          setOpen]          = useState(false)
-  const [comments,      setComments]      = useState<WallComment[]>([])
-  const [userEmail,     setUserEmail]     = useState<string | null>(null)
-  const [overlayId,     setOverlayId]     = useState<string | null>(null)
-  const [author,        setAuthor]        = useState('')
-  const [text,          setText]          = useState('')
-  const [taggedTo,      setTaggedTo]      = useState('')
-  const [submitting,    setSubmitting]    = useState(false)
-  const [submitErr,     setSubmitErr]     = useState<string | null>(null)
+export default function Wall({ sessionId }: Props) {
+  const [open,      setOpen]      = useState(false)
+  const [comments,  setComments]  = useState<WallComment[]>([])
+  const [userEmail, setUserEmail] = useState<string | null>(null)
+  const [overlayId, setOverlayId] = useState<string | null>(null)
 
   const isAdmin = !!userEmail && ADMIN_EMAILS.includes(userEmail)
 
@@ -115,30 +107,6 @@ export default function Wall({ sessionId, currentSectionType, teamMembers }: Pro
   }, [sessionId])
 
   // ── Actions ───────────────────────────────────────────────────────────
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
-    if (!author || !text.trim()) return
-    setSubmitting(true)
-    setSubmitErr(null)
-    const { error } = await getBrowserClient()
-      .from('wall_comments')
-      .insert({
-        session_id:       sessionId,
-        section_type:     currentSectionType,
-        author_name:      author,
-        comment_text:     text.trim(),
-        tagged_presenter: taggedTo || null,
-      })
-    setSubmitting(false)
-    if (error) {
-      setSubmitErr('Failed to post. Please try again.')
-    } else {
-      setText('')
-      setTaggedTo('')
-      await loadComments()
-    }
-  }
-
   async function handleMarkAddressed(id: string) {
     await getBrowserClient()
       .from('wall_comments')
@@ -251,7 +219,7 @@ export default function Wall({ sessionId, currentSectionType, teamMembers }: Pro
         <div className="min-h-0 flex-1 overflow-y-auto px-6 py-4 space-y-3">
           {sorted.length === 0 ? (
             <p className="py-8 text-center text-[13px] text-white/30">
-              No comments yet — be the first to post!
+              No questions or comments yet
             </p>
           ) : (
             sorted.map((c) => (
@@ -320,59 +288,6 @@ export default function Wall({ sessionId, currentSectionType, teamMembers }: Pro
           )}
         </div>
 
-        {/* Add comment form */}
-        <form
-          onSubmit={handleSubmit}
-          className="flex-shrink-0 space-y-3 border-t border-white/10 px-6 py-4"
-        >
-          <div className="flex gap-3">
-            <select
-              value={author}
-              onChange={(e) => setAuthor(e.target.value)}
-              required
-              className="flex-1 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-[13px] text-white focus:outline-none focus:border-white/30"
-              style={{ colorScheme: 'dark' }}
-            >
-              <option value="" disabled>Your name…</option>
-              {teamMembers.map((m) => (
-                <option key={m.id} value={m.name}>{m.name}</option>
-              ))}
-            </select>
-            <select
-              value={taggedTo}
-              onChange={(e) => setTaggedTo(e.target.value)}
-              className="flex-1 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-[13px] focus:outline-none focus:border-white/30"
-              style={{ color: taggedTo ? 'white' : 'rgba(255,255,255,0.4)', colorScheme: 'dark' }}
-            >
-              <option value="">Direct to (optional)</option>
-              {teamMembers.map((m) => (
-                <option key={m.id} value={m.name}>{m.name}</option>
-              ))}
-            </select>
-          </div>
-
-          <div className="flex gap-3">
-            <input
-              type="text"
-              value={text}
-              onChange={(e) => setText(e.target.value)}
-              placeholder="Ask a question or leave a comment…"
-              className="flex-1 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-[13px] text-white placeholder-white/30 focus:outline-none focus:border-white/30"
-            />
-            <button
-              type="submit"
-              disabled={submitting || !author || !text.trim()}
-              className="rounded-lg px-5 py-2 text-[13px] font-bold text-white transition-opacity disabled:opacity-40"
-              style={{ background: '#2969FF' }}
-            >
-              {submitting ? '…' : 'Post'}
-            </button>
-          </div>
-
-          {submitErr && (
-            <p className="text-[12px]" style={{ color: '#D50000' }}>{submitErr}</p>
-          )}
-        </form>
       </div>
     </>
   )

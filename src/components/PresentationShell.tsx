@@ -318,11 +318,7 @@ export default function PresentationShell({ session, sections, teamMembers, init
       )}
 
       {/* ── Session wall ─────────────────────────────────────────────── */}
-      <Wall
-        sessionId={session.id}
-        currentSectionType={currentSectionType}
-        teamMembers={teamMembers}
-      />
+      <Wall sessionId={session.id} />
 
     </>
   )

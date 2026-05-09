@@ -70,7 +70,7 @@ export default function EditShell({
   readOnly = false,
 }: Props) {
   const welcomeSection   = sections.find((s) => s.section_type === 'welcome')
-  const displaySections  = sections.filter((s) => s.section_type !== 'welcome')
+  const displaySections  = sections.filter((s) => s.section_type !== 'welcome' && s.section_type !== 'the_wall')
 
   const [activeId,    setActiveId]    = useState<string>(() =>
     initialSectionId && sections.some((s) => s.id === initialSectionId)
