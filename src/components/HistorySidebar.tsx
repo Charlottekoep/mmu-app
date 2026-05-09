@@ -54,15 +54,14 @@ export default function HistorySidebar({ open, onClose, currentSessionId }: Prop
 
   async function handleArchive(id: string) {
     setArchiving(true)
+    setConfirmArchiveId(null)
+    setSessions((prev) => prev.filter((s) => s.id !== id))
     const { error } = await getBrowserClient()
       .from('mmu_sessions')
       .update({ is_archived: true })
       .eq('id', id)
-    setConfirmArchiveId(null)
+    if (error) console.error('Archive failed:', error.message)
     setArchiving(false)
-    if (!error) {
-      setSessions((prev) => prev.filter((s) => s.id !== id))
-    }
   }
 
   // Fetch sessions and user email lazily on first open; re-fetch when showArchived changes
