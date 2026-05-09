@@ -14,6 +14,7 @@ const SECTION_LABELS: Record<string, string> = {
   show_and_tell: 'Show & Tell',
   announcements: 'Announcements',
   the_league:    'The League',
+  the_wall:      'The Wall',
 }
 
 // ─── Component ────────────────────────────────────────────────────────────

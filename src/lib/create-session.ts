@@ -11,6 +11,7 @@ const DEFAULT_SECTIONS: { section_type: SectionType; display_order: number }[] =
   { section_type: 'show_and_tell', display_order: 4 },
   { section_type: 'announcements', display_order: 5 },
   { section_type: 'the_league',    display_order: 6 },
+  { section_type: 'the_wall',      display_order: 7 },
 ]
 
 // Creates a new MMU session with default sections and copies lever snapshots

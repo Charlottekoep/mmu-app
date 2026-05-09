@@ -204,6 +204,7 @@ export type Database = {
           tagged_presenter: string | null
           is_addressed:     boolean
           is_pinned:        boolean
+          comment_type:     string
           created_at:       string
         }
         Insert: {
@@ -215,6 +216,7 @@ export type Database = {
           tagged_presenter?: string | null
           is_addressed?:     boolean
           is_pinned?:        boolean
+          comment_type?:     string
           created_at?:       string
         }
         Update: Partial<Database['public']['Tables']['wall_comments']['Row']>

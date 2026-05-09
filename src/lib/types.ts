@@ -25,6 +25,7 @@ export type SectionType =
   | 'show_and_tell'
   | 'announcements'
   | 'the_league'
+  | 'the_wall'
 
 export type RagStatus = 'green' | 'amber' | 'red'
 

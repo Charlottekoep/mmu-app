@@ -13,6 +13,7 @@ import DeepDiveSection   from '@/components/sections/DeepDiveSection'
 import ShowAndTellSection  from '@/components/sections/ShowAndTellSection'
 import AnnouncementsSection from '@/components/sections/AnnouncementsSection'
 import TheLeagueSection  from '@/components/sections/TheLeagueSection'
+import WallSection       from '@/components/sections/WallSection'
 import type { MmuSession, SessionSection, TeamMember } from '@/lib/types'
 
 // ─── Slide type ───────────────────────────────────────────────────────────
@@ -31,6 +32,7 @@ const SECTION_LABELS: Record<string, string> = {
   show_and_tell: 'Show & Tell',
   announcements: 'Announcements',
   the_league:    'The League',
+  the_wall:      'The Wall',
 }
 
 // ─── Section renderer ─────────────────────────────────────────────────────
@@ -55,6 +57,8 @@ function SectionRenderer({
       return <AnnouncementsSection section={section} sessionId={sessionId} />
     case 'the_league':
       return <TheLeagueSection section={section} sessionId={sessionId} />
+    case 'the_wall':
+      return <WallSection section={section} sessionId={sessionId} />
     default:
       return (
         <DarkPageLayout>
