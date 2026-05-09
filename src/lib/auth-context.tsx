@@ -37,29 +37,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const supabase = getBrowserClient()
 
-    // 1. Check existing session on mount
-    supabase.auth.getSession().then(({ data }) => {
-      const s = data.session
+    // Single source of truth for session state. INITIAL_SESSION fires on
+    // mount with the current cookie-stored session (or null). SIGNED_IN /
+    // SIGNED_OUT handle subsequent changes (magic-link callback, sign-out).
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, s) => {
       setSession(s)
-      setLoading(false)
 
-      if (!s && !isPublicPath(pathname)) {
-        router.replace('/login')
+      if (event === 'INITIAL_SESSION') {
+        setLoading(false)
+        if (!s && !isPublicPath(pathname)) router.replace('/login')
+        if (s  && pathname.startsWith('/login')) router.replace('/')
       }
-      if (s && pathname.startsWith('/login')) {
-        router.replace('/')
-      }
-    })
 
-    // 2. Keep session in sync (handles magic-link callback in same tab)
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, s) => {
-      setSession(s)
-      if (s && pathname.startsWith('/login')) {
-        router.replace('/')
-      }
-      if (!s && !isPublicPath(pathname)) {
-        router.replace('/login')
-      }
+      if (event === 'SIGNED_IN'  && pathname.startsWith('/login')) router.replace('/')
+      if (event === 'SIGNED_OUT' && !isPublicPath(pathname))       router.replace('/login')
     })
 
     return () => subscription.unsubscribe()
