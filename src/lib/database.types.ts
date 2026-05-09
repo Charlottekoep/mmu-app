@@ -89,13 +89,15 @@ export type Database = {
       }
       lever_snapshots: {
         Row: {
-          id:              string
+          id:                   string
           session_id:           string
           lever_id:             string
           current_state:        string
           second_current_state: string | null
           rag_status:           RagStatus
+          second_rag_status:    RagStatus | null
           trend:                Trend | null
+          second_trend:         Trend | null
           notes:                string | null
           done_update:          string | null
           planning_update:      string | null
@@ -109,7 +111,9 @@ export type Database = {
           current_state:         string
           second_current_state?: string | null
           rag_status:            RagStatus
+          second_rag_status?:    string | null
           trend?:                Trend | null
+          second_trend?:         string | null
           notes?:                string | null
           done_update?:          string | null
           planning_update?:      string | null

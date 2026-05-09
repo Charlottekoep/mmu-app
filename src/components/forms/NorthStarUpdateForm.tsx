@@ -24,7 +24,9 @@ type LeverState = {
   current_state:        string
   second_current_state: string
   rag_status:           RagStatus
+  second_rag_status:    RagStatus
   trend:                'up' | 'flat' | 'down' | null
+  second_trend:         'up' | 'flat' | 'down' | null
   notes:                string
   done_update:          string
   planning_update:      string
@@ -67,7 +69,9 @@ export default function NorthStarUpdateForm({ section, sessionId, levers, snapsh
         current_state:        snap?.current_state        ?? lever.current_state,
         second_current_state: snap?.second_current_state ?? lever.second_current_state ?? '',
         rag_status:           snap?.rag_status           ?? lever.rag_status,
+        second_rag_status:    snap?.second_rag_status    ?? lever.rag_status,
         trend:                snap?.trend                ?? lever.trend,
+        second_trend:         snap?.second_trend         ?? lever.trend,
         notes:                snap?.notes                ?? lever.notes ?? '',
         done_update:          snap?.done_update          ?? '',
         planning_update:      snap?.planning_update      ?? '',
@@ -77,28 +81,24 @@ export default function NorthStarUpdateForm({ section, sessionId, levers, snapsh
     return out
   }
 
-  const [states,       setStates]      = useState<Record<string, LeverState>>(initState)
-  // leverOwners tracks the owner name string per lever (matches levers.owner column)
-  const [leverOwners,  setLeverOwners] = useState<Record<string, string>>(
+  const [states,        setStates]        = useState<Record<string, LeverState>>(initState)
+  const [leverOwners,   setLeverOwners]   = useState<Record<string, string>>(
     Object.fromEntries(levers.map((l) => [l.id, l.owner ?? ''])),
   )
-  // leverMeasures tracks the measure text per lever (matches levers.measure column)
   const [leverMeasures, setLeverMeasures] = useState<Record<string, string>>(
     Object.fromEntries(levers.map((l) => [l.id, l.measure ?? ''])),
   )
-  const [images,      setImages]     = useState<ImageItem[]>(
+  const [images,    setImages]    = useState<ImageItem[]>(
     normaliseImages(
       Array.isArray((section.content as { images?: unknown[] })?.images)
         ? (section.content as { images: (string | ImageItem)[] }).images
         : [],
     ),
   )
-  const [saving,      setSaving]     = useState<string | null>(null)
-  const [saved,       setSaved]      = useState<string | null>(null)
-  const [saveError,   setSaveError]  = useState<string | null>(null)
+  const [saving,    setSaving]    = useState<string | null>(null)
+  const [saved,     setSaved]     = useState<string | null>(null)
+  const [saveError, setSaveError] = useState<string | null>(null)
 
-  // Refs hold the latest merged state for each lever so debounced saves
-  // always send the most recent values, not a stale closure snapshot.
   const pendingStates       = useRef<Record<string, LeverState>>({})
   const debounceRefs        = useRef<Record<string, ReturnType<typeof setTimeout>>>({})
   const ownerDebounceRefs   = useRef<Record<string, ReturnType<typeof setTimeout>>>({})
@@ -128,7 +128,9 @@ export default function NorthStarUpdateForm({ section, sessionId, levers, snapsh
       current_state:        state.current_state,
       second_current_state: state.second_current_state || null,
       rag_status:           state.rag_status,
+      second_rag_status:    state.second_rag_status,
       trend:                state.trend,
+      second_trend:         state.second_trend,
       notes:                state.notes           || null,
       done_update:          state.done_update     || null,
       planning_update:      state.planning_update || null,
@@ -147,7 +149,7 @@ export default function NorthStarUpdateForm({ section, sessionId, levers, snapsh
     setTimeout(() => setSaved((s) => s === leverId ? null : s), 2000)
   }, [sessionId])
 
-  // ── Owner save — updates levers.owner (independent of snapshot saves) ───
+  // ── Owner save ───────────────────────────────────────────────────────────
 
   const saveLeverOwner = useCallback(async (leverId: string, owner: string) => {
     setSaving(leverId); setSaveError(null)
@@ -165,7 +167,7 @@ export default function NorthStarUpdateForm({ section, sessionId, levers, snapsh
     setTimeout(() => setSaved((s) => s === leverId ? null : s), 2000)
   }, [])
 
-  // ── Measure save — updates levers.measure (independent of snapshot saves) ─
+  // ── Measure save ─────────────────────────────────────────────────────────
 
   const saveLeverMeasure = useCallback(async (leverId: string, measure: string) => {
     setSaving(leverId); setSaveError(null)
@@ -183,7 +185,7 @@ export default function NorthStarUpdateForm({ section, sessionId, levers, snapsh
     setTimeout(() => setSaved((s) => s === leverId ? null : s), 2000)
   }, [])
 
-  // ── State update — stores latest merged state in ref before debouncing ──
+  // ── State update ─────────────────────────────────────────────────────────
 
   function update(leverId: string, patch: Partial<LeverState>) {
     setStates((prev) => {
@@ -198,8 +200,6 @@ export default function NorthStarUpdateForm({ section, sessionId, levers, snapsh
     }, 800)
   }
 
-  // ── Owner update — fully independent of snapshot saves ──────────────────
-
   function updateOwner(leverId: string, owner: string) {
     setLeverOwners((prev) => ({ ...prev, [leverId]: owner }))
     clearTimeout(ownerDebounceRefs.current[leverId])
@@ -207,8 +207,6 @@ export default function NorthStarUpdateForm({ section, sessionId, levers, snapsh
       saveLeverOwner(leverId, owner)
     }, 800)
   }
-
-  // ── Measure update — fully independent of snapshot saves ─────────────────
 
   function updateMeasure(leverId: string, measure: string) {
     setLeverMeasures((prev) => ({ ...prev, [leverId]: measure }))
@@ -235,7 +233,6 @@ export default function NorthStarUpdateForm({ section, sessionId, levers, snapsh
 
   return (
     <div className="px-8 py-10 space-y-12">
-      {/* Global save indicator */}
       {(saving || saved || saveError) && (
         <div className={`fixed bottom-6 right-8 z-10 rounded-full px-4 py-2 text-[12px] shadow-md ${saveError ? 'bg-red text-white' : 'bg-[#262626] text-white'}`}>
           {saving ? 'Saving…' : saveError ? 'Save failed' : 'Saved ✓'}
@@ -269,7 +266,6 @@ export default function NorthStarUpdateForm({ section, sessionId, levers, snapsh
         </section>
       ))}
 
-      {/* Images */}
       <section>
         <p className="type-eyebrow text-[#2969FF] mb-5">Images</p>
         <ImageUploader
@@ -300,102 +296,143 @@ type LeverRowProps = {
 function LeverRow({ lever, leverOwner, leverMeasure, teamMembers, state, isSaving, isSaved, onChange, onOwnerChange, onMeasureChange }: LeverRowProps) {
   const [expanded, setExpanded] = useState(false)
 
-  const ragColor  = { green: '#1FC881', amber: '#FFAB00', red: '#D50000' }[state.rag_status] ?? '#FFAB00'
+  const ragColor    = { green: '#1FC881', amber: '#FFAB00', red: '#D50000' }[state.rag_status] ?? '#FFAB00'
   const ownerMember = teamMembers.find((m) => m.name === leverOwner)
+
+  const expandBtn = (
+    <button
+      type="button"
+      onClick={() => setExpanded((v) => !v)}
+      className="text-[#969696] hover:text-[#262626] transition-colors"
+      aria-label={expanded ? 'Collapse' : 'Expand to edit details'}
+    >
+      <svg
+        width="14" height="14" viewBox="0 0 14 14" fill="none"
+        className={`transition-transform ${expanded ? 'rotate-180' : ''}`}
+        aria-hidden="true"
+      >
+        <path d="M2 4l5 6 5-6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+      </svg>
+    </button>
+  )
 
   return (
     <div className="rounded-xl border border-[#DEDEDE] bg-white overflow-hidden">
-      {/* Header row */}
-      <div className="flex items-center gap-4 px-4 py-3">
-        {/* RAG dot */}
-        <div className="h-2.5 w-2.5 flex-shrink-0 rounded-full" style={{ background: ragColor }} />
 
-        {/* Lever name + owner (owner reflects local state immediately) */}
-        <div className="flex-1 min-w-0">
-          <p className="text-[13px] font-bold text-[#262626] truncate">{lever.name}</p>
-          <p className="text-[11px] text-[#969696] truncate">{leverOwner || lever.owner}</p>
+      {lever.second_measure ? (
+        /* ── Dual-measure: name/owner row + two metric control rows ── */
+        <div className="px-4 py-3 space-y-2.5">
+
+          {/* Lever name + owner + save indicator + expand toggle */}
+          <div className="flex items-center gap-4">
+            <div className="h-2.5 w-2.5 flex-shrink-0 rounded-full" style={{ background: ragColor }} />
+            <div className="flex-1 min-w-0">
+              <p className="text-[13px] font-bold text-[#262626] truncate">{lever.name}</p>
+              <p className="text-[11px] text-[#969696] truncate">{leverOwner || lever.owner}</p>
+            </div>
+            <span className="w-12 text-right text-[11px] text-[#969696]">
+              {isSaving ? '…' : isSaved ? '✓' : ''}
+            </span>
+            {expandBtn}
+          </div>
+
+          {/* Primary metric — current state, RAG, trend */}
+          <MetricControls
+            label={lever.measure}
+            current={state.current_state}
+            ragStatus={state.rag_status}
+            trend={state.trend}
+            labelColor="#2969FF"
+            onCurrent={(v) => onChange({ current_state: v })}
+            onRag={(v) => onChange({ rag_status: v })}
+            onTrend={(v) => onChange({ trend: v })}
+          />
+
+          {/* Secondary metric — current state, RAG, trend */}
+          <MetricControls
+            label={lever.second_measure}
+            current={state.second_current_state}
+            ragStatus={state.second_rag_status}
+            trend={state.second_trend}
+            labelColor="#969696"
+            onCurrent={(v) => onChange({ second_current_state: v })}
+            onRag={(v) => onChange({ second_rag_status: v })}
+            onTrend={(v) => onChange({ second_trend: v })}
+          />
         </div>
+      ) : (
+        /* ── Single-measure: standard flat header row ── */
+        <div className="flex items-center gap-4 px-4 py-3">
+          <div className="h-2.5 w-2.5 flex-shrink-0 rounded-full" style={{ background: ragColor }} />
 
-        {/* Current state input */}
-        <input
-          type="text"
-          value={state.current_state}
-          onChange={(e) => onChange({ current_state: e.target.value })}
-          className="w-28 rounded-lg border border-[#DEDEDE] bg-white px-2.5 py-1.5 text-[13px] text-[#262626] placeholder-[#969696] outline-none focus:border-[#2969FF] transition-colors"
-          placeholder="Current…"
-          aria-label={`Current value for ${lever.name}`}
-        />
+          <div className="flex-1 min-w-0">
+            <p className="text-[13px] font-bold text-[#262626] truncate">{lever.name}</p>
+            <p className="text-[11px] text-[#969696] truncate">{leverOwner || lever.owner}</p>
+          </div>
 
-        {/* RAG buttons */}
-        <div className="flex gap-1">
-          {RAG_OPTIONS.map((opt) => (
-            <button
-              key={opt.value}
-              type="button"
-              onClick={() => onChange({ rag_status: opt.value })}
-              aria-label={`Set ${lever.name} RAG to ${opt.value}`}
-              className={`h-7 w-7 rounded text-[11px] font-bold transition-all ${
-                state.rag_status === opt.value
-                  ? 'opacity-100 scale-110'
-                  : 'opacity-25 hover:opacity-60'
-              }`}
-              style={{
-                background: state.rag_status === opt.value ? opt.color + '33' : 'transparent',
-                color:      opt.color,
-                border:     `1px solid ${state.rag_status === opt.value ? opt.color : 'transparent'}`,
-              }}
-            >
-              {opt.label}
-            </button>
-          ))}
+          <input
+            type="text"
+            value={state.current_state}
+            onChange={(e) => onChange({ current_state: e.target.value })}
+            className="w-28 rounded-lg border border-[#DEDEDE] bg-white px-2.5 py-1.5 text-[13px] text-[#262626] placeholder-[#969696] outline-none focus:border-[#2969FF] transition-colors"
+            placeholder="Current…"
+            aria-label={`Current value for ${lever.name}`}
+          />
+
+          <div className="flex gap-1">
+            {RAG_OPTIONS.map((opt) => (
+              <button
+                key={opt.value}
+                type="button"
+                onClick={() => onChange({ rag_status: opt.value })}
+                aria-label={`Set ${lever.name} RAG to ${opt.value}`}
+                className={`h-7 w-7 rounded text-[11px] font-bold transition-all ${
+                  state.rag_status === opt.value
+                    ? 'opacity-100 scale-110'
+                    : 'opacity-25 hover:opacity-60'
+                }`}
+                style={{
+                  background: state.rag_status === opt.value ? opt.color + '33' : 'transparent',
+                  color:      opt.color,
+                  border:     `1px solid ${state.rag_status === opt.value ? opt.color : 'transparent'}`,
+                }}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+
+          <div className="flex gap-1">
+            {TREND_OPTIONS.map((opt) => (
+              <button
+                key={opt.value}
+                type="button"
+                onClick={() => onChange({ trend: state.trend === opt.value ? null : opt.value })}
+                aria-label={`Set ${lever.name} trend to ${opt.value}`}
+                className={`h-7 w-7 rounded text-[14px] transition-all ${
+                  state.trend === opt.value
+                    ? 'bg-[#2969FF]/10 text-[#2969FF]'
+                    : 'text-[#969696] hover:bg-[#F7F7F7] hover:text-[#262626]'
+                }`}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+
+          <span className="w-12 text-right text-[11px] text-[#969696]">
+            {isSaving ? '…' : isSaved ? '✓' : ''}
+          </span>
+
+          {expandBtn}
         </div>
-
-        {/* Trend buttons */}
-        <div className="flex gap-1">
-          {TREND_OPTIONS.map((opt) => (
-            <button
-              key={opt.value}
-              type="button"
-              onClick={() => onChange({ trend: state.trend === opt.value ? null : opt.value })}
-              aria-label={`Set ${lever.name} trend to ${opt.value}`}
-              className={`h-7 w-7 rounded text-[14px] transition-all ${
-                state.trend === opt.value
-                  ? 'bg-[#2969FF]/10 text-[#2969FF]'
-                  : 'text-[#969696] hover:bg-[#F7F7F7] hover:text-[#262626]'
-              }`}
-            >
-              {opt.label}
-            </button>
-          ))}
-        </div>
-
-        {/* Save indicator */}
-        <span className="w-12 text-right text-[11px] text-[#969696]">
-          {isSaving ? '…' : isSaved ? '✓' : ''}
-        </span>
-
-        {/* Expand toggle */}
-        <button
-          type="button"
-          onClick={() => setExpanded((v) => !v)}
-          className="text-[#969696] hover:text-[#262626] transition-colors"
-          aria-label={expanded ? 'Collapse' : 'Expand to edit details'}
-        >
-          <svg
-            width="14" height="14" viewBox="0 0 14 14" fill="none"
-            className={`transition-transform ${expanded ? 'rotate-180' : ''}`}
-            aria-hidden="true"
-          >
-            <path d="M2 4l5 6 5-6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-          </svg>
-        </button>
-      </div>
+      )}
 
       {/* Expanded edit block */}
       {expanded && (
         <div className="border-t border-[#DEDEDE] divide-y divide-[#DEDEDE]">
 
-          {/* ── Owner — first field ──────────────────────────────────── */}
+          {/* ── Owner ─────────────────────────────────────────────────── */}
           <div className="flex flex-col px-4 py-3">
             <label className="block text-[11px] font-bold uppercase tracking-widest text-[#2969FF] mb-1.5">
               Owner
@@ -415,7 +452,7 @@ function LeverRow({ lever, leverOwner, leverMeasure, teamMembers, state, isSavin
             </div>
           </div>
 
-          {/* ── Measure ──────────────────────────────────────────────── */}
+          {/* ── Measure ───────────────────────────────────────────────── */}
           <div className="flex flex-col px-4 py-3">
             <label className="block text-[11px] font-bold uppercase tracking-widest text-[#2969FF] mb-1.5">
               Measure
@@ -429,23 +466,7 @@ function LeverRow({ lever, leverOwner, leverMeasure, teamMembers, state, isSavin
             />
           </div>
 
-          {/* ── Second current state (only when lever has two metrics) ─ */}
-          {lever.second_measure && (
-            <div className="flex flex-col px-4 py-3">
-              <label className="block text-[11px] font-bold uppercase tracking-widest text-[#2969FF] mb-1.5">
-                Current — {lever.second_measure}
-              </label>
-              <input
-                type="text"
-                value={state.second_current_state}
-                onChange={(e) => onChange({ second_current_state: e.target.value })}
-                placeholder="Current value…"
-                className="w-full rounded-lg border border-[#DEDEDE] bg-white px-3 py-2 text-[13px] text-[#262626] placeholder-[#969696] outline-none focus:border-[#2969FF] transition-colors"
-              />
-            </div>
-          )}
-
-          {/* ── What have we done ────────────────────────────────────── */}
+          {/* ── What have we done ─────────────────────────────────────── */}
           <div className="flex flex-col px-4 py-3">
             <label className="block text-[11px] font-bold uppercase tracking-widest text-[#2969FF] mb-1.5">
               What have we done to move the needle?
@@ -459,7 +480,7 @@ function LeverRow({ lever, leverOwner, leverMeasure, teamMembers, state, isSavin
             />
           </div>
 
-          {/* ── What are we planning ─────────────────────────────────── */}
+          {/* ── What are we planning ──────────────────────────────────── */}
           <div className="flex flex-col px-4 py-3">
             <label className="block text-[11px] font-bold uppercase tracking-widest text-[#2969FF] mb-1.5">
               What are we planning?
@@ -473,7 +494,7 @@ function LeverRow({ lever, leverOwner, leverMeasure, teamMembers, state, isSavin
             />
           </div>
 
-          {/* ── Lever images ─────────────────────────────────────────── */}
+          {/* ── Lever images ──────────────────────────────────────────── */}
           <div className="flex flex-col px-4 py-3">
             <label className="block text-[11px] font-bold uppercase tracking-widest text-[#2969FF] mb-1.5">
               Images (up to 3)
@@ -487,6 +508,74 @@ function LeverRow({ lever, leverOwner, leverMeasure, teamMembers, state, isSavin
 
         </div>
       )}
+    </div>
+  )
+}
+
+// ─── Metric controls — reused for each metric row in dual-measure levers ─
+
+function MetricControls({
+  label, current, ragStatus, trend, labelColor, onCurrent, onRag, onTrend,
+}: {
+  label:      string
+  current:    string
+  ragStatus:  RagStatus
+  trend:      'up' | 'flat' | 'down' | null
+  labelColor: string
+  onCurrent:  (v: string) => void
+  onRag:      (v: RagStatus) => void
+  onTrend:    (v: 'up' | 'flat' | 'down' | null) => void
+}) {
+  return (
+    <div className="flex items-center gap-2 pl-[22px]">
+      <p
+        className="type-eyebrow w-28 shrink-0 truncate"
+        style={{ color: labelColor }}
+      >
+        {label}
+      </p>
+      <input
+        type="text"
+        value={current}
+        onChange={(e) => onCurrent(e.target.value)}
+        className="w-24 rounded-lg border border-[#DEDEDE] bg-white px-2.5 py-1.5 text-[13px] text-[#262626] placeholder-[#969696] outline-none focus:border-[#2969FF] transition-colors"
+        placeholder="Current…"
+      />
+      <div className="flex gap-1">
+        {RAG_OPTIONS.map((opt) => (
+          <button
+            key={opt.value}
+            type="button"
+            onClick={() => onRag(opt.value)}
+            className={`h-7 w-7 rounded text-[11px] font-bold transition-all ${
+              ragStatus === opt.value ? 'opacity-100 scale-110' : 'opacity-25 hover:opacity-60'
+            }`}
+            style={{
+              background: ragStatus === opt.value ? opt.color + '33' : 'transparent',
+              color:      opt.color,
+              border:     `1px solid ${ragStatus === opt.value ? opt.color : 'transparent'}`,
+            }}
+          >
+            {opt.label}
+          </button>
+        ))}
+      </div>
+      <div className="flex gap-1">
+        {TREND_OPTIONS.map((opt) => (
+          <button
+            key={opt.value}
+            type="button"
+            onClick={() => onTrend(trend === opt.value ? null : opt.value)}
+            className={`h-7 w-7 rounded text-[14px] transition-all ${
+              trend === opt.value
+                ? 'bg-[#2969FF]/10 text-[#2969FF]'
+                : 'text-[#969696] hover:bg-[#F7F7F7] hover:text-[#262626]'
+            }`}
+          >
+            {opt.label}
+          </button>
+        ))}
+      </div>
     </div>
   )
 }

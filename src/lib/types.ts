@@ -88,7 +88,9 @@ export type LeverSnapshot = {
   current_state:        string
   second_current_state: string | null
   rag_status:           RagStatus
+  second_rag_status:    RagStatus | null
   trend:                'up' | 'down' | 'flat' | null
+  second_trend:         'up' | 'down' | 'flat' | null
   notes:                string | null
   done_update:          string | null
   planning_update:      string | null
