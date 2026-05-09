@@ -23,7 +23,7 @@ export async function createSession(): Promise<string | null> {
   // ── 1. Determine next session number ──────────────────────────────────────
   const { data: latest } = await supabase
     .from('mmu_sessions')
-    .select('session_number')
+    .select('session_number, welcome_message')
     .order('session_number', { ascending: false })
     .limit(1)
     .maybeSingle()
@@ -35,7 +35,7 @@ export async function createSession(): Promise<string | null> {
       session_number:  (latest?.session_number ?? 0) + 1,
       date:            new Date().toISOString().split('T')[0],
       created_by:      'Charlotte',
-      welcome_message: null,
+      welcome_message: latest?.welcome_message ?? null,
     })
     .select()
     .single()
