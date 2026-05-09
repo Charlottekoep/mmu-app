@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { getBrowserClient } from '@/lib/supabase'
 import DarkPageLayout    from '@/components/DarkPageLayout'
 import HistorySidebar    from '@/components/HistorySidebar'
+import Wall              from '@/components/Wall'
 import WelcomeSection    from '@/components/sections/WelcomeSection'
 import NorthStarSection  from '@/components/sections/NorthStarSection'
 import JustHumansSection from '@/components/sections/JustHumansSection'
@@ -12,7 +13,7 @@ import DeepDiveSection   from '@/components/sections/DeepDiveSection'
 import ShowAndTellSection  from '@/components/sections/ShowAndTellSection'
 import AnnouncementsSection from '@/components/sections/AnnouncementsSection'
 import TheLeagueSection  from '@/components/sections/TheLeagueSection'
-import type { MmuSession, SessionSection } from '@/lib/types'
+import type { MmuSession, SessionSection, TeamMember } from '@/lib/types'
 
 // ─── Slide type ───────────────────────────────────────────────────────────
 // Slide 0 is always the synthetic WelcomeSection; the rest are DB sections.
@@ -75,10 +76,11 @@ function SectionRenderer({
 type Props = {
   session:           MmuSession
   sections:          SessionSection[]
+  teamMembers:       TeamMember[]
   initialSectionId?: string
 }
 
-export default function PresentationShell({ session, sections, initialSectionId }: Props) {
+export default function PresentationShell({ session, sections, teamMembers, initialSectionId }: Props) {
   const welcomeSection   = sections.find((s) => s.section_type === 'welcome')
   const contentSections  = sections.filter((s) => s.section_type !== 'welcome')
 
@@ -119,8 +121,8 @@ export default function PresentationShell({ session, sections, initialSectionId 
 
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
-      // Don't navigate while the user is typing in an input
-      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return
+      // Don't navigate while the user is typing or selecting
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement || e.target instanceof HTMLSelectElement) return
       if (e.key === 'ArrowRight') next()
       if (e.key === 'ArrowLeft')  prev()
       if (e.key === 'Escape')     setSidebarOpen(false)
@@ -129,9 +131,12 @@ export default function PresentationShell({ session, sections, initialSectionId 
     return () => window.removeEventListener('keydown', onKey)
   }, [next, prev])
 
-  const hasPrev      = index > 0
-  const hasNext      = index < slides.length - 1
-  const currentSlide = slides[index]
+  const hasPrev             = index > 0
+  const hasNext             = index < slides.length - 1
+  const currentSlide        = slides[index]
+  const currentSectionType  = currentSlide?.kind === 'section'
+    ? currentSlide.section.section_type
+    : 'welcome'
 
   // Label for a slide (used in progress dots aria-label)
   function slideLabel(slide: Slide) {
@@ -307,6 +312,13 @@ export default function PresentationShell({ session, sections, initialSectionId 
           ))}
         </div>
       )}
+
+      {/* ── Session wall ─────────────────────────────────────────────── */}
+      <Wall
+        sessionId={session.id}
+        currentSectionType={currentSectionType}
+        teamMembers={teamMembers}
+      />
 
     </>
   )

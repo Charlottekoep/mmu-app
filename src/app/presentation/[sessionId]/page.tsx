@@ -13,7 +13,7 @@ export default async function PresentationPage({
   const { section: initialSectionId } = await searchParams
   const supabase = await getServerClient()
 
-  const [{ data: session }, { data: sections }] = await Promise.all([
+  const [{ data: session }, { data: sections }, { data: teamMembers }] = await Promise.all([
     supabase
       .from('mmu_sessions')
       .select('*')
@@ -25,9 +25,20 @@ export default async function PresentationPage({
       .eq('session_id', sessionId)
       .eq('is_active', true)
       .order('display_order'),
+    supabase
+      .from('team_members')
+      .select('*')
+      .order('name'),
   ])
 
   if (!session) notFound()
 
-  return <PresentationShell session={session} sections={sections ?? []} initialSectionId={initialSectionId} />
+  return (
+    <PresentationShell
+      session={session}
+      sections={sections ?? []}
+      teamMembers={teamMembers ?? []}
+      initialSectionId={initialSectionId}
+    />
+  )
 }

@@ -194,6 +194,40 @@ export type Database = {
           },
         ]
       }
+      wall_comments: {
+        Row: {
+          id:               string
+          session_id:       string
+          section_type:     string
+          author_name:      string
+          comment_text:     string
+          tagged_presenter: string | null
+          is_addressed:     boolean
+          is_pinned:        boolean
+          created_at:       string
+        }
+        Insert: {
+          id?:               string
+          session_id:        string
+          section_type:      string
+          author_name:       string
+          comment_text:      string
+          tagged_presenter?: string | null
+          is_addressed?:     boolean
+          is_pinned?:        boolean
+          created_at?:       string
+        }
+        Update: Partial<Database['public']['Tables']['wall_comments']['Row']>
+        Relationships: [
+          {
+            foreignKeyName: 'wall_comments_session_id_fkey'
+            columns: ['session_id']
+            isOneToOne: false
+            referencedRelation: 'mmu_sessions'
+            referencedColumns: ['id']
+          },
+        ]
+      }
     }
     Views:     Record<string, never>
     Functions: Record<string, never>
