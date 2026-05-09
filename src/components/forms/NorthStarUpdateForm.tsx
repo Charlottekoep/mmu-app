@@ -331,7 +331,7 @@ function LeverRow({ lever, leverOwner, leverMeasure, teamMembers, state, isSavin
           {/* Two metric rows stacked where the single input normally sits */}
           <div className="flex flex-col gap-1.5">
             <MetricControls
-              label={lever.measure}
+              label="% coverage"
               current={state.current_state}
               ragStatus={state.rag_status}
               trend={state.trend}
@@ -522,7 +522,7 @@ function MetricControls({
 }) {
   return (
     <div className="flex items-center gap-2">
-      <span className="text-[11px] text-[#969696] shrink-0">{label}</span>
+      <p className="text-[11px] text-[#969696] w-36 shrink-0 text-right">{label}</p>
       <input
         type="text"
         value={current}
