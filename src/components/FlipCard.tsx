@@ -124,96 +124,77 @@ export default function FlipCard({ lever, update, compact = false, alwaysHighlig
       </h3>
 
       {hasSecond ? (
+        /* ── Dual-metric layout: identical to single-metric, adds a second bar ── */
         <>
+          {lever.measure && (
+            <div className="mt-3">
+              <p className="type-eyebrow text-white/40">Measure</p>
+              <p
+                className="mt-1 line-clamp-2 leading-snug text-white/65"
+                style={{ fontSize: compact ? '10px' : '12px' }}
+              >
+                {lever.measure}
+              </p>
+            </div>
+          )}
+
           <div className="flex-1" />
 
-          {/* Primary metric — "MEASURE" label appears once, here */}
-          <div>
-            <p className="type-eyebrow text-white/40">Measure</p>
-            <p
-              className="mt-0.5 truncate font-bold uppercase leading-none"
-              style={{
-                fontSize:      compact ? '8px'  : '10px',
-                letterSpacing: '0.07em',
-                color:         'rgba(255,255,255,0.65)',
-              }}
-            >
-              {lever.measure}
-            </p>
-            <div className="mt-1.5 flex items-baseline gap-1.5">
-              <span
-                className="font-bold text-white leading-none"
-                style={{ fontSize: compact ? '13px' : '16px' }}
+          <div className="flex gap-5 pt-2">
+            <div>
+              <p className="type-eyebrow text-white/40">Current</p>
+              <p
+                className="mt-1 font-bold leading-none text-white"
+                style={{ fontSize: compact ? '14px' : '20px' }}
               >
                 {lever.current_state}
-              </span>
-              <span className="text-white/30" style={{ fontSize: compact ? '9px' : '10px' }}>→</span>
-              <span
-                className="text-white/45 leading-none"
-                style={{ fontSize: compact ? '13px' : '16px' }}
+              </p>
+            </div>
+            <div>
+              <p className="type-eyebrow text-white/40">Target</p>
+              <p
+                className="mt-1 font-bold leading-none text-white/50"
+                style={{ fontSize: compact ? '14px' : '20px' }}
               >
                 {lever.target}
-              </span>
-            </div>
-            <div
-              className="mt-1.5 overflow-hidden rounded-full bg-white/10"
-              style={{ height: compact ? '5px' : '8px' }}
-            >
-              {primaryProgress !== null && (
-                <div
-                  className="h-full rounded-full"
-                  style={{
-                    width:      `${primaryProgress}%`,
-                    background: primaryProgress === 100 ? '#1FC881' : ragColor,
-                  }}
-                />
-              )}
+              </p>
             </div>
           </div>
 
-          <div className="my-2 border-t border-white/[0.08]" />
+          {/* Primary bar */}
+          <div
+            className="mt-3 overflow-hidden rounded-full bg-white/10"
+            style={{ height: compact ? '5px' : '6px' }}
+          >
+            {primaryProgress !== null && (
+              <div
+                className="h-full rounded-full"
+                style={{
+                  width:      `${primaryProgress}%`,
+                  background: primaryProgress === 100 ? '#1FC881' : ragColor,
+                }}
+              />
+            )}
+          </div>
 
-          {/* Secondary metric — smaller and more muted */}
-          <div>
-            <p
-              className="type-eyebrow truncate"
-              style={{ color: 'rgba(255,255,255,0.30)' }}
-            >
-              {lever.second_measure}
-            </p>
-            <div className="mt-1 flex items-baseline gap-1.5">
-              <span
-                className="font-bold leading-none"
-                style={{ fontSize: compact ? '11px' : '13px', color: 'rgba(255,255,255,0.50)' }}
-              >
-                {lever.second_current_state ?? '—'}
-              </span>
-              <span
-                className="text-white/20"
-                style={{ fontSize: compact ? '8px' : '10px' }}
-              >→</span>
-              <span
-                className="leading-none"
-                style={{ fontSize: compact ? '11px' : '13px', color: 'rgba(255,255,255,0.30)' }}
-              >
-                {lever.second_target ?? '—'}
-              </span>
-            </div>
-            <div
-              className="mt-1.5 overflow-hidden rounded-full"
-              style={{ height: compact ? '3px' : '5px', background: 'rgba(255,255,255,0.07)' }}
-            >
-              {secondProgress !== null && (
-                <div
-                  className="h-full rounded-full"
-                  style={{
-                    width:      `${secondProgress}%`,
-                    background: secondProgress === 100 ? '#1FC881' : ragColor,
-                    opacity:    0.7,
-                  }}
-                />
-              )}
-            </div>
+          {/* Secondary bar */}
+          <div
+            className="mt-1 overflow-hidden rounded-full"
+            style={{
+              height:     compact ? '3px' : '4px',
+              background: 'rgba(255,255,255,0.07)',
+              opacity:    0.7,
+            }}
+          >
+            {secondProgress !== null && (
+              <div
+                className="h-full rounded-full"
+                style={{
+                  width:      `${secondProgress}%`,
+                  background: secondProgress === 100 ? '#1FC881' : ragColor,
+                }}
+              />
+            )}
           </div>
         </>
       ) : (
