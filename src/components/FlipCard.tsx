@@ -81,10 +81,12 @@ type Props = {
 // ─── Component ────────────────────────────────────────────────────────────
 
 export default function FlipCard({ lever, update, compact = false, alwaysHighlighted = false, onExpand }: Props) {
-  const ragColor  = RAG_COLOR[lever.rag_status] ?? RAG_COLOR.amber
+  const ragColor       = RAG_COLOR[lever.rag_status]              ?? RAG_COLOR.amber
+  const secondRagColor = RAG_COLOR[lever.second_rag_status ?? ''] ?? RAG_COLOR.amber
   const hasSecond = !!lever.second_measure
-  // Card height is always the same regardless of how many metrics are shown
-  const cardH     = compact ? 210 : 268
+  const cardH     = hasSecond
+    ? (compact ? 268 : 340)
+    : (compact ? 210 : 268)
 
   const hasUpdate      = !!update?.done?.trim() || !!update?.planning?.trim()
   const highlighted    = alwaysHighlighted || hasUpdate
@@ -96,10 +98,8 @@ export default function FlipCard({ lever, update, compact = false, alwaysHighlig
     ? calcProgress(lever.current_state, lever.target, lever.rag_status)
     : null
 
-  // Secondary bar: explicit burn-down calculation.
-  // Only renders when both second_current_state and second_target are present
-  // and parseable.  Uses inverse proportion for "→ 0" targets so the bar
-  // visually fills as overdue items are resolved.
+  // Secondary bar: uses second_rag_status for the green-override check.
+  // Only renders when both second_current_state and second_target are present.
   const secondProgress: number | null = (() => {
     if (!hasSecond) return null
     const rawC = lever.second_current_state
@@ -108,7 +108,8 @@ export default function FlipCard({ lever, update, compact = false, alwaysHighlig
     const c = parseNumeric(rawC)
     const t = parseNumeric(rawT)
     if (c === null || t === null) return null
-    if (lever.rag_status === 'green' || c === 0) return 100
+    const secondRag = lever.second_rag_status ?? lever.rag_status
+    if (secondRag === 'green' || c === 0) return 100
     if (t === 0) return Math.round((1 / (1 + c)) * 100)
     if (c > t)   return Math.min(100, Math.round((t / c) * 100))
     return Math.min(100, Math.round((c / t) * 100))
@@ -199,17 +200,39 @@ export default function FlipCard({ lever, update, compact = false, alwaysHighlig
             )}
           </div>
 
+          {/* Second metric: current / target */}
+          <div className="flex gap-5 pt-3">
+            <div>
+              <p className="type-eyebrow text-white/40">Current</p>
+              <p
+                className="mt-1 font-bold leading-none text-white"
+                style={{ fontSize: compact ? '14px' : '20px' }}
+              >
+                {lever.second_current_state ?? '—'}
+              </p>
+            </div>
+            <div>
+              <p className="type-eyebrow text-white/40">Target</p>
+              <p
+                className="mt-1 font-bold leading-none text-white/50"
+                style={{ fontSize: compact ? '14px' : '20px' }}
+              >
+                {lever.second_target ?? '—'}
+              </p>
+            </div>
+          </div>
+
           {/* Secondary bar */}
           <div
-            className="mt-2 overflow-hidden rounded-full bg-white/[0.12]"
-            style={{ height: compact ? '3px' : '4px' }}
+            className="mt-3 overflow-hidden rounded-full bg-white/10"
+            style={{ height: compact ? '5px' : '6px' }}
           >
             {secondProgress !== null && (
               <div
-                className="h-full rounded-full opacity-70"
+                className="h-full rounded-full"
                 style={{
                   width:      `${secondProgress}%`,
-                  background: secondProgress === 100 ? '#1FC881' : ragColor,
+                  background: secondProgress === 100 ? '#1FC881' : secondRagColor,
                 }}
               />
             )}

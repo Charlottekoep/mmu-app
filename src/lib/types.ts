@@ -58,6 +58,7 @@ export type Lever = {
   second_measure:       string | null
   second_current_state: string | null
   second_target:        string | null
+  second_rag_status?:   RagStatus | null
   owner:                string
   rag_status:           RagStatus
   trend:                'up' | 'down' | 'flat' | null
