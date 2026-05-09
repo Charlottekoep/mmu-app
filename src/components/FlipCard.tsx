@@ -69,7 +69,8 @@ type Props = {
 export default function FlipCard({ lever, update, compact = false, alwaysHighlighted = false, onExpand }: Props) {
   const ragColor  = RAG_COLOR[lever.rag_status] ?? RAG_COLOR.amber
   const hasSecond = !!lever.second_measure
-  const cardH     = compact ? (hasSecond ? 240 : 210) : (hasSecond ? 300 : 268)
+  // Card height is always the same regardless of how many metrics are shown
+  const cardH     = compact ? 210 : 268
 
   const hasUpdate   = !!update?.done?.trim() || !!update?.planning?.trim()
   const highlighted = alwaysHighlighted || hasUpdate
@@ -106,9 +107,11 @@ export default function FlipCard({ lever, update, compact = false, alwaysHighlig
       </h3>
 
       {hasSecond ? (
-        /* ── Dual metric layout ── */
-        <div className="mt-3 flex-1 min-h-0 flex flex-col justify-between">
-          <MetricRow
+        /* ── Dual-metric layout: both blocks pushed to the bottom, same as
+           single-metric which uses flex-1 to anchor values to the bottom ── */
+        <>
+          <div className="flex-1" />
+          <MetricBlock
             measure={lever.measure}
             current={lever.current_state}
             target={lever.target}
@@ -116,8 +119,8 @@ export default function FlipCard({ lever, update, compact = false, alwaysHighlig
             ragColor={ragColor}
             compact={compact}
           />
-          <div className="border-t border-white/15 my-2" />
-          <MetricRow
+          <div className="border-t border-white/[0.12] my-2" />
+          <MetricBlock
             measure={lever.second_measure!}
             current={lever.second_current_state ?? '—'}
             target={lever.second_target ?? '—'}
@@ -125,9 +128,9 @@ export default function FlipCard({ lever, update, compact = false, alwaysHighlig
             ragColor={ragColor}
             compact={compact}
           />
-        </div>
+        </>
       ) : (
-        /* ── Single metric layout ── */
+        /* ── Single-metric layout (unchanged) ── */
         <>
           {lever.measure && (
             <div className="mt-3">
@@ -178,7 +181,7 @@ export default function FlipCard({ lever, update, compact = false, alwaysHighlig
         </>
       )}
 
-      {/* Update indicator — pulses to hint there is content inside */}
+      {/* Update indicator */}
       {hasUpdate && (
         <div className="absolute bottom-3 right-3.5 animate-pulse text-[#2969FF]" aria-hidden="true">
           <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
@@ -191,9 +194,10 @@ export default function FlipCard({ lever, update, compact = false, alwaysHighlig
   )
 }
 
-// ─── Metric row (dual-metric variant) ────────────────────────────────────
+// ─── Metric block — mirrors the single-metric visual pattern but slightly
+// more compact so two can stack comfortably within the standard card height ─
 
-function MetricRow({
+function MetricBlock({
   measure, current, target, ragStatus, ragColor, compact,
 }: {
   measure:   string
@@ -203,25 +207,44 @@ function MetricRow({
   ragColor:  string
   compact:   boolean
 }) {
-  const progress = calcProgress(current, target, ragStatus)
+  const progress  = calcProgress(current, target, ragStatus)
+  const textSize  = compact ? '9px'  : '11px'
+  const valueSize = compact ? '12px' : '14px'
+
   return (
     <div>
-      <p className="type-eyebrow text-white/40 truncate">{measure}</p>
-      <div className="mt-1 flex items-baseline gap-2">
-        <span
-          className="font-bold leading-none text-white"
-          style={{ fontSize: compact ? '13px' : '15px' }}
-        >
-          {current}
-        </span>
-        <span className="text-white/25" style={{ fontSize: '10px' }}>→</span>
-        <span
-          className="font-bold leading-none text-white/40"
-          style={{ fontSize: compact ? '13px' : '15px' }}
-        >
-          {target}
-        </span>
+      {/* MEASURE label + description — same pattern as single-metric */}
+      <p className="type-eyebrow text-white/40">Measure</p>
+      <p
+        className="mt-0.5 line-clamp-1 leading-snug text-white/65"
+        style={{ fontSize: textSize }}
+      >
+        {measure}
+      </p>
+
+      {/* CURRENT + TARGET — same labels/layout, slightly smaller values */}
+      <div className="mt-1.5 flex gap-4">
+        <div>
+          <p className="type-eyebrow text-white/40">Current</p>
+          <p
+            className="mt-0.5 font-bold leading-none text-white"
+            style={{ fontSize: valueSize }}
+          >
+            {current}
+          </p>
+        </div>
+        <div>
+          <p className="type-eyebrow text-white/40">Target</p>
+          <p
+            className="mt-0.5 font-bold leading-none text-white/50"
+            style={{ fontSize: valueSize }}
+          >
+            {target}
+          </p>
+        </div>
       </div>
+
+      {/* Progress bar */}
       <div className="mt-1.5 h-0.5 overflow-hidden rounded-full bg-white/10">
         {progress !== null && (
           <div
