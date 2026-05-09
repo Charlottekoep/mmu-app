@@ -212,8 +212,8 @@ export default function Wall({ sessionId, currentSectionType, teamMembers }: Pro
       <button
         onClick={() => setOpen((v) => !v)}
         aria-label="Toggle session wall"
-        className="fixed bottom-8 left-8 z-30 flex items-center gap-1.5 rounded-full px-4 py-2.5 type-eyebrow text-white transition-colors hover:bg-white/15"
-        style={{ background: 'rgba(255,255,255,0.10)', border: '1px solid rgba(255,255,255,0.12)' }}
+        className="fixed bottom-8 left-8 z-30 flex items-center gap-1.5 rounded-full px-4 py-2.5 type-eyebrow text-white transition-colors"
+        style={{ background: '#1a2a5e', border: '1px solid rgba(255,255,255,0.12)' }}
       >
         <span>💬</span>
         {totalCount > 0 && <span>{totalCount}</span>}
