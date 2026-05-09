@@ -82,9 +82,15 @@ export default function FlipCard({ lever, update, compact = false, alwaysHighlig
   const hasUpdate      = !!update?.done?.trim() || !!update?.planning?.trim()
   const highlighted    = alwaysHighlighted || hasUpdate
   // Computed once here to avoid the double-call in the single-metric branch
-  const singleProgress = hasSecond
+  const singleProgress  = hasSecond
     ? null
     : calcProgress(lever.current_state, lever.target, lever.rag_status)
+  const primaryProgress = hasSecond
+    ? calcProgress(lever.current_state, lever.target, lever.rag_status)
+    : null
+  const secondProgress  = hasSecond
+    ? calcProgress(lever.second_current_state ?? '—', lever.second_target ?? '—', lever.rag_status)
+    : null
 
   return (
     <div
@@ -118,27 +124,97 @@ export default function FlipCard({ lever, update, compact = false, alwaysHighlig
       </h3>
 
       {hasSecond ? (
-        /* ── Dual-metric layout: both blocks pushed to the bottom, same as
-           single-metric which uses flex-1 to anchor values to the bottom ── */
         <>
           <div className="flex-1" />
-          <MetricBlock
-            measure={lever.measure}
-            current={lever.current_state}
-            target={lever.target}
-            ragStatus={lever.rag_status}
-            ragColor={ragColor}
-            compact={compact}
-          />
-          <div className="border-t border-white/[0.12] my-2" />
-          <MetricBlock
-            measure={lever.second_measure!}
-            current={lever.second_current_state ?? '—'}
-            target={lever.second_target ?? '—'}
-            ragStatus={lever.rag_status}
-            ragColor={ragColor}
-            compact={compact}
-          />
+
+          {/* Primary metric — "MEASURE" label appears once, here */}
+          <div>
+            <p className="type-eyebrow text-white/40">Measure</p>
+            <p
+              className="mt-0.5 truncate font-bold uppercase leading-none"
+              style={{
+                fontSize:      compact ? '8px'  : '10px',
+                letterSpacing: '0.07em',
+                color:         'rgba(255,255,255,0.65)',
+              }}
+            >
+              {lever.measure}
+            </p>
+            <div className="mt-1.5 flex items-baseline gap-1.5">
+              <span
+                className="font-bold text-white leading-none"
+                style={{ fontSize: compact ? '13px' : '16px' }}
+              >
+                {lever.current_state}
+              </span>
+              <span className="text-white/30" style={{ fontSize: compact ? '9px' : '10px' }}>→</span>
+              <span
+                className="text-white/45 leading-none"
+                style={{ fontSize: compact ? '13px' : '16px' }}
+              >
+                {lever.target}
+              </span>
+            </div>
+            <div
+              className="mt-1.5 overflow-hidden rounded-full bg-white/10"
+              style={{ height: compact ? '5px' : '8px' }}
+            >
+              {primaryProgress !== null && (
+                <div
+                  className="h-full rounded-full"
+                  style={{
+                    width:      `${primaryProgress}%`,
+                    background: primaryProgress === 100 ? '#1FC881' : ragColor,
+                  }}
+                />
+              )}
+            </div>
+          </div>
+
+          <div className="my-2 border-t border-white/[0.08]" />
+
+          {/* Secondary metric — smaller and more muted */}
+          <div>
+            <p
+              className="type-eyebrow truncate"
+              style={{ color: 'rgba(255,255,255,0.30)' }}
+            >
+              {lever.second_measure}
+            </p>
+            <div className="mt-1 flex items-baseline gap-1.5">
+              <span
+                className="font-bold leading-none"
+                style={{ fontSize: compact ? '11px' : '13px', color: 'rgba(255,255,255,0.50)' }}
+              >
+                {lever.second_current_state ?? '—'}
+              </span>
+              <span
+                className="text-white/20"
+                style={{ fontSize: compact ? '8px' : '10px' }}
+              >→</span>
+              <span
+                className="leading-none"
+                style={{ fontSize: compact ? '11px' : '13px', color: 'rgba(255,255,255,0.30)' }}
+              >
+                {lever.second_target ?? '—'}
+              </span>
+            </div>
+            <div
+              className="mt-1.5 overflow-hidden rounded-full"
+              style={{ height: compact ? '3px' : '5px', background: 'rgba(255,255,255,0.07)' }}
+            >
+              {secondProgress !== null && (
+                <div
+                  className="h-full rounded-full"
+                  style={{
+                    width:      `${secondProgress}%`,
+                    background: secondProgress === 100 ? '#1FC881' : ragColor,
+                    opacity:    0.7,
+                  }}
+                />
+              )}
+            </div>
+          </div>
         </>
       ) : (
         /* ── Single-metric layout (unchanged) ── */
@@ -205,65 +281,3 @@ export default function FlipCard({ lever, update, compact = false, alwaysHighlig
   )
 }
 
-// ─── Metric block — mirrors the single-metric visual pattern but slightly
-// more compact so two can stack comfortably within the standard card height ─
-
-function MetricBlock({
-  measure, current, target, ragStatus, ragColor, compact,
-}: {
-  measure:   string
-  current:   string
-  target:    string
-  ragStatus: string
-  ragColor:  string
-  compact:   boolean
-}) {
-  const progress  = calcProgress(current, target, ragStatus)
-  const textSize  = compact ? '9px'  : '11px'
-  const valueSize = compact ? '12px' : '14px'
-
-  return (
-    <div>
-      {/* MEASURE label + description — same pattern as single-metric */}
-      <p className="type-eyebrow text-white/40">Measure</p>
-      <p
-        className="mt-0.5 line-clamp-1 leading-snug text-white/65"
-        style={{ fontSize: textSize }}
-      >
-        {measure}
-      </p>
-
-      {/* CURRENT + TARGET — same labels/layout, slightly smaller values */}
-      <div className="mt-1.5 flex gap-4">
-        <div>
-          <p className="type-eyebrow text-white/40">Current</p>
-          <p
-            className="mt-0.5 font-bold leading-none text-white"
-            style={{ fontSize: valueSize }}
-          >
-            {current}
-          </p>
-        </div>
-        <div>
-          <p className="type-eyebrow text-white/40">Target</p>
-          <p
-            className="mt-0.5 font-bold leading-none text-white/50"
-            style={{ fontSize: valueSize }}
-          >
-            {target}
-          </p>
-        </div>
-      </div>
-
-      {/* Progress bar */}
-      <div className="mt-1.5 h-0.5 overflow-hidden rounded-full bg-white/10">
-        {progress !== null && (
-          <div
-            className="h-full rounded-full"
-            style={{ width: `${progress}%`, background: progress === 100 ? '#1FC881' : ragColor }}
-          />
-        )}
-      </div>
-    </div>
-  )
-}
