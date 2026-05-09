@@ -37,6 +37,7 @@ export type Database = {
           welcome_message: string | null
           created_by:      string
           created_at:      string
+          is_archived:     boolean
         }
         Insert: {
           id?:              string
@@ -45,6 +46,7 @@ export type Database = {
           welcome_message?: string | null
           created_by:       string
           created_at?:      string
+          is_archived?:     boolean
         }
         Update: Partial<Database['public']['Tables']['mmu_sessions']['Row']>
         Relationships: []

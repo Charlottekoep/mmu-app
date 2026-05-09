@@ -35,6 +35,9 @@ export default async function EditPage({
 
   if (!session) notFound()
 
+  const today    = new Date().toISOString().split('T')[0]
+  const readOnly = session.date < today
+
   return (
     <EditShell
       session={session}
@@ -44,6 +47,7 @@ export default async function EditPage({
       snapshots={snapshots ?? []}
       leaderboard={leaderboard ?? []}
       initialSectionId={initialSectionId}
+      readOnly={readOnly}
     />
   )
 }

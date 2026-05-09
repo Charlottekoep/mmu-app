@@ -40,6 +40,7 @@ type Props = {
   snapshots:         LeverSnapshot[]
   leaderboard:       LeaderboardEntry[]
   initialSectionId?: string
+  readOnly?:         boolean
 }
 
 // ─── Shell ────────────────────────────────────────────────────────────────
@@ -66,6 +67,7 @@ export default function EditShell({
   levers,
   snapshots,
   initialSectionId,
+  readOnly = false,
 }: Props) {
   const welcomeSection   = sections.find((s) => s.section_type === 'welcome')
   const displaySections  = sections.filter((s) => s.section_type !== 'welcome')
@@ -184,6 +186,21 @@ export default function EditShell({
         </div>
       </nav>
 
+      {/* ── Read-only banner ────────────────────────────────────────────── */}
+      {readOnly && (
+        <div
+          className="flex flex-shrink-0 items-center gap-2.5 px-8 py-2.5 text-[13px] font-medium"
+          style={{ background: 'rgba(255,171,0,0.10)', color: '#FFAB00', borderBottom: '1px solid rgba(255,171,0,0.18)' }}
+        >
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+            <path d="M7 1.5L12.5 11.5H1.5L7 1.5Z" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round"/>
+            <path d="M7 5.5V8" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
+            <circle cx="7" cy="10" r="0.75" fill="currentColor"/>
+          </svg>
+          This MMU has already taken place — editing is disabled
+        </div>
+      )}
+
       {/* ── Sidebar + main ──────────────────────────────────────────────── */}
       <div className="flex flex-1 overflow-hidden">
 
@@ -256,14 +273,19 @@ export default function EditShell({
             <div>
               <h1 className="text-[15px] font-bold text-[#262626]">{activeSectionLabel}</h1>
               <p className="mt-0.5 text-[11px] text-[#969696]">
-                Fill in content before the meeting
+                {readOnly ? 'Past session — view only' : 'Fill in content before the meeting'}
               </p>
             </div>
           </header>
 
           {/* Form area */}
           <main className="flex-1 overflow-y-auto bg-[#F7F7F7]">
-            {renderContent()}
+            <fieldset
+              disabled={readOnly}
+              style={{ border: 'none', padding: 0, margin: 0, minWidth: 0, display: 'contents' }}
+            >
+              {renderContent()}
+            </fieldset>
           </main>
         </div>
       </div>

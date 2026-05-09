@@ -18,6 +18,7 @@ export default async function HomePage() {
   const { data } = await supabase
     .from('mmu_sessions')
     .select('*')
+    .eq('is_archived', false)
     .order('date', { ascending: false })
     .limit(10)
 

@@ -35,6 +35,7 @@ export type MmuSession = {
   welcome_message: string | null
   created_by:      string
   created_at:      string
+  is_archived:     boolean
 }
 
 export type SessionSection = {
