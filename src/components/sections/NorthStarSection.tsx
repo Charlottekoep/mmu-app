@@ -108,11 +108,19 @@ export default function NorthStarSection({ section, sessionId }: Props) {
     )
   }
 
-  const groups = GROUPS.map(({ key, label }) => ({
-    key,
-    label,
-    levers: levers.filter((l) => l.focus_area === key),
-  })).filter((g) => g.levers.length > 0)
+  const knownKeys = new Set(GROUPS.map((g) => g.key))
+  const orphans   = levers.filter((l) => !knownKeys.has(l.focus_area))
+
+  const groups = [
+    ...GROUPS.map(({ key, label }) => ({
+      key,
+      label,
+      levers: levers.filter((l) => l.focus_area === key),
+    })).filter((g) => g.levers.length > 0),
+    ...(orphans.length > 0
+      ? [{ key: '__other__', label: 'Other', levers: orphans }]
+      : []),
+  ]
 
   return (
     <DarkPageLayout>
