@@ -33,7 +33,14 @@ export function calcProgress(
 
   const c = parseNumeric(current)
   const t = parseNumeric(target)
-  if (c === null || t === null || t === 0) return null
+  if (c === null || t === null) return null
+
+  // Special case: target is zero (e.g. "1 overdue → 0")
+  // Use inverse proportion so the bar isn't empty while work remains
+  if (t === 0) {
+    if (rag === 'green' || c === 0) return 100
+    return Math.round((1 / (1 + c)) * 100)
+  }
 
   // Presenter has confirmed the metric is met — fill bar completely
   if (rag === 'green') return 100

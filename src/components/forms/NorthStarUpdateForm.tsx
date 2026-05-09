@@ -320,45 +320,40 @@ function LeverRow({ lever, leverOwner, leverMeasure, teamMembers, state, isSavin
     <div className="rounded-xl border border-[#DEDEDE] bg-white overflow-hidden">
 
       {lever.second_measure ? (
-        /* ── Dual-measure: name/owner row + two metric control rows ── */
-        <div className="px-4 py-3 space-y-2.5">
-
-          {/* Lever name + owner + save indicator + expand toggle */}
-          <div className="flex items-center gap-4">
-            <div className="h-2.5 w-2.5 flex-shrink-0 rounded-full" style={{ background: ragColor }} />
-            <div className="flex-1 min-w-0">
-              <p className="text-[13px] font-bold text-[#262626] truncate">{lever.name}</p>
-              <p className="text-[11px] text-[#969696] truncate">{leverOwner || lever.owner}</p>
-            </div>
-            <span className="w-12 text-right text-[11px] text-[#969696]">
-              {isSaving ? '…' : isSaved ? '✓' : ''}
-            </span>
-            {expandBtn}
+        /* ── Dual-measure: metric rows on the right, matching single-measure alignment ── */
+        <div className="flex items-center gap-4 px-4 py-3">
+          <div className="h-2.5 w-2.5 flex-shrink-0 rounded-full" style={{ background: ragColor }} />
+          <div className="flex-1 min-w-0">
+            <p className="text-[13px] font-bold text-[#262626] truncate">{lever.name}</p>
+            <p className="text-[11px] text-[#969696] truncate">{leverOwner || lever.owner}</p>
           </div>
 
-          {/* Primary metric — current state, RAG, trend */}
-          <MetricControls
-            label={lever.measure}
-            current={state.current_state}
-            ragStatus={state.rag_status}
-            trend={state.trend}
-            labelColor="#2969FF"
-            onCurrent={(v) => onChange({ current_state: v })}
-            onRag={(v) => onChange({ rag_status: v })}
-            onTrend={(v) => onChange({ trend: v })}
-          />
+          {/* Two metric rows stacked where the single input normally sits */}
+          <div className="flex flex-col gap-1.5">
+            <MetricControls
+              label={lever.measure}
+              current={state.current_state}
+              ragStatus={state.rag_status}
+              trend={state.trend}
+              onCurrent={(v) => onChange({ current_state: v })}
+              onRag={(v) => onChange({ rag_status: v })}
+              onTrend={(v) => onChange({ trend: v })}
+            />
+            <MetricControls
+              label={lever.second_measure}
+              current={state.second_current_state}
+              ragStatus={state.second_rag_status}
+              trend={state.second_trend}
+              onCurrent={(v) => onChange({ second_current_state: v })}
+              onRag={(v) => onChange({ second_rag_status: v })}
+              onTrend={(v) => onChange({ second_trend: v })}
+            />
+          </div>
 
-          {/* Secondary metric — current state, RAG, trend */}
-          <MetricControls
-            label={lever.second_measure}
-            current={state.second_current_state}
-            ragStatus={state.second_rag_status}
-            trend={state.second_trend}
-            labelColor="#969696"
-            onCurrent={(v) => onChange({ second_current_state: v })}
-            onRag={(v) => onChange({ second_rag_status: v })}
-            onTrend={(v) => onChange({ second_trend: v })}
-          />
+          <span className="w-12 text-right text-[11px] text-[#969696]">
+            {isSaving ? '…' : isSaved ? '✓' : ''}
+          </span>
+          {expandBtn}
         </div>
       ) : (
         /* ── Single-measure: standard flat header row ── */
@@ -515,25 +510,19 @@ function LeverRow({ lever, leverOwner, leverMeasure, teamMembers, state, isSavin
 // ─── Metric controls — reused for each metric row in dual-measure levers ─
 
 function MetricControls({
-  label, current, ragStatus, trend, labelColor, onCurrent, onRag, onTrend,
+  label, current, ragStatus, trend, onCurrent, onRag, onTrend,
 }: {
-  label:      string
-  current:    string
-  ragStatus:  RagStatus
-  trend:      'up' | 'flat' | 'down' | null
-  labelColor: string
-  onCurrent:  (v: string) => void
-  onRag:      (v: RagStatus) => void
-  onTrend:    (v: 'up' | 'flat' | 'down' | null) => void
+  label:     string
+  current:   string
+  ragStatus: RagStatus
+  trend:     'up' | 'flat' | 'down' | null
+  onCurrent: (v: string) => void
+  onRag:     (v: RagStatus) => void
+  onTrend:   (v: 'up' | 'flat' | 'down' | null) => void
 }) {
   return (
-    <div className="flex items-center gap-2 pl-[22px]">
-      <p
-        className="type-eyebrow w-28 shrink-0 truncate"
-        style={{ color: labelColor }}
-      >
-        {label}
-      </p>
+    <div className="flex items-center gap-2">
+      <span className="text-[11px] text-[#969696] shrink-0">{label}</span>
       <input
         type="text"
         value={current}
