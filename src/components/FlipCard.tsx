@@ -84,9 +84,15 @@ export default function FlipCard({ lever, update, compact = false, alwaysHighlig
   const ragColor       = RAG_COLOR[lever.rag_status]              ?? RAG_COLOR.amber
   const secondRagColor = RAG_COLOR[lever.second_rag_status ?? ''] ?? RAG_COLOR.amber
   const hasSecond = !!lever.second_measure
-  const cardH     = hasSecond
-    ? (compact ? 268 : 340)
-    : (compact ? 210 : 268)
+  const cardH     = compact ? 210 : 268
+
+  // Worst RAG across both metrics (red > amber > green) — only for dual-metric cards
+  const dotColor = (() => {
+    if (!hasSecond || !lever.second_rag_status) return ragColor
+    if (lever.rag_status === 'red'   || lever.second_rag_status === 'red')   return RAG_COLOR.red
+    if (lever.rag_status === 'amber' || lever.second_rag_status === 'amber') return RAG_COLOR.amber
+    return RAG_COLOR.green
+  })()
 
   const hasUpdate      = !!update?.done?.trim() || !!update?.planning?.trim()
   const highlighted    = alwaysHighlighted || hasUpdate
@@ -129,10 +135,10 @@ export default function FlipCard({ lever, update, compact = false, alwaysHighlig
         transition:  'opacity 0.3s ease, border-color 0.3s ease',
       }}
     >
-      {/* RAG dot */}
+      {/* RAG dot — worst RAG for dual-metric, own RAG for single */}
       <div
         className="absolute right-4 top-4 h-2.5 w-2.5 rounded-full"
-        style={{ background: ragColor }}
+        style={{ background: dotColor }}
       />
 
       {/* 1. Owner */}
@@ -200,31 +206,9 @@ export default function FlipCard({ lever, update, compact = false, alwaysHighlig
             )}
           </div>
 
-          {/* Second metric: current / target */}
-          <div className="flex gap-5 pt-3">
-            <div>
-              <p className="type-eyebrow text-white/40">Current</p>
-              <p
-                className="mt-1 font-bold leading-none text-white"
-                style={{ fontSize: compact ? '14px' : '20px' }}
-              >
-                {lever.second_current_state ?? '—'}
-              </p>
-            </div>
-            <div>
-              <p className="type-eyebrow text-white/40">Target</p>
-              <p
-                className="mt-1 font-bold leading-none text-white/50"
-                style={{ fontSize: compact ? '14px' : '20px' }}
-              >
-                {lever.second_target ?? '—'}
-              </p>
-            </div>
-          </div>
-
           {/* Secondary bar */}
           <div
-            className="mt-3 overflow-hidden rounded-full bg-white/10"
+            className="mt-2 overflow-hidden rounded-full bg-white/10"
             style={{ height: compact ? '5px' : '6px' }}
           >
             {secondProgress !== null && (
@@ -237,6 +221,16 @@ export default function FlipCard({ lever, update, compact = false, alwaysHighlig
               />
             )}
           </div>
+
+          {/* Second metric inline values */}
+          {lever.second_current_state && lever.second_target && (
+            <p
+              className="mt-1.5 truncate leading-none"
+              style={{ fontSize: compact ? '9px' : '11px', color: 'rgba(255,255,255,0.65)' }}
+            >
+              {lever.second_current_state} → {lever.second_target}
+            </p>
+          )}
         </>
       ) : (
         /* ── Single-metric layout (unchanged) ── */
