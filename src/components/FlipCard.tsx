@@ -95,9 +95,24 @@ export default function FlipCard({ lever, update, compact = false, alwaysHighlig
   const primaryProgress = hasSecond
     ? calcProgress(lever.current_state, lever.target, lever.rag_status)
     : null
-  const secondProgress  = hasSecond
-    ? calcProgress(lever.second_current_state ?? '—', lever.second_target ?? '—', lever.rag_status)
-    : null
+
+  // Secondary bar: explicit burn-down calculation.
+  // Only renders when both second_current_state and second_target are present
+  // and parseable.  Uses inverse proportion for "→ 0" targets so the bar
+  // visually fills as overdue items are resolved.
+  const secondProgress: number | null = (() => {
+    if (!hasSecond) return null
+    const rawC = lever.second_current_state
+    const rawT = lever.second_target
+    if (!rawC || !rawT) return null
+    const c = parseNumeric(rawC)
+    const t = parseNumeric(rawT)
+    if (c === null || t === null) return null
+    if (lever.rag_status === 'green' || c === 0) return 100
+    if (t === 0) return Math.round((1 / (1 + c)) * 100)
+    if (c > t)   return Math.min(100, Math.round((t / c) * 100))
+    return Math.min(100, Math.round((c / t) * 100))
+  })()
 
   return (
     <div
@@ -186,16 +201,12 @@ export default function FlipCard({ lever, update, compact = false, alwaysHighlig
 
           {/* Secondary bar */}
           <div
-            className="mt-1 overflow-hidden rounded-full"
-            style={{
-              height:     compact ? '3px' : '4px',
-              background: 'rgba(255,255,255,0.07)',
-              opacity:    0.7,
-            }}
+            className="mt-2 overflow-hidden rounded-full bg-white/[0.12]"
+            style={{ height: compact ? '3px' : '4px' }}
           >
             {secondProgress !== null && (
               <div
-                className="h-full rounded-full"
+                className="h-full rounded-full opacity-70"
                 style={{
                   width:      `${secondProgress}%`,
                   background: secondProgress === 100 ? '#1FC881' : ragColor,
