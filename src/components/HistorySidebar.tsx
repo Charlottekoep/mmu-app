@@ -58,14 +58,14 @@ export default function HistorySidebar({ open, onClose, currentSessionId }: Prop
       .from('mmu_sessions')
       .update({ is_archived: true })
       .eq('id', id)
-    if (!error) {
-      setSessions((prev) => prev.map((s) => s.id === id ? { ...s, is_archived: true } : s))
-    }
     setConfirmArchiveId(null)
     setArchiving(false)
+    if (!error) {
+      setSessions((prev) => prev.filter((s) => s.id !== id))
+    }
   }
 
-  // Fetch sessions and user email lazily on first open
+  // Fetch sessions and user email lazily on first open; re-fetch when showArchived changes
   useEffect(() => {
     if (!open) return
 
@@ -73,19 +73,21 @@ export default function HistorySidebar({ open, onClose, currentSessionId }: Prop
       setUserEmail(data.session?.user.email ?? null)
     })
 
-    if (sessions.length > 0) return
     setLoading(true)
-    getBrowserClient()
+    let query = getBrowserClient()
       .from('mmu_sessions')
       .select('*')
       .order('date', { ascending: false })
-      .then(({ data }) => {
-        setSessions(data ?? [])
-        setLoading(false)
-      })
-  }, [open, sessions.length])
+    if (!showArchived) {
+      query = query.eq('is_archived', false)
+    }
+    query.then(({ data }) => {
+      setSessions(data ?? [])
+      setLoading(false)
+    })
+  }, [open, showArchived])
 
-  const visibleSessions = sessions.filter((s) => showArchived || !s.is_archived)
+  const visibleSessions = sessions
 
   return (
     <>
