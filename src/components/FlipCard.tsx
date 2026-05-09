@@ -54,6 +54,25 @@ export function calcProgress(
   return Math.min(100, (c / t) * 100)
 }
 
+// ─── Trend arrow ──────────────────────────────────────────────────────────
+
+const TREND_ARROW: Record<string, { symbol: string; color: string }> = {
+  up:   { symbol: '↑', color: '#1FC881' },
+  flat: { symbol: '→', color: '#FFAB00' },
+  down: { symbol: '↓', color: '#D50000' },
+}
+
+function TrendArrow({ trend, size }: { trend: string | null | undefined; size: number }) {
+  if (!trend) return null
+  const t = TREND_ARROW[trend]
+  if (!t) return null
+  return (
+    <span style={{ fontSize: size * 0.7, color: t.color, marginLeft: '4px', lineHeight: 1 }}>
+      {t.symbol}
+    </span>
+  )
+}
+
 // ─── Constants ────────────────────────────────────────────────────────────
 
 export const RAG_COLOR: Record<string, string> = {
@@ -177,6 +196,7 @@ export default function FlipCard({ lever, update, compact = false, alwaysHighlig
                 style={{ fontSize: compact ? '14px' : '20px' }}
               >
                 {lever.current_state}
+                <TrendArrow trend={lever.trend} size={compact ? 14 : 20} />
               </p>
             </div>
             <div>
@@ -257,6 +277,7 @@ export default function FlipCard({ lever, update, compact = false, alwaysHighlig
                 style={{ fontSize: compact ? '14px' : '20px' }}
               >
                 {lever.current_state}
+                <TrendArrow trend={lever.trend} size={compact ? 14 : 20} />
               </p>
             </div>
             <div>
