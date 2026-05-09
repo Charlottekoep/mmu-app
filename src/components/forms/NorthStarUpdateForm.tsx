@@ -80,6 +80,10 @@ export default function NorthStarUpdateForm({ section, sessionId, levers, snapsh
   const [leverOwners,  setLeverOwners] = useState<Record<string, string>>(
     Object.fromEntries(levers.map((l) => [l.id, l.owner ?? ''])),
   )
+  // leverMeasures tracks the measure text per lever (matches levers.measure column)
+  const [leverMeasures, setLeverMeasures] = useState<Record<string, string>>(
+    Object.fromEntries(levers.map((l) => [l.id, l.measure ?? ''])),
+  )
   const [images,      setImages]     = useState<ImageItem[]>(
     normaliseImages(
       Array.isArray((section.content as { images?: unknown[] })?.images)
@@ -93,9 +97,10 @@ export default function NorthStarUpdateForm({ section, sessionId, levers, snapsh
 
   // Refs hold the latest merged state for each lever so debounced saves
   // always send the most recent values, not a stale closure snapshot.
-  const pendingStates     = useRef<Record<string, LeverState>>({})
-  const debounceRefs      = useRef<Record<string, ReturnType<typeof setTimeout>>>({})
-  const ownerDebounceRefs = useRef<Record<string, ReturnType<typeof setTimeout>>>({})
+  const pendingStates       = useRef<Record<string, LeverState>>({})
+  const debounceRefs        = useRef<Record<string, ReturnType<typeof setTimeout>>>({})
+  const ownerDebounceRefs   = useRef<Record<string, ReturnType<typeof setTimeout>>>({})
+  const measureDebounceRefs = useRef<Record<string, ReturnType<typeof setTimeout>>>({})
 
   // ── Snapshot save ────────────────────────────────────────────────────────
 
@@ -157,6 +162,24 @@ export default function NorthStarUpdateForm({ section, sessionId, levers, snapsh
     setTimeout(() => setSaved((s) => s === leverId ? null : s), 2000)
   }, [])
 
+  // ── Measure save — updates levers.measure (independent of snapshot saves) ─
+
+  const saveLeverMeasure = useCallback(async (leverId: string, measure: string) => {
+    setSaving(leverId); setSaveError(null)
+    const { error: err } = await getBrowserClient()
+      .from('levers')
+      .update({ measure })
+      .eq('id', leverId)
+    if (err) {
+      setSaving(null); setSaveError(leverId)
+      setTimeout(() => setSaveError((e) => e === leverId ? null : e), 3000)
+      return
+    }
+    setSaving(null)
+    setSaved(leverId)
+    setTimeout(() => setSaved((s) => s === leverId ? null : s), 2000)
+  }, [])
+
   // ── State update — stores latest merged state in ref before debouncing ──
 
   function update(leverId: string, patch: Partial<LeverState>) {
@@ -179,6 +202,16 @@ export default function NorthStarUpdateForm({ section, sessionId, levers, snapsh
     clearTimeout(ownerDebounceRefs.current[leverId])
     ownerDebounceRefs.current[leverId] = setTimeout(() => {
       saveLeverOwner(leverId, owner)
+    }, 800)
+  }
+
+  // ── Measure update — fully independent of snapshot saves ─────────────────
+
+  function updateMeasure(leverId: string, measure: string) {
+    setLeverMeasures((prev) => ({ ...prev, [leverId]: measure }))
+    clearTimeout(measureDebounceRefs.current[leverId])
+    measureDebounceRefs.current[leverId] = setTimeout(() => {
+      saveLeverMeasure(leverId, measure)
     }, 800)
   }
 
@@ -218,12 +251,14 @@ export default function NorthStarUpdateForm({ section, sessionId, levers, snapsh
                   key={lever.id}
                   lever={lever}
                   leverOwner={leverOwners[lever.id] ?? lever.owner ?? ''}
+                  leverMeasure={leverMeasures[lever.id] ?? lever.measure ?? ''}
                   teamMembers={teamMembers}
                   state={state}
                   isSaving={saving === lever.id}
                   isSaved={saved  === lever.id}
                   onChange={(patch) => update(lever.id, patch)}
                   onOwnerChange={(owner) => updateOwner(lever.id, owner)}
+                  onMeasureChange={(measure) => updateMeasure(lever.id, measure)}
                 />
               )
             })}
@@ -247,17 +282,19 @@ export default function NorthStarUpdateForm({ section, sessionId, levers, snapsh
 // ─── Lever row ────────────────────────────────────────────────────────────
 
 type LeverRowProps = {
-  lever:          Lever
-  leverOwner:     string
-  teamMembers:    TeamMember[]
-  state:          LeverState
-  isSaving:       boolean
-  isSaved:        boolean
-  onChange:       (patch: Partial<LeverState>) => void
-  onOwnerChange:  (owner: string) => void
+  lever:           Lever
+  leverOwner:      string
+  leverMeasure:    string
+  teamMembers:     TeamMember[]
+  state:           LeverState
+  isSaving:        boolean
+  isSaved:         boolean
+  onChange:        (patch: Partial<LeverState>) => void
+  onOwnerChange:   (owner: string) => void
+  onMeasureChange: (measure: string) => void
 }
 
-function LeverRow({ lever, leverOwner, teamMembers, state, isSaving, isSaved, onChange, onOwnerChange }: LeverRowProps) {
+function LeverRow({ lever, leverOwner, leverMeasure, teamMembers, state, isSaving, isSaved, onChange, onOwnerChange, onMeasureChange }: LeverRowProps) {
   const [expanded, setExpanded] = useState(false)
 
   const ragColor  = { green: '#1FC881', amber: '#FFAB00', red: '#D50000' }[state.rag_status] ?? '#FFAB00'
@@ -373,6 +410,20 @@ function LeverRow({ lever, leverOwner, teamMembers, state, isSaving, isSaved, on
                 ))}
               </select>
             </div>
+          </div>
+
+          {/* ── Measure ──────────────────────────────────────────────── */}
+          <div className="flex flex-col px-4 py-3">
+            <label className="block text-[11px] font-bold uppercase tracking-widest text-[#2969FF] mb-1.5">
+              Measure
+            </label>
+            <input
+              type="text"
+              value={leverMeasure}
+              onChange={(e) => onMeasureChange(e.target.value)}
+              placeholder="How we measure this lever…"
+              className="w-full rounded-lg border border-[#DEDEDE] bg-white px-3 py-2 text-[13px] text-[#262626] placeholder-[#969696] outline-none focus:border-[#2969FF] transition-colors"
+            />
           </div>
 
           {/* ── What have we done ────────────────────────────────────── */}
