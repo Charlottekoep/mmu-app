@@ -20,14 +20,15 @@ const GROUPS: { key: string; label: string }[] = [
 // ─── Types ────────────────────────────────────────────────────────────────
 
 type LeverState = {
-  lever_id:        string
-  current_state:   string
-  rag_status:      RagStatus
-  trend:           'up' | 'flat' | 'down' | null
-  notes:           string
-  done_update:     string
-  planning_update: string
-  images:          string[]
+  lever_id:             string
+  current_state:        string
+  second_current_state: string
+  rag_status:           RagStatus
+  trend:                'up' | 'flat' | 'down' | null
+  notes:                string
+  done_update:          string
+  planning_update:      string
+  images:               string[]
 }
 
 type Props = {
@@ -62,14 +63,15 @@ export default function NorthStarUpdateForm({ section, sessionId, levers, snapsh
     for (const lever of levers) {
       const snap = snapshotMap.get(lever.id)
       out[lever.id] = {
-        lever_id:        lever.id,
-        current_state:   snap?.current_state   ?? lever.current_state,
-        rag_status:      snap?.rag_status       ?? lever.rag_status,
-        trend:           snap?.trend            ?? lever.trend,
-        notes:           snap?.notes            ?? lever.notes ?? '',
-        done_update:     snap?.done_update      ?? '',
-        planning_update: snap?.planning_update  ?? '',
-        images:          snap?.images           ?? [],
+        lever_id:             lever.id,
+        current_state:        snap?.current_state        ?? lever.current_state,
+        second_current_state: snap?.second_current_state ?? lever.second_current_state ?? '',
+        rag_status:           snap?.rag_status           ?? lever.rag_status,
+        trend:                snap?.trend                ?? lever.trend,
+        notes:                snap?.notes                ?? lever.notes ?? '',
+        done_update:          snap?.done_update          ?? '',
+        planning_update:      snap?.planning_update      ?? '',
+        images:               snap?.images               ?? [],
       }
     }
     return out
@@ -121,16 +123,17 @@ export default function NorthStarUpdateForm({ section, sessionId, levers, snapsh
     }
 
     const { error: insErr } = await supabase.from('lever_snapshots').insert({
-      session_id:      sessionId,
-      lever_id:        leverId,
-      current_state:   state.current_state,
-      rag_status:      state.rag_status,
-      trend:           state.trend,
-      notes:           state.notes           || null,
-      done_update:     state.done_update     || null,
-      planning_update: state.planning_update || null,
-      images:          state.images,
-      snapshotted_at:  new Date().toISOString(),
+      session_id:           sessionId,
+      lever_id:             leverId,
+      current_state:        state.current_state,
+      second_current_state: state.second_current_state || null,
+      rag_status:           state.rag_status,
+      trend:                state.trend,
+      notes:                state.notes           || null,
+      done_update:          state.done_update     || null,
+      planning_update:      state.planning_update || null,
+      images:               state.images,
+      snapshotted_at:       new Date().toISOString(),
     })
 
     if (insErr) {
@@ -425,6 +428,22 @@ function LeverRow({ lever, leverOwner, leverMeasure, teamMembers, state, isSavin
               className="w-full rounded-lg border border-[#DEDEDE] bg-white px-3 py-2 text-[13px] text-[#262626] placeholder-[#969696] outline-none focus:border-[#2969FF] transition-colors"
             />
           </div>
+
+          {/* ── Second current state (only when lever has two metrics) ─ */}
+          {lever.second_measure && (
+            <div className="flex flex-col px-4 py-3">
+              <label className="block text-[11px] font-bold uppercase tracking-widest text-[#2969FF] mb-1.5">
+                Current — {lever.second_measure}
+              </label>
+              <input
+                type="text"
+                value={state.second_current_state}
+                onChange={(e) => onChange({ second_current_state: e.target.value })}
+                placeholder="Current value…"
+                className="w-full rounded-lg border border-[#DEDEDE] bg-white px-3 py-2 text-[13px] text-[#262626] placeholder-[#969696] outline-none focus:border-[#2969FF] transition-colors"
+              />
+            </div>
+          )}
 
           {/* ── What have we done ────────────────────────────────────── */}
           <div className="flex flex-col px-4 py-3">

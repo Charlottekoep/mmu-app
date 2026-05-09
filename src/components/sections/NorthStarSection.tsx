@@ -66,10 +66,11 @@ export default function NorthStarSection({ section, sessionId }: Props) {
           if (!snap) return lever
           return {
             ...lever,
-            current_state: snap.current_state,
-            rag_status:    snap.rag_status,
-            trend:         snap.trend,
-            notes:         snap.notes,
+            current_state:        snap.current_state,
+            second_current_state: snap.second_current_state ?? lever.second_current_state,
+            rag_status:           snap.rag_status,
+            trend:                snap.trend,
+            notes:                snap.notes,
           }
         }),
       )

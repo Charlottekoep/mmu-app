@@ -48,18 +48,21 @@ export type SessionSection = {
 }
 
 export type Lever = {
-  id:            string
-  name:          string
-  focus_area:    string
-  sub_objective: string | null
-  measure:       string
-  current_state: string
-  target:        string
-  owner:         string
-  rag_status:    RagStatus
-  trend:         'up' | 'down' | 'flat' | null
-  notes:         string | null
-  display_order: number
+  id:                   string
+  name:                 string
+  focus_area:           string
+  sub_objective:        string | null
+  measure:              string
+  current_state:        string
+  target:               string
+  second_measure:       string | null
+  second_current_state: string | null
+  second_target:        string | null
+  owner:                string
+  rag_status:           RagStatus
+  trend:                'up' | 'down' | 'flat' | null
+  notes:                string | null
+  display_order:        number
 }
 
 export type TeamMember = {
@@ -79,15 +82,16 @@ export type LeaderboardEntry = {
 }
 
 export type LeverSnapshot = {
-  id:              string
-  session_id:      string
-  lever_id:        string
-  current_state:   string
-  rag_status:      RagStatus
-  trend:           'up' | 'down' | 'flat' | null
-  notes:           string | null
-  done_update:     string | null
-  planning_update: string | null
-  images:          string[]
-  snapshotted_at:  string
+  id:                   string
+  session_id:           string
+  lever_id:             string
+  current_state:        string
+  second_current_state: string | null
+  rag_status:           RagStatus
+  trend:                'up' | 'down' | 'flat' | null
+  notes:                string | null
+  done_update:          string | null
+  planning_update:      string | null
+  images:               string[]
+  snapshotted_at:       string
 }

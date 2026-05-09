@@ -27,9 +27,10 @@ export default function LoginPage() {
 
     setStatus('loading')
 
+    const origin = process.env.NEXT_PUBLIC_SITE_URL ?? window.location.origin
     const { error: sbError } = await getBrowserClient().auth.signInWithOtp({
       email,
-      options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
+      options: { emailRedirectTo: `${origin}/auth/callback` },
     })
 
     if (sbError) {

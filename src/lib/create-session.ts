@@ -88,15 +88,16 @@ export async function createSession(): Promise<string | null> {
       if (source) {
         await supabase.from('lever_snapshots').insert(
           snapsBySession.get(source.id)!.map((snap) => ({
-            session_id:      session.id,
-            lever_id:        snap.lever_id,
-            current_state:   snap.current_state,
-            rag_status:      snap.rag_status,
-            trend:           snap.trend,
-            notes:           snap.notes,
-            done_update:     snap.done_update,
-            planning_update: snap.planning_update,
-            images:          snap.images,
+            session_id:           session.id,
+            lever_id:             snap.lever_id,
+            current_state:        snap.current_state,
+            second_current_state: snap.second_current_state,
+            rag_status:           snap.rag_status,
+            trend:                snap.trend,
+            notes:                snap.notes,
+            done_update:          snap.done_update,
+            planning_update:      snap.planning_update,
+            images:               snap.images,
           })),
         )
       }
