@@ -102,11 +102,13 @@ export async function createSession(): Promise<CreateSessionResult> {
             current_state:        snap.current_state,
             second_current_state: snap.second_current_state,
             rag_status:           snap.rag_status,
+            second_rag_status:    snap.second_rag_status,
             trend:                snap.trend,
+            second_trend:         snap.second_trend,
             notes:                snap.notes,
-            done_update:          snap.done_update,
-            planning_update:      snap.planning_update,
-            images:               snap.images,
+            done_update:          null,
+            planning_update:      null,
+            images:               [],
           })),
         )
       }
