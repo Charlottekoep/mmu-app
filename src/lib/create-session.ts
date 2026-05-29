@@ -1,6 +1,7 @@
 'use client'
 
 import { getBrowserClient } from '@/lib/supabase'
+import { isAdminEmail } from '@/lib/admin'
 import type { SectionType } from '@/lib/types'
 
 const DEFAULT_SECTIONS: { section_type: SectionType; display_order: number }[] = [
@@ -14,11 +15,18 @@ const DEFAULT_SECTIONS: { section_type: SectionType; display_order: number }[] =
   { section_type: 'the_wall',      display_order: 7 },
 ]
 
+export type CreateSessionResult = { id: string; error: null } | { id: null; error: string }
+
 // Creates a new MMU session with default sections and copies lever snapshots
-// from the most recent previous session that has them. Returns the new
-// session id on success, or null on failure.
-export async function createSession(): Promise<string | null> {
+// from the most recent previous session that has them.
+export async function createSession(): Promise<CreateSessionResult> {
   const supabase = getBrowserClient()
+
+  // ── 0. Admin guard ────────────────────────────────────────────────────────
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!isAdminEmail(user?.email)) {
+    return { id: null, error: 'Only admins can create new MMU sessions.' }
+  }
 
   // ── 1. Determine next session number ──────────────────────────────────────
   const { data: latest } = await supabase
@@ -40,7 +48,7 @@ export async function createSession(): Promise<string | null> {
     .select()
     .single()
 
-  if (sessionErr || !session) return null
+  if (sessionErr || !session) return { id: null, error: 'Failed to create session.' }
 
   // ── 3. Create default sections ────────────────────────────────────────────
   const { error: sectionsErr } = await supabase
@@ -54,7 +62,7 @@ export async function createSession(): Promise<string | null> {
       })),
     )
 
-  if (sectionsErr) return null
+  if (sectionsErr) return { id: null, error: 'Failed to create session sections.' }
 
   // ── 4. Copy lever snapshots from the most recent session that has them ─────
   // Fetch the 10 most recent previous sessions in one shot, then fetch all
@@ -107,5 +115,5 @@ export async function createSession(): Promise<string | null> {
     // view will read from the base levers table as before.
   }
 
-  return session.id
+  return { id: session.id, error: null }
 }

@@ -5,9 +5,8 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { getBrowserClient } from '@/lib/supabase'
 import { createSession } from '@/lib/create-session'
+import { isAdminEmail } from '@/lib/admin'
 import type { MmuSession } from '@/lib/types'
-
-const ADMIN_EMAILS = ['charlotte@root.co.za', 'jonny@rootplatform.com']
 
 type Props = {
   open:              boolean
@@ -38,18 +37,18 @@ export default function HistorySidebar({ open, onClose, currentSessionId }: Prop
   const [confirmArchiveId, setConfirmArchiveId] = useState<string | null>(null)
   const [archiving,       setArchiving]       = useState(false)
 
-  const isAdmin = !!userEmail && ADMIN_EMAILS.includes(userEmail)
+  const isAdmin = isAdminEmail(userEmail)
 
   async function handleCreate() {
     setBusy(true)
     setCreateErr(null)
-    const sessionId = await createSession()
-    if (!sessionId) {
-      setCreateErr('Failed to create session.')
+    const result = await createSession()
+    if (!result.id) {
+      setCreateErr(result.error ?? 'Failed to create session.')
       setBusy(false)
       return
     }
-    router.push(`/edit/${sessionId}`)
+    router.push(`/edit/${result.id}`)
   }
 
   async function handleArchive(id: string) {
@@ -120,21 +119,23 @@ export default function HistorySidebar({ open, onClose, currentSessionId }: Prop
           </button>
         </div>
 
-        {/* Create new MMU */}
-        <div className="border-b border-white/10 px-4 py-4">
-          <button
-            type="button"
-            onClick={handleCreate}
-            disabled={busy}
-            className="w-full rounded-xl py-3 text-[13px] font-bold text-white transition-opacity disabled:opacity-60"
-            style={{ background: '#2969FF' }}
-          >
-            {busy ? 'Creating…' : '+ Create new MMU'}
-          </button>
-          {createErr && (
-            <p className="mt-2 text-[12px] text-red-400">{createErr}</p>
-          )}
-        </div>
+        {/* Create new MMU — admins only */}
+        {isAdmin && (
+          <div className="border-b border-white/10 px-4 py-4">
+            <button
+              type="button"
+              onClick={handleCreate}
+              disabled={busy}
+              className="w-full rounded-xl py-3 text-[13px] font-bold text-white transition-opacity disabled:opacity-60"
+              style={{ background: '#2969FF' }}
+            >
+              {busy ? 'Creating…' : '+ Create new MMU'}
+            </button>
+            {createErr && (
+              <p className="mt-2 text-[12px] text-red-400">{createErr}</p>
+            )}
+          </div>
+        )}
 
         {/* Session list */}
         <nav className="flex-1 overflow-y-auto py-2">

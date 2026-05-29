@@ -4,24 +4,28 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createSession } from '@/lib/create-session'
 
-export default function StartSessionButton() {
+type Props = { isAdmin: boolean }
+
+export default function StartSessionButton({ isAdmin }: Props) {
   const router              = useRouter()
   const [busy,  setBusy]    = useState(false)
   const [error, setError]   = useState<string | null>(null)
+
+  if (!isAdmin) return null
 
   async function handleCreate() {
     setBusy(true)
     setError(null)
 
-    const sessionId = await createSession()
+    const result = await createSession()
 
-    if (!sessionId) {
-      setError('Failed to create session — please try again.')
+    if (!result.id) {
+      setError(result.error ?? 'Failed to create session — please try again.')
       setBusy(false)
       return
     }
 
-    router.push(`/edit/${sessionId}`)
+    router.push(`/edit/${result.id}`)
   }
 
   return (

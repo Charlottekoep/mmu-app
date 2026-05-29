@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { getServerClient } from '@/lib/supabase-server'
+import { isAdminEmail } from '@/lib/admin'
 import DarkPageLayout from '@/components/DarkPageLayout'
 import StartSessionButton from '@/components/StartSessionButton'
 import type { MmuSession } from '@/lib/types'
@@ -15,13 +16,18 @@ function formatSessionTitle(isoDate: string) {
 
 export default async function HomePage() {
   const supabase = await getServerClient()
-  const { data } = await supabase
-    .from('mmu_sessions')
-    .select('*')
-    .eq('is_archived', false)
-    .order('date', { ascending: false })
-    .limit(10)
 
+  const [{ data: { user } }, { data }] = await Promise.all([
+    supabase.auth.getUser(),
+    supabase
+      .from('mmu_sessions')
+      .select('*')
+      .eq('is_archived', false)
+      .order('date', { ascending: false })
+      .limit(10),
+  ])
+
+  const isAdmin              = isAdminEmail(user?.email)
   const sessions: MmuSession[] = data ?? []
 
   return (
@@ -41,7 +47,7 @@ export default async function HomePage() {
         </div>
 
         {/* ── Primary CTA ──────────────────────────────────────────────── */}
-        <StartSessionButton />
+        <StartSessionButton isAdmin={isAdmin} />
 
         {/* ── Recent sessions ──────────────────────────────────────────── */}
         {sessions.length > 0 && (
@@ -84,7 +90,7 @@ export default async function HomePage() {
 
         {sessions.length === 0 && (
           <p className="mt-12 type-eyebrow text-white/65">
-            No sessions yet — create your first one above
+            {isAdmin ? 'No sessions yet — create your first one above' : 'No sessions yet'}
           </p>
         )}
       </div>

@@ -2,10 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { getBrowserClient } from '@/lib/supabase'
-
-// ─── Constants ────────────────────────────────────────────────────────────
-
-const ADMIN_EMAILS = ['charlotte@root.co.za', 'jonny@rootplatform.com']
+import { isAdminEmail } from '@/lib/admin'
 
 // ─── Types ────────────────────────────────────────────────────────────────
 
@@ -33,7 +30,7 @@ export default function Wall({ sessionId }: Props) {
   const [userEmail, setUserEmail] = useState<string | null>(null)
   const [overlayId, setOverlayId] = useState<string | null>(null)
 
-  const isAdmin = !!userEmail && ADMIN_EMAILS.includes(userEmail)
+  const isAdmin = isAdminEmail(userEmail)
 
   // ── Auth ──────────────────────────────────────────────────────────────
   useEffect(() => {
